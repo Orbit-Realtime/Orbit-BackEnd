@@ -4,15 +4,13 @@ import com.chat.entity.Chat;
 import com.chat.entity.ChatRoom;
 import com.chat.entity.ChatRoomParticipant;
 import com.chat.entity.Member;
-import com.chat.repository.ChatRepository;
-import com.chat.repository.ChatRoomParticipantRepository;
-import com.chat.repository.ChatRoomRepository;
-import com.chat.repository.MemberRepository;
+import com.chat.repository.*;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -31,6 +29,8 @@ public class TestDataFixture {
     private ChatRoomParticipantRepository chatRoomParticipantRepository;
     @Autowired
     private ChatRepository chatRepository;
+    @Autowired
+    private ChatReadRepository chatReadRepository;
     @PersistenceContext
     private EntityManager em;
 
@@ -70,8 +70,12 @@ public class TestDataFixture {
         return chatRepository.save(chat);
     }
 
-    public void flushAllData() {
-        em.flush();
-        em.clear();
+    @Transactional
+    public void deleteAllData() {
+        chatReadRepository.deleteAll();
+        chatRepository.deleteAll();
+        chatRoomParticipantRepository.deleteAll();
+        chatRoomRepository.deleteAll();
+        memberRepository.deleteAll();
     }
 }

@@ -12,13 +12,13 @@ import com.chat.utils.message.MessageType;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.WebSocketSession;
@@ -37,7 +37,6 @@ import java.util.concurrent.TimeUnit;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-//@Transactional
 @AutoConfigureMockMvc
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class ChatRoomServiceSocketTest {
@@ -55,6 +54,11 @@ public class ChatRoomServiceSocketTest {
     private WebSocketClient client;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    @AfterEach
+    void tearDown() {
+        fixture.deleteAllData();
+    }
+
     @Test
     @DisplayName("채팅 내역이 없는 채팅방에 연결한다.")
     void connectChatRoomSocketTest() throws Exception {
@@ -67,7 +71,6 @@ public class ChatRoomServiceSocketTest {
         participants.add(encryptMember);
         ChatRoom chatRoom = fixture.savedChatRoomBy("title", participants);
         Long chatRoomId = chatRoom.getId();
-//        fixture.flushAllData();
 
         String JSessionId = memberFixture.loginRequestBy(username, port);
 
@@ -165,12 +168,12 @@ public class ChatRoomServiceSocketTest {
     @DisplayName("채팅방 참여자들에게 메시지를 전송한다.")
     void simpleBroadcastToChatRoomMembersTest() throws ExecutionException, InterruptedException, JsonProcessingException {
         // given
-        String first = "firstUsername";
+        String first = "first";
         Member firstMember = memberFixture.saveEncryptPasswordBy(first);
         String firstJSessionId = memberFixture.loginRequestBy(first, port);
         Long firstMemberId = firstMember.getId();
 
-        String second = "secondUsername";
+        String second = "second";
         Member secondMember = memberFixture.saveEncryptPasswordBy(second);
         String secondJSessionId = memberFixture.loginRequestBy(second, port);
         Long secondMemberId = secondMember.getId();
