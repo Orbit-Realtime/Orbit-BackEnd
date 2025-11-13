@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @AutoConfigureMockMvc
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class ChatRoomServiceSocketTest {
+public class SimpleChatRoomServiceSocketTest {
 
     @Autowired
     private TestDataFixture fixture;
