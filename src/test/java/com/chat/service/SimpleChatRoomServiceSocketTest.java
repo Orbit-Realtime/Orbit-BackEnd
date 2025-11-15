@@ -7,6 +7,8 @@ import com.chat.fixture.SocketFixture;
 import com.chat.fixture.TestDataFixture;
 import com.chat.service.dtos.chat.SendChat;
 import com.chat.service.dtos.chat.UpdateChatRoom;
+import com.chat.socket.manager.ChatRoomManager;
+import com.chat.socket.manager.WebsocketSessionManager;
 import com.chat.utils.consts.SessionConst;
 import com.chat.utils.message.MessageType;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -49,6 +51,12 @@ public class SimpleChatRoomServiceSocketTest {
     private SocketFixture socketFixture;
     @Autowired
     private ChatRoomService chatRoomService;
+
+    @Autowired
+    private ChatRoomManager chatRoomManager;
+    @Autowired
+    private WebsocketSessionManager websocketSessionManager;
+
     @LocalServerPort
     private int port;
     private WebSocketClient client;
@@ -57,6 +65,8 @@ public class SimpleChatRoomServiceSocketTest {
     @AfterEach
     void tearDown() {
         fixture.deleteAllData();
+        chatRoomManager.clearAll();
+        websocketSessionManager.clearAll();
     }
 
     @Test

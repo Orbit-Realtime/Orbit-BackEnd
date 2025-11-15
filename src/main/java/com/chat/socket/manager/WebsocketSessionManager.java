@@ -1,5 +1,6 @@
 package com.chat.socket.manager;
 
+import com.chat.utils.annotation.VisibleForTesting;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -40,5 +41,10 @@ public class WebsocketSessionManager {
                 log.warn("Failed to close WebSocket session for memberId={}", memberId, e);
             }
         }
+    }
+
+    @VisibleForTesting
+    public void clearAll() {
+        activeMemberSessions.clear();
     }
 }
