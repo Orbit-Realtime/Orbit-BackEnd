@@ -11,6 +11,8 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 public class MemberFixture {
@@ -25,6 +27,7 @@ public class MemberFixture {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Member saveEncryptPasswordBy(String username) {
         Member member = Member.of(
                 username,

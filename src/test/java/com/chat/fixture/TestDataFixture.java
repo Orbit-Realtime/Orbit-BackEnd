@@ -10,6 +10,7 @@ import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -43,6 +44,7 @@ public class TestDataFixture {
         return memberRepository.save(member);
     }
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public ChatRoom savedChatRoomBy(String title, List<Member> participants) {
 
         ChatRoom chatRoom = ChatRoom.of(title);
@@ -72,10 +74,12 @@ public class TestDataFixture {
 
     @Transactional
     public void deleteAllData() {
-        chatReadRepository.deleteAll();
-        chatRepository.deleteAll();
-        chatRoomParticipantRepository.deleteAll();
-        chatRoomRepository.deleteAll();
-        memberRepository.deleteAll();
+        em.createQuery("DELETE FROM ChatRead").executeUpdate();
+        em.createQuery("DELETE FROM Chat").executeUpdate();
+        em.createQuery("DELETE FROM ChatRoomParticipant").executeUpdate();
+        em.createQuery("DELETE FROM ChatRoom").executeUpdate();
+        em.createQuery("DELETE FROM Member").executeUpdate();
+        em.flush();
     }
+
 }
