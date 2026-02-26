@@ -127,7 +127,7 @@ class ChatRoomManagerTest {
         given(session.getAttributes()).willReturn(Map.of(SessionConst.SESSION_ID, memberId));
 
         chatRoomManager.addSessionToRoom(session, chatRoomId);
-        chatRoomManager.removeChatRoomSession(chatRoomId, memberId);
+        chatRoomManager.removeChatRoomSession(chatRoomId, session);
 
         assertThatThrownBy(() -> chatRoomManager.getWebSocketSessionBy(chatRoomId))
                 .isInstanceOf(CustomException.class)
@@ -184,8 +184,9 @@ class ChatRoomManagerTest {
         assertThat(chatRoomManager.getWebSocketSessionBy(chatRoomId)).contains(session);
         assertThat(chatRoomManager.getChatRoomIdsBy(memberId)).contains(chatRoomId);
 
-        chatRoomManager.removeChatRoomSession(chatRoomId, memberId);
+        boolean result = chatRoomManager.removeChatRoomSession(chatRoomId, session);
 
+        assertThat(result).isTrue();
         assertThatThrownBy(() -> chatRoomManager.getWebSocketSessionBy(chatRoomId))
                 .isInstanceOf(CustomException.class)
                 .extracting(ex -> (CustomException) ex)
@@ -197,31 +198,36 @@ class ChatRoomManagerTest {
     }
 
     @Test
-    @DisplayName("채팅방이 없으면 아무 동작도 하지 않는다.")
+    @DisplayName("채팅방이 없으면 false 를 반환하고 예외가 발생하지 않는다.")
     void removeChatRoomSession_noRoomTest() {
         Long chatRoomId = 999L;
         Long memberId = 42L;
 
-        assertThatCode(() -> chatRoomManager.removeChatRoomSession(chatRoomId, memberId))
-                .doesNotThrowAnyException();
+        WebSocketSession mockSession = mock(WebSocketSession.class);
+        given(mockSession.getAttributes()).willReturn(Map.of(SessionConst.SESSION_ID, memberId));
+
+        boolean result = chatRoomManager.removeChatRoomSession(chatRoomId, mockSession);
+
+        assertThat(result).isFalse();
     }
 
     @Test
-    @DisplayName("멤버의 세션이 없으면 아무 동작도 하지 않는다.")
+    @DisplayName("방에 없는 세션을 제거해도 다른 세션은 유지된다.")
     void removeChatRoomSession_noMemberSessionTest() {
         Long chatRoomId = 1L;
-        Long memberId = 42L;
 
-        WebSocketSession session = mock(WebSocketSession.class);
-        given(session.getAttributes()).willReturn(Map.of(SessionConst.SESSION_ID, 99L)); // 다른 멤버
+        WebSocketSession sessionInRoom = mock(WebSocketSession.class);
+        given(sessionInRoom.getAttributes()).willReturn(Map.of(SessionConst.SESSION_ID, 99L));
 
-        chatRoomManager.addSessionToRoom(session, chatRoomId);
+        WebSocketSession sessionNotInRoom = mock(WebSocketSession.class);
+        given(sessionNotInRoom.getAttributes()).willReturn(Map.of(SessionConst.SESSION_ID, 42L));
 
-        assertThat(chatRoomManager.getWebSocketSessionBy(chatRoomId)).contains(session);
+        chatRoomManager.addSessionToRoom(sessionInRoom, chatRoomId);
+        assertThat(chatRoomManager.getWebSocketSessionBy(chatRoomId)).contains(sessionInRoom);
 
-        chatRoomManager.removeChatRoomSession(chatRoomId, memberId);
+        chatRoomManager.removeChatRoomSession(chatRoomId, sessionNotInRoom);
 
-        assertThat(chatRoomManager.getWebSocketSessionBy(chatRoomId)).contains(session);
+        assertThat(chatRoomManager.getWebSocketSessionBy(chatRoomId)).contains(sessionInRoom);
     }
 
     @Test
@@ -235,9 +241,68 @@ class ChatRoomManagerTest {
 
         chatRoomManager.addSessionToRoom(session, chatRoomId);
 
-        chatRoomManager.removeChatRoomSession(chatRoomId, memberId);
+        boolean result = chatRoomManager.removeChatRoomSession(chatRoomId, session);
 
+        assertThat(result).isTrue();
         assertThat(chatRoomManager.getChatRoomIdsBy(memberId)).isNull();
+    }
+
+    @Test
+    @DisplayName("동일 멤버의 세션이 여러 개일 때 하나 제거해도 멤버는 방에 남아있다.")
+    void removeChatRoomSession_multiSessionReturnsFalse() {
+        // given
+        Long chatRoomId = 1L;
+        Long memberId = 42L;
+
+        WebSocketSession sessionA = mock(WebSocketSession.class);
+        given(sessionA.getAttributes()).willReturn(Map.of(SessionConst.SESSION_ID, memberId));
+
+        WebSocketSession sessionB = mock(WebSocketSession.class);
+        given(sessionB.getAttributes()).willReturn(Map.of(SessionConst.SESSION_ID, memberId));
+
+        chatRoomManager.addSessionToRoom(sessionA, chatRoomId);
+        chatRoomManager.addSessionToRoom(sessionB, chatRoomId);
+
+        // when: sessionA 만 제거
+        boolean memberLeftRoom = chatRoomManager.removeChatRoomSession(chatRoomId, sessionA);
+
+        // then: sessionB 가 남아있으므로 멤버는 방에 남아있음
+        assertThat(memberLeftRoom).isFalse();
+        assertThat(chatRoomManager.getWebSocketSessionBy(chatRoomId)).contains(sessionB);
+        assertThat(chatRoomManager.getChatRoomIdsBy(memberId)).contains(chatRoomId);
+    }
+
+    @Test
+    @DisplayName("마지막 세션 제거 시 멤버가 방에서 나간다.")
+    void removeChatRoomSession_lastSessionReturnsTrue() {
+        // given
+        Long chatRoomId = 1L;
+        Long memberId = 42L;
+
+        WebSocketSession session = mock(WebSocketSession.class);
+        given(session.getAttributes()).willReturn(Map.of(SessionConst.SESSION_ID, memberId));
+
+        chatRoomManager.addSessionToRoom(session, chatRoomId);
+
+        // when
+        boolean memberLeftRoom = chatRoomManager.removeChatRoomSession(chatRoomId, session);
+
+        // then: 세션이 없으므로 멤버가 방에서 나감
+        assertThat(memberLeftRoom).isTrue();
+        assertThat(chatRoomManager.getChatRoomIdsBy(memberId)).isNull();
+        assertThatThrownBy(() -> chatRoomManager.getWebSocketSessionBy(chatRoomId))
+                .isInstanceOf(CustomException.class);
+    }
+
+    @Test
+    @DisplayName("세션이 없는 채팅방에 broadcastEnterChatRoom 호출 시 예외가 발생하지 않는다.")
+    void broadcastEnterChatRoom_emptyRoom_noException() {
+        Long chatRoomId = 999L;  // 등록되지 않은 방
+        EnterChatRoom enterChatRoom = new EnterChatRoom(chatRoomId, 1L);
+
+        // when & then: 세션이 없는 방에 브로드캐스트해도 예외가 발생하지 않아야 함
+        assertThatCode(() -> chatRoomManager.broadcastEnterChatRoom(chatRoomId, enterChatRoom))
+                .doesNotThrowAnyException();
     }
 
     @Test

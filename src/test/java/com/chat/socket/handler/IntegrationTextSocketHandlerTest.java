@@ -30,6 +30,7 @@ import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -101,8 +102,8 @@ class IntegrationTextSocketHandlerTest {
                 .get();
 
         // then
-        WebSocketSession session = websocketSessionManager.getSessionBy(memberId);
-        assertThat(session).isNotNull();
+        Collection<WebSocketSession> sessions = websocketSessionManager.getSessionBy(memberId);
+        assertThat(sessions).isNotEmpty();
     }
 
     @Test
@@ -133,7 +134,8 @@ class IntegrationTextSocketHandlerTest {
                         URI.create("ws://localhost:" + port + "/ws/chat"))
                 .get();
 
-        chatRoomService.connectChatRoomSocket(memberId, chatRoomId);
+        WebSocketSession serverSession = websocketSessionManager.getSessionBy(memberId).iterator().next();
+        chatRoomService.connectChatRoomSocket(serverSession, memberId, chatRoomId);
 
         ObjectMapper objectMapper = new ObjectMapper();
         SendChat sendChat = SendChat
@@ -188,7 +190,7 @@ class IntegrationTextSocketHandlerTest {
         latch.await(2, TimeUnit.SECONDS);
 
         // WebsocketSessionManager에서 세션이 제거되었는지 확인
-        WebSocketSession removedSession = websocketSessionManager.getSessionBy(memberId);
-        assertThat(removedSession).isNull();
+        Collection<WebSocketSession> removedSessions = websocketSessionManager.getSessionBy(memberId);
+        assertThat(removedSessions).isEmpty();
     }
 }

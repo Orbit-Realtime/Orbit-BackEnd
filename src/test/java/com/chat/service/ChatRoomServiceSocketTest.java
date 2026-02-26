@@ -27,6 +27,7 @@ import org.springframework.web.socket.WebSocketSession;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -89,7 +90,8 @@ public class ChatRoomServiceSocketTest {
         socketFixture.connectSocket(JSESSIONID, memberId, port, recievedMessgaes, latch);
 
         // when
-        chatRoomService.connectChatRoomSocket(memberId, chatRoomId);
+        WebSocketSession serverSession = websocketSessionManager.getSessionBy(memberId).iterator().next();
+        chatRoomService.connectChatRoomSocket(serverSession, memberId, chatRoomId);
 
         // then
         String payload = recievedMessgaes.get(0);
@@ -128,7 +130,8 @@ public class ChatRoomServiceSocketTest {
         socketFixture.connectSocket(JSESSIONID, firstId, port, recievedMessgaes, latch);
 
         // when
-        chatRoomService.connectChatRoomSocket(firstId, chatRoomId);
+        WebSocketSession serverSession = websocketSessionManager.getSessionBy(firstId).iterator().next();
+        chatRoomService.connectChatRoomSocket(serverSession, firstId, chatRoomId);
 
         // then
         String payload = recievedMessgaes.get(0);
@@ -139,9 +142,9 @@ public class ChatRoomServiceSocketTest {
 
         Set<WebSocketSession> webSocketSessions = chatRoomManager.getWebSocketSessionBy(chatRoomId);
         assertThat(webSocketSessions).hasSize(1);
-        WebSocketSession session = websocketSessionManager.getSessionBy(firstId);
-        assertThat(session).isNotNull();
-        assertThat(webSocketSessions.contains(session)).isTrue();
+        Collection<WebSocketSession> memberSessions = websocketSessionManager.getSessionBy(firstId);
+        assertThat(memberSessions).isNotEmpty();
+        assertThat(webSocketSessions.containsAll(memberSessions)).isTrue();
     }
 
     @Test
@@ -173,8 +176,10 @@ public class ChatRoomServiceSocketTest {
         String secondJSessionId = memberFixture.loginRequestBy("second", port);
         socketFixture.connectSocket(secondJSessionId, secondId, port, secondMessages, latch);
 
-        chatRoomService.connectChatRoomSocket(firstId, chatRoomId);
-        chatRoomService.connectChatRoomSocket(secondId, chatRoomId);
+        WebSocketSession firstServerSession = websocketSessionManager.getSessionBy(firstId).iterator().next();
+        chatRoomService.connectChatRoomSocket(firstServerSession, firstId, chatRoomId);
+        WebSocketSession secondServerSession = websocketSessionManager.getSessionBy(secondId).iterator().next();
+        chatRoomService.connectChatRoomSocket(secondServerSession, secondId, chatRoomId);
 
         String message = "message";
         SendChat sendChat = SendChat

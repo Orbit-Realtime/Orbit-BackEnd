@@ -110,7 +110,8 @@ public class SimpleChatRoomServiceSocketTest {
                 .get();
 
         // when
-        chatRoomService.connectChatRoomSocket(encryptMemberId, chatRoomId);
+        WebSocketSession serverSession = websocketSessionManager.getSessionBy(encryptMemberId).iterator().next();
+        chatRoomService.connectChatRoomSocket(serverSession, encryptMemberId, chatRoomId);
 
         // then
         boolean messageReceived = latch.await(3, TimeUnit.SECONDS);
@@ -145,8 +146,10 @@ public class SimpleChatRoomServiceSocketTest {
         ChatRoom chatRoom = fixture.savedChatRoomBy("title", participants);
         Long chatRoomId = chatRoom.getId();
 
-        chatRoomService.connectChatRoomSocket(firstMemberId, chatRoomId);
-        chatRoomService.connectChatRoomSocket(secondMemberId, chatRoomId);
+        WebSocketSession firstServerSession = websocketSessionManager.getSessionBy(firstMemberId).iterator().next();
+        chatRoomService.connectChatRoomSocket(firstServerSession, firstMemberId, chatRoomId);
+        WebSocketSession secondServerSession = websocketSessionManager.getSessionBy(secondMemberId).iterator().next();
+        chatRoomService.connectChatRoomSocket(secondServerSession, secondMemberId, chatRoomId);
 
         String message = "message";
         fixture.savedSimpleChat(message, firstMember, chatRoom);
