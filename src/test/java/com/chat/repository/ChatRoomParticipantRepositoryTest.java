@@ -13,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -157,7 +159,7 @@ class ChatRoomParticipantRepositoryTest {
         ChatRoomParticipant secondParticipant = chatRoomParticipantRepository.save(new ChatRoomParticipant(true, member, second));
 
         // when
-        List<ChatRoomParticipant> findChatRoomParticipants = chatRoomParticipantRepository.findAllBy(member.getId());
+        List<ChatRoomParticipant> findChatRoomParticipants = chatRoomParticipantRepository.findAllFetchChatRoomBy(member.getId());
 
         // then
         assertThat(findChatRoomParticipants).hasSize(2);
@@ -227,6 +229,35 @@ class ChatRoomParticipantRepositoryTest {
         // then
         assertThat(chatRoomParticipant.getChatRoom()).isEqualTo(chatRoom);
         assertThat(chatRoomParticipant.getMember()).isEqualTo(member);
+    }
+
+    @Test
+    @DisplayName("여러 채팅방 ID 로 참여자와 회원 정보를 일괄 조회한다.")
+    void findAllFetchMemberByRoomIdsTest() {
+        // given
+        Member firstMember = createMemberBy("first");
+        Member secondMember = createMemberBy("second");
+        Member thirdMember = createMemberBy("third");
+
+        ChatRoom firstRoom = createChatRoomBy("firstRoom");
+        ChatRoom secondRoom = createChatRoomBy("secondRoom");
+
+        chatRoomParticipantRepository.save(new ChatRoomParticipant(true, firstMember, firstRoom));
+        chatRoomParticipantRepository.save(new ChatRoomParticipant(true, secondMember, firstRoom));
+        chatRoomParticipantRepository.save(new ChatRoomParticipant(true, thirdMember, secondRoom));
+
+        em.flush();
+        em.clear();
+
+        // when
+        List<ChatRoomParticipant> participants = chatRoomParticipantRepository
+                .findAllFetchMemberBy(List.of(firstRoom.getId(), secondRoom.getId()));
+
+        // then
+        assertThat(participants).hasSize(3);
+        assertThat(participants)
+                .extracting(crp -> crp.getMember().getNickname())
+                .doesNotContainNull();
     }
 
     private Member createMemberBy(String username) {

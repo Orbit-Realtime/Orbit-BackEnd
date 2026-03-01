@@ -12,6 +12,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -107,6 +109,51 @@ class ChatRepositoryTest {
         assertThat(chatHistory).hasSize(2);
         assertThat(chatHistory.get(0)).isEqualTo(firstChat);
         assertThat(chatHistory.get(1)).isEqualTo(secondChat);
+    }
+
+    @Test
+    @DisplayName("여러 채팅방의 마지막 메시지를 일괄 조회한다.")
+    void findLastChatsByMultipleRoomsTest() {
+        // given
+        Member member = createMember("user");
+
+        ChatRoom firstRoom = createChatRoom("firstRoom");
+        ChatRoom secondRoom = createChatRoom("secondRoom");
+
+        chatRepository.save(new Chat("first-1", member, firstRoom));
+        Chat lastOfFirst = chatRepository.save(new Chat("first-2", member, firstRoom));
+
+        Chat lastOfSecond = chatRepository.save(new Chat("second-1", member, secondRoom));
+
+        // when
+        List<Chat> lastChats = chatRepository
+                .findLastChatsBy(List.of(firstRoom.getId(), secondRoom.getId()));
+
+        // then
+        assertThat(lastChats).hasSize(2);
+        assertThat(lastChats)
+                .extracting(Chat::getId)
+                .containsExactlyInAnyOrder(lastOfFirst.getId(), lastOfSecond.getId());
+    }
+
+    @Test
+    @DisplayName("메시지가 없는 채팅방은 마지막 메시지 일괄 조회 결과에 포함되지 않는다.")
+    void findLastChatsBy_emptyRoomNotIncludedTest() {
+        // given
+        Member member = createMember("user");
+
+        ChatRoom roomWithChat = createChatRoom("roomWithChat");
+        ChatRoom emptyRoom = createChatRoom("emptyRoom");
+
+        Chat chat = chatRepository.save(new Chat("message", member, roomWithChat));
+
+        // when
+        List<Chat> lastChats = chatRepository
+                .findLastChatsBy(List.of(roomWithChat.getId(), emptyRoom.getId()));
+
+        // then
+        assertThat(lastChats).hasSize(1);
+        assertThat(lastChats.get(0).getId()).isEqualTo(chat.getId());
     }
 
     private Member createMember(String username) {
