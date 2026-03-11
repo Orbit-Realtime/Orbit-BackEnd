@@ -68,7 +68,7 @@ public class ChatRoomService {
         EnterChatRoom enterChatRoom = EnterChatRoom.builder()
                 .messageType(MessageType.CHAT_ENTER)
                 .lastReadChatId(lastChatRead != null ? lastChatRead.getLastChatReadId() : null)
-                .memberId(lastChatRead != null ? lastChatRead.getMemberId() : null)
+                .memberId(memberId)
                 .build();
         publisher.publishEvent(new PublishEnterRoomEvent(session, chatRoomId, enterChatRoom));
     }
