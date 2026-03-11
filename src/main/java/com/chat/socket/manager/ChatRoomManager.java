@@ -14,6 +14,7 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -40,26 +41,35 @@ public class ChatRoomManager {
 
         IdValidator.requireChatRoomId(chatRoomId);
 
+        Set<WebSocketSession> sessions = chatRooms.get(chatRoomId);
+
+        if (sessions == null || sessions.isEmpty()) {
+            return;
+        }
+
+        String enterChatRoomMessage;
         try {
-            String enterChatRoomMessage = objectMapper.writeValueAsString(enterChatRoom);
-            Set<WebSocketSession> sessions = chatRooms.get(chatRoomId);
-
-            if (sessions == null || sessions.isEmpty()) {
-                return;
-            }
-
-            for (WebSocketSession session : sessions) {
-                session.sendMessage(new TextMessage(enterChatRoomMessage));
-            }
+            enterChatRoomMessage = objectMapper.writeValueAsString(enterChatRoom);
         } catch (IOException e) {
             throw new CustomException(ErrorCode.CHAT_ROOM_BROADCAST_IO_EXCEPTION);
+        }
+
+        for (WebSocketSession session : sessions) {
+            if (!session.isOpen()) {
+                continue;
+            }
+            try {
+                session.sendMessage(new TextMessage(enterChatRoomMessage));
+            } catch (IOException e) {
+                log.warn("입장 메시지 전송 실패: session={}", session.getId(), e);
+            }
         }
     }
 
     public Set<WebSocketSession> getWebSocketSessionBy(Long chatRoomId) {
         Set<WebSocketSession> sessions = chatRooms.get(chatRoomId);
-        if (sessions == null || sessions.isEmpty()) {
-            throw new CustomException(ErrorCode.WEB_SOCKET_SESSION_NOT_EXIST);
+        if (sessions == null) {
+            return Collections.emptySet();
         }
         return sessions;
     }

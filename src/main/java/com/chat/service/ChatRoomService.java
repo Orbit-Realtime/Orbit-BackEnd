@@ -76,7 +76,6 @@ public class ChatRoomService {
     @Transactional
     public void broadCastMessage(SendChat sendChat) {
         Long chatRoomId = sendChat.getChatRoomId();
-        Set<WebSocketSession> SessionsInChatRoom = chatRoomManager.getWebSocketSessionBy(chatRoomId);
 
         Long senderId = sendChat.getSenderId();
         String message = sendChat.getMessage();
@@ -85,8 +84,7 @@ public class ChatRoomService {
         SaveChatData chatData = chatService.findChatData(saveChatId);
         sendChat.updateSavedChat(chatData);
 
-        publisher.publishEvent(new PublishMessageEvent(sendChat, SessionsInChatRoom));
-//        chatBroadcastListener.publishMessageToSessions(new PublishMessageEvent(sendChat, SessionsInChatRoom));
+        publisher.publishEvent(new PublishMessageEvent(sendChat, chatRoomId));
     }
 
     public void broadcastToChatRoomMembers(Long chatRoomId) {

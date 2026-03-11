@@ -21,7 +21,6 @@ public enum ErrorCode {
     CHAT_NOT_EXIST(HttpStatus.BAD_REQUEST, "존재하지 않는 채팅입니다."),
     CHAT_ROOM_BROADCAST_IO_EXCEPTION(HttpStatus.INTERNAL_SERVER_ERROR, "채팅방 전파 중 오류가 발생했습니다."),
     WEB_SOCKET_SESSION_NOT_EXIST(HttpStatus.INTERNAL_SERVER_ERROR, "웹소켓 세션이 존재하지 않습니다."),
-    CHAT_ROOM_SESSION_NOT_EXIST(HttpStatus.INTERNAL_SERVER_ERROR, "채팅방 세션이 존재하지 않습니다."),
     SERVER_BUSY(HttpStatus.TOO_MANY_REQUESTS, "서버가 일시적으로 혼잡합니다. 잠시 후 다시 시도해주세요.")
     ;
 
