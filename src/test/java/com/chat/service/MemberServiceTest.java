@@ -18,6 +18,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.transaction.TestTransaction;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.socket.WebSocketSession;
 
@@ -78,14 +79,17 @@ class MemberServiceTest {
     @DisplayName("사용자가 로그인한다.")
     void loginTest() {
         // given
-        String username = "username";
-        String password = "password";
-        String nickname = "nickname";
-        Long joinMemberId = joinMember(username, password, nickname);
+        Long joinMemberId = joinMember("username", "password", "nickname");
+
+        // login()은 Propagation.NOT_SUPPORTED로 실행되어 별도 TX에서 DB를 조회한다.
+        // join()으로 저장한 데이터가 별도 TX에서 보이려면 먼저 커밋되어야 한다.
+        TestTransaction.flagForCommit();
+        TestTransaction.end();
+        TestTransaction.start();
 
         LoginRequest request = LoginRequest.builder()
-                .username(username)
-                .password(password)
+                .username("username")
+                .password("password")
                 .build();
 
         // when
@@ -93,7 +97,12 @@ class MemberServiceTest {
 
         // then
         assertThat(response.getMemberId()).isEqualTo(joinMemberId);
-        assertThat(response.getNickname()).isEqualTo(nickname);
+        assertThat(response.getNickname()).isEqualTo("nickname");
+
+        // T1에서 커밋된 데이터는 자동 롤백되지 않으므로 직접 정리
+        memberRepository.deleteById(joinMemberId);
+        TestTransaction.flagForCommit();
+        TestTransaction.end();
     }
 
     @Test
