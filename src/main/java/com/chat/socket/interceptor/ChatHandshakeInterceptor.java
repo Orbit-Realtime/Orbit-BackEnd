@@ -14,23 +14,28 @@ import java.util.Map;
 
 @Component
 public class ChatHandshakeInterceptor implements HandshakeInterceptor {
+
     @Override
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
 
-        if (request instanceof ServletServerHttpRequest) {
-            HttpServletRequest servletRequest = ((ServletServerHttpRequest) request).getServletRequest();
-            HttpSession httpSession = servletRequest.getSession(false);
-
-            if (httpSession != null) {
-                Long loginMemberId = (Long) httpSession.getAttribute(SessionConst.SESSION_ID); // 세션에서 사용자 정보 가져오기
-                if (loginMemberId != null) {
-                    attributes.put(SessionConst.SESSION_ID, loginMemberId); // WebSocketSession의 attributes에 저장
-                    attributes.put(SessionConst.HTTP_SESSION_ID, httpSession.getId());
-                }
-            } else {
-                return false;
-            }
+        if (!(request instanceof ServletServerHttpRequest)) {
+            return false;
         }
+
+        HttpServletRequest servletRequest = ((ServletServerHttpRequest) request).getServletRequest();
+        HttpSession httpSession = servletRequest.getSession(false);
+        if (httpSession == null) {
+            return false;
+        }
+
+        Long loginMemberId = (Long) httpSession.getAttribute(SessionConst.SESSION_ID); // 세션에서 사용자 정보 가져오기
+        if (loginMemberId == null) {
+            return false;
+        }
+
+        attributes.put(SessionConst.SESSION_ID, loginMemberId); // WebSocketSession의 attributes에 저장
+        attributes.put(SessionConst.HTTP_SESSION_ID, httpSession.getId());
+
         return true;
     }
 

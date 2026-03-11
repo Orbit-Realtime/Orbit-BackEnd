@@ -76,8 +76,12 @@ public class IntegrationTextSocketHandler extends TextWebSocketHandler {
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
         Long loginMemberId = (Long) session.getAttributes().get(SessionConst.SESSION_ID);
 
-        log.info("close Websocket member : {}", loginMemberId);
+        if (loginMemberId == null) {
+            log.warn("afterConnectionClosed: SESSION_ID not found, session={}", session.getId());
+            return;
+        }
 
+        log.info("close Websocket member : {}", loginMemberId);
         memberService.removeSession(loginMemberId, session);
     }
 
