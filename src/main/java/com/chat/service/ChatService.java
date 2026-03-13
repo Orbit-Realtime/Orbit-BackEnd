@@ -104,13 +104,13 @@ public class ChatService {
                 .map(Chat::getId)
                 .toList();
 
+        chatReadRepository.updateUnreadChatReadsToRead(memberId, chatRoomId);
+
         Map<Long, Long> unreadCountMap = chatReadRepository.countUnreadByChatIds(chatIds).stream()
                 .collect(Collectors.toMap(
                         ChatUnreadCount::getChatId,
                         ChatUnreadCount::getUnreadCount
                 ));
-
-        chatReadRepository.updateUnreadChatReadsToRead(memberId, chatRoomId);
 
         List<ChatHistory> response = new ArrayList<>(chats.size());
         for (Chat chat : chats) {
