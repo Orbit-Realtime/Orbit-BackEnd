@@ -5,13 +5,12 @@ import com.chat.entity.Member;
 import com.chat.fixture.MemberFixture;
 import com.chat.fixture.SocketFixture;
 import com.chat.fixture.TestDataFixture;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.chat.service.dtos.chat.SendChat;
-import com.chat.service.dtos.chat.UpdateChatRoom;
 import com.chat.socket.manager.ChatRoomManager;
 import com.chat.socket.manager.WebsocketSessionManager;
 import com.chat.utils.consts.SessionConst;
 import com.chat.utils.message.MessageType;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
@@ -29,7 +28,6 @@ import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.net.URI;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -166,15 +164,19 @@ public class SimpleChatRoomServiceSocketTest {
         // when
         chatRoomService.broadCastMessage(sendChat);
 
-        // then
-        boolean messageReceived = latch.await(3, TimeUnit.SECONDS);
-        assertTrue(messageReceived, "EnterChatRoom 메시지를 수신해야 합니다.");
+        // then: CHAT_MESSAGE가 second에 도착할 때까지 대기 (latch는 CHAT_ENTER 단계에서 이미 소진됨)
+        long deadline = System.currentTimeMillis() + 3000;
+        while (secondMessages.size() < 2 && System.currentTimeMillis() < deadline) {
+            Thread.sleep(50);
+        }
+        assertThat(secondMessages).hasSizeGreaterThanOrEqualTo(2);
+
+        // 서버는 BroadcastChat DTO를 직렬화해서 전송 (Phase 3)
         String payload = secondMessages.get(1);
-        objectMapper.addMixIn(SendChat.class, SendChatIgnoreMixIn.class);
-        SendChat chatData = objectMapper.readValue(payload, SendChat.class);
+        JsonNode node = objectMapper.readTree(payload);
         assertThat(payload).isNotEmpty();
-        assertThat(chatData.getChatId()).isNotNull();
-        assertThat(chatData.getMessage()).isEqualTo(message);
+        assertThat(node.get("chatId").asLong()).isGreaterThan(0);
+        assertThat(node.get("message").asText()).isEqualTo(message);
     }
 
     @Test
@@ -206,17 +208,11 @@ public class SimpleChatRoomServiceSocketTest {
         // when
         chatRoomService.broadcastToChatRoomMembers(chatRoomId);
 
-        // then
+        // then: 서버는 UpdateChatRoom DTO를 직렬화해서 전송 (Phase 3)
         boolean messageReceived = latch.await(3, TimeUnit.SECONDS);
         String payload = secondMessages.get(0);
-        objectMapper.addMixIn(UpdateChatRoom.class, SendChatIgnoreMixIn.class);
-        UpdateChatRoom chatData = objectMapper.readValue(payload, UpdateChatRoom.class);
+        JsonNode node = objectMapper.readTree(payload);
         assertThat(payload).isNotEmpty();
-        assertThat(chatData.getChatRoomId()).isEqualTo(chatRoomId);
-    }
-
-    public abstract class SendChatIgnoreMixIn {
-        @JsonIgnore
-        private LocalDateTime createDate;
+        assertThat(node.get("chatRoomId").asLong()).isEqualTo(chatRoomId);
     }
 }

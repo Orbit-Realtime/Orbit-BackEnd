@@ -4,6 +4,7 @@ import com.chat.exception.CustomException;
 import com.chat.exception.ErrorCode;
 import com.chat.service.dtos.chat.EnterChatRoom;
 import com.chat.utils.consts.SessionConst;
+import com.chat.utils.message.MessageType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -105,20 +106,16 @@ class ChatRoomManagerTest {
     }
 
     @Test
-    @DisplayName("채팅방이 존재하지 않으면 CustomException 발생")
+    @DisplayName("채팅방이 존재하지 않으면 빈 세트를 반환한다")
     void nonExistentRoomTest() {
         Long chatRoomId = 999L;
 
-        assertThatThrownBy(() -> chatRoomManager.getWebSocketSessionBy(chatRoomId))
-                .isInstanceOf(CustomException.class)
-                .extracting(ex -> (CustomException) ex)
-                .satisfies(ex -> {
-                    assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.WEB_SOCKET_SESSION_NOT_EXIST);
-                });
+        Set<WebSocketSession> result = chatRoomManager.getWebSocketSessionBy(chatRoomId);
+        assertThat(result).isEmpty();
     }
 
     @Test
-    @DisplayName("채팅방이 있지만 세션이 없으면 CustomException 발생")
+    @DisplayName("채팅방 세션이 모두 제거되면 빈 세트를 반환한다")
     void emptySessionSetTest() {
         Long chatRoomId = 999L;
         Long memberId = 42L;
@@ -129,12 +126,8 @@ class ChatRoomManagerTest {
         chatRoomManager.addSessionToRoom(session, chatRoomId);
         chatRoomManager.removeChatRoomSession(chatRoomId, session);
 
-        assertThatThrownBy(() -> chatRoomManager.getWebSocketSessionBy(chatRoomId))
-                .isInstanceOf(CustomException.class)
-                .extracting(ex -> (CustomException) ex)
-                .satisfies(ex -> {
-                    assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.WEB_SOCKET_SESSION_NOT_EXIST);
-                });
+        Set<WebSocketSession> result = chatRoomManager.getWebSocketSessionBy(chatRoomId);
+        assertThat(result).isEmpty();
     }
 
     @Test
@@ -187,13 +180,7 @@ class ChatRoomManagerTest {
         boolean result = chatRoomManager.removeChatRoomSession(chatRoomId, session);
 
         assertThat(result).isTrue();
-        assertThatThrownBy(() -> chatRoomManager.getWebSocketSessionBy(chatRoomId))
-                .isInstanceOf(CustomException.class)
-                .extracting(ex -> (CustomException) ex)
-                .satisfies(ex -> {
-                    assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.WEB_SOCKET_SESSION_NOT_EXIST);
-                });
-
+        assertThat(chatRoomManager.getWebSocketSessionBy(chatRoomId)).isEmpty();
         assertThat(chatRoomManager.getChatRoomIdsBy(memberId)).isNull();
     }
 
@@ -290,15 +277,17 @@ class ChatRoomManagerTest {
         // then: 세션이 없으므로 멤버가 방에서 나감
         assertThat(memberLeftRoom).isTrue();
         assertThat(chatRoomManager.getChatRoomIdsBy(memberId)).isNull();
-        assertThatThrownBy(() -> chatRoomManager.getWebSocketSessionBy(chatRoomId))
-                .isInstanceOf(CustomException.class);
+        assertThat(chatRoomManager.getWebSocketSessionBy(chatRoomId)).isEmpty();
     }
 
     @Test
     @DisplayName("세션이 없는 채팅방에 broadcastEnterChatRoom 호출 시 예외가 발생하지 않는다.")
     void broadcastEnterChatRoom_emptyRoom_noException() {
         Long chatRoomId = 999L;  // 등록되지 않은 방
-        EnterChatRoom enterChatRoom = new EnterChatRoom(chatRoomId, 1L);
+        EnterChatRoom enterChatRoom = EnterChatRoom.builder()
+                .messageType(MessageType.CHAT_ENTER)
+                .memberId(1L)
+                .build();
 
         // when & then: 세션이 없는 방에 브로드캐스트해도 예외가 발생하지 않아야 함
         assertThatCode(() -> chatRoomManager.broadcastEnterChatRoom(chatRoomId, enterChatRoom))
@@ -312,43 +301,78 @@ class ChatRoomManagerTest {
         Long chatRoomId = 1L;
         WebSocketSession session1 = mock(WebSocketSession.class);
         given(session1.getAttributes()).willReturn(Map.of(SessionConst.SESSION_ID, 1L));
+        given(session1.isOpen()).willReturn(true);
         WebSocketSession session2 = mock(WebSocketSession.class);
         given(session2.getAttributes()).willReturn(Map.of(SessionConst.SESSION_ID, 2L));
+        given(session2.isOpen()).willReturn(true);
 
         // 테스트용 채팅방 등록
         chatRoomManager.addSessionToRoom(session1, chatRoomId);
         chatRoomManager.addSessionToRoom(session2, chatRoomId);
 
-        EnterChatRoom enterChatRoom = new EnterChatRoom(chatRoomId, 1L);
+        EnterChatRoom enterChatRoom = EnterChatRoom.builder()
+                .messageType(MessageType.CHAT_ENTER)
+                .memberId(1L)
+                .build();
 
         // when
         chatRoomManager.broadcastEnterChatRoom(chatRoomId, enterChatRoom);
 
-        // then - 각 세션에 sendMessage()가 한 번씩 호출되어야 함
+        // then - 열린 세션에 sendMessage()가 한 번씩 호출되어야 함
         verify(session1, times(1)).sendMessage(any(TextMessage.class));
         verify(session2, times(1)).sendMessage(any(TextMessage.class));
     }
 
     @Test
-    @DisplayName("메시지 전송 중 IOException 발생 시 CustomException 이 발생한다.")
+    @DisplayName("개별 세션 메시지 전송 중 IOException 발생 시 예외 없이 warn 로그만 남긴다.")
     void broadcastEnterChatRoom_ioException() throws IOException {
         // given
         Long chatRoomId = 1L;
         WebSocketSession session = mock(WebSocketSession.class);
         given(session.getAttributes()).willReturn(Map.of(SessionConst.SESSION_ID, 1L));
-
+        given(session.isOpen()).willReturn(true);
         doThrow(new IOException("send fail")).when(session).sendMessage(any(TextMessage.class));
 
         chatRoomManager.addSessionToRoom(session, chatRoomId);
-        EnterChatRoom enterChatRoom = new EnterChatRoom(chatRoomId, 1L);
+        EnterChatRoom enterChatRoom = EnterChatRoom.builder()
+                .messageType(MessageType.CHAT_ENTER)
+                .memberId(1L)
+                .build();
 
-        // when & then
-        assertThatThrownBy(() -> chatRoomManager.broadcastEnterChatRoom(chatRoomId, enterChatRoom))
-                .isInstanceOf(CustomException.class)
-                .extracting(ex -> (CustomException) ex)
-                .satisfies(ex -> {
-                    assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.CHAT_ROOM_BROADCAST_IO_EXCEPTION);
-                });
+        // when & then: 개별 세션 IOException은 warn 로그로 처리되고 예외가 전파되지 않아야 함
+        assertThatCode(() -> chatRoomManager.broadcastEnterChatRoom(chatRoomId, enterChatRoom))
+                .doesNotThrowAnyException();
+        verify(session, times(1)).sendMessage(any(TextMessage.class));
+    }
+
+    @Test
+    @DisplayName("닫힌 세션은 브로드캐스트 대상에서 제외된다.")
+    void broadcastEnterChatRoom_skipClosedSession() throws IOException {
+        // given
+        Long chatRoomId = 1L;
+
+        WebSocketSession openSession = mock(WebSocketSession.class);
+        given(openSession.getAttributes()).willReturn(Map.of(SessionConst.SESSION_ID, 1L));
+        given(openSession.isOpen()).willReturn(true);
+
+        WebSocketSession closedSession = mock(WebSocketSession.class);
+        given(closedSession.getAttributes()).willReturn(Map.of(SessionConst.SESSION_ID, 2L));
+        given(closedSession.isOpen()).willReturn(false);
+
+        chatRoomManager.addSessionToRoom(openSession, chatRoomId);
+        chatRoomManager.addSessionToRoom(closedSession, chatRoomId);
+
+        EnterChatRoom enterChatRoom = EnterChatRoom.builder()
+                .messageType(MessageType.CHAT_ENTER)
+                .memberId(1L)
+                .build();
+
+        // when
+        chatRoomManager.broadcastEnterChatRoom(chatRoomId, enterChatRoom);
+
+        // then: 열린 세션에만 전송, 닫힌 세션은 스킵
+        verify(openSession, times(1)).sendMessage(any(TextMessage.class));
+        verify(closedSession, never()).sendMessage(any(TextMessage.class));
     }
 
     @Test
@@ -358,9 +382,13 @@ class ChatRoomManagerTest {
         Long chatRoomId = 1L;
         WebSocketSession session = mock(WebSocketSession.class);
         given(session.getAttributes()).willReturn(Map.of(SessionConst.SESSION_ID, 1L));
+        given(session.isOpen()).willReturn(true);
         chatRoomManager.addSessionToRoom(session, chatRoomId);
 
-        EnterChatRoom message = new EnterChatRoom(chatRoomId, 1L);
+        EnterChatRoom message = EnterChatRoom.builder()
+                .messageType(MessageType.CHAT_ENTER)
+                .memberId(1L)
+                .build();
 
         // when
         chatRoomManager.broadcastEnterChatRoom(chatRoomId, message);

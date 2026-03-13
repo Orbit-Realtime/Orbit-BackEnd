@@ -90,7 +90,7 @@ class ChatServiceTest {
         // then
         assertThat(chatData.getChatId()).isEqualTo(savedChatId);
         assertThat(chatData.getUnReadCount()).isEqualTo(2);
-        assertThat(chatData.getCreateDate()).isNotNull();
+        assertThat(chatData.getCreatedDate()).isNotNull();
     }
 
     @Test
