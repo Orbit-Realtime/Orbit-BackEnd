@@ -55,6 +55,5 @@ public class ChatBroadcastListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void publishEventRoomToSessions(PublishEnterRoomEvent event) {
         chatRoomManager.addSessionToRoom(event.getSession(), event.getChatRoomId());
-        chatRoomManager.broadcastEnterChatRoom(event.getChatRoomId(), event.getEnterChatRoom());
     }
 }

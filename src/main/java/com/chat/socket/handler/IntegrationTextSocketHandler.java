@@ -6,6 +6,7 @@ import com.chat.service.ChatRoomService;
 import com.chat.service.MemberService;
 import com.chat.service.dtos.chat.EnterRoomRequest;
 import com.chat.service.dtos.chat.SendChat;
+import com.chat.socket.manager.ChatRoomManager;
 import com.chat.socket.manager.WebsocketSessionManager;
 import com.chat.utils.consts.SessionConst;
 import com.chat.utils.message.BaseWebSocketMessage;
@@ -24,6 +25,7 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 public class IntegrationTextSocketHandler extends TextWebSocketHandler {
 
     private final WebsocketSessionManager websocketSessionManager;
+    private final ChatRoomManager chatRoomManager;
     private final ChatRoomService chatRoomService;
     private final MemberService memberService;
     private final ObjectMapper objectMapper;
@@ -53,6 +55,11 @@ public class IntegrationTextSocketHandler extends TextWebSocketHandler {
                 SendChat sendChat = (SendChat) baseMessage;
                 Long chatRoomId = sendChat.getChatRoomId();
                 Long loginMemberId = (Long) session.getAttributes().get(SessionConst.SESSION_ID);
+
+                if (!chatRoomManager.getWebSocketSessionBy(chatRoomId).contains(session)) {
+                    log.warn("session not in room: session={}, chatRoomId={}", session.getId(), chatRoomId);
+                    break;
+                }
 
                 log.info("chat : {} member : {}", payload, loginMemberId);
 

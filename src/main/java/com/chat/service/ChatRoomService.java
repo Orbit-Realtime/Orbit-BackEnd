@@ -8,11 +8,9 @@ import com.chat.exception.ErrorCode;
 import com.chat.repository.*;
 import com.chat.repository.dtos.ChatRoomUnreadCount;
 import com.chat.repository.dtos.MemberUnreadCount;
-import com.chat.service.dtos.LastChatRead;
 import com.chat.service.dtos.SaveChatData;
 import com.chat.service.dtos.SaveChatRoomDTO;
 import com.chat.service.dtos.chat.BroadcastChat;
-import com.chat.service.dtos.chat.EnterChatRoom;
 import com.chat.service.dtos.chat.SendChat;
 import com.chat.service.dtos.chat.UpdateChatRoom;
 import com.chat.socket.event.PublishEnterRoomEvent;
@@ -46,7 +44,6 @@ public class ChatRoomService {
     private final ApplicationEventPublisher publisher;
 
     private final ChatRoomParticipantService chatRoomParticipantService;
-    private final ChatReadService chatReadService;
     private final ChatService chatService;
 
     private final WebsocketSessionManager websocketSessionManager;
@@ -62,16 +59,8 @@ public class ChatRoomService {
     public void connectChatRoomSocket(WebSocketSession session, Long memberId, Long chatRoomId) {
 
         IdValidator.requireIds(memberId, chatRoomId);
-
         chatRoomParticipantService.enterChatRoom(chatRoomId, memberId);
-
-        LastChatRead lastChatRead = chatReadService.findLastChatBy(memberId, chatRoomId);
-        EnterChatRoom enterChatRoom = EnterChatRoom.builder()
-                .messageType(MessageType.CHAT_ENTER)
-                .lastReadChatId(lastChatRead != null ? lastChatRead.getLastChatReadId() : null)
-                .memberId(memberId)
-                .build();
-        publisher.publishEvent(new PublishEnterRoomEvent(session, chatRoomId, enterChatRoom));
+        publisher.publishEvent(new PublishEnterRoomEvent(session, chatRoomId));
     }
 
     @Transactional
@@ -92,7 +81,7 @@ public class ChatRoomService {
                 .chatRoomId(chatRoomId)
                 .message(sendChat.getMessage())
                 .chatId(chatData.getChatId())
-                .unReadCount(chatData.getUnReadCount())
+                .unreadMemberCount(chatData.getUnreadMemberCount())
                 .createdDate(chatData.getCreatedDate())
                 .build();
 
@@ -109,12 +98,12 @@ public class ChatRoomService {
         Chat lastChat = chatRepository.findLastChatBy(chatRoomId, createLimitOne())
                 .stream().findFirst().orElse(null);
 
-        Map<Long, Long> unReadCountMap = chatReadRepository
+        Map<Long, Long> unreadMessageCountMap = chatReadRepository
                 .findUnReadCountsBy(chatRoomId, memberIdsInChatRoom)
                 .stream()
                 .collect(Collectors.toMap(
                         MemberUnreadCount::getMemberId,
-                        MemberUnreadCount::getUnreadCount
+                        MemberUnreadCount::getUnreadMemberCount
                 ));
 
         List<UpdateChatRoomEntry> entries = new ArrayList<>();
@@ -124,14 +113,14 @@ public class ChatRoomService {
             if (sessions.isEmpty()) {
                 continue;
             }
-            Long unReadCount = unReadCountMap.getOrDefault(memberId, 0L);
+            Long unreadMessageCount = unreadMessageCountMap.getOrDefault(memberId, 0L);
 
             UpdateChatRoom updateChatRoom = UpdateChatRoom.builder()
                     .messageType(MessageType.UPDATE_CHAT_ROOM)
                     .chatRoomId(chatRoomId)
                     .lastMessage(lastChat != null ? lastChat.getMessage() : null)
                     .createdDate(lastChat != null ? lastChat.getCreatedDate() : null)
-                    .unReadCount(unReadCount)
+                    .unreadMessageCount(unreadMessageCount)
                     .build();
             entries.add(new UpdateChatRoomEntry(updateChatRoom, sessions));
         }
@@ -284,12 +273,12 @@ public class ChatRoomService {
                 ));
 
         // 채팅방별 안 읽은 메시지 수 일괄 조회
-        Map<Long, Long> unReadCountMap = chatReadRepository
+        Map<Long, Long> unreadMessageCountMap = chatReadRepository
                 .findChatRoomUnreadCountsBy(chatRoomIds, memberId)
                 .stream()
                 .collect(Collectors.toMap(
                         ChatRoomUnreadCount::getChatRoomId,
-                        ChatRoomUnreadCount::getUnreadCount
+                        ChatRoomUnreadCount::getUnreadMessageCount
                 ));
 
         // 채팅방별 참여자 목록 일괄 조회
@@ -315,7 +304,7 @@ public class ChatRoomService {
                             .title(crp.getChatRoom().getTitle())
                             .lastMessage(lastChat != null ? lastChat.getMessage() : null)
                             .createdDate(lastChat != null ? lastChat.getCreatedDate() : null)
-                            .unReadCount(unReadCountMap.getOrDefault(chatRoomId, 0L))
+                            .unreadMessageCount(unreadMessageCountMap.getOrDefault(chatRoomId, 0L))
                             .opponents(opponents)
                             .build();
                 })

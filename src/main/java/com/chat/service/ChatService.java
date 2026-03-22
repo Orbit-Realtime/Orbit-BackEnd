@@ -6,6 +6,8 @@ import com.chat.exception.ErrorCode;
 import com.chat.repository.*;
 import com.chat.repository.dtos.ChatUnreadCount;
 import com.chat.service.dtos.ChatHistory;
+import com.chat.service.dtos.ChatHistoryResponse;
+import com.chat.service.dtos.LastChatRead;
 import com.chat.service.dtos.SaveChatData;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,13 +35,13 @@ public class ChatService {
         Chat findChat = chatRepository.findById(chatId).orElseThrow(
                 () -> new CustomException(ErrorCode.CHAT_NOT_EXIST)
         );
-        Long unReadcount = chatReadRepository.findUnReadCountBy(chatId);
+        Long unreadMemberCount = chatReadRepository.findUnReadCountBy(chatId);
 
         return SaveChatData
                 .builder()
                 .chatId(findChat.getId())
                 .createdDate(findChat.getCreatedDate())
-                .unReadCount(unReadcount)
+                .unreadMemberCount(unreadMemberCount)
                 .build();
     }
 
@@ -61,30 +63,23 @@ public class ChatService {
 
     private void saveChatRead(Long senderId, Long chatRoomId, Chat chat) {
 
-        // 내가 보낸 메시지 이전의 메시지 모두 읽음처리
+        // 발신자의 이전 미읽음 메시지 읽음 처리 (메시지를 보내는 행위 = 이전 메시지 모두 읽음)
         chatReadRepository.updateUnreadChatReadsToRead(senderId, chatRoomId);
 
-        // 읽음 저장
+        // 읽음 저장: 발신자=true, 나머지=false (실제 읽음 처리는 getChatHistory 호출 시점에만 수행)
         List<ChatRoomParticipant> findChatRoomParticipants
                 = chatRoomParticipantRepository
                 .findAllFetchMemberBy(chatRoomId);
 
         for (ChatRoomParticipant findChatRoomParticipant : findChatRoomParticipants) {
-
             Member participant = findChatRoomParticipant.getMember();
-
-            if (!participant.getId().equals(senderId)) {
-                boolean isRead = findChatRoomParticipant.isParticipate();
-                ChatRead chatRead = new ChatRead(isRead, participant, chat);
-                chatReadRepository.save(chatRead);
-            } else {
-                chatReadRepository.save(new ChatRead(true, participant, chat));
-            }
+            boolean isRead = participant.getId().equals(senderId);
+            chatReadRepository.save(new ChatRead(isRead, participant, chat));
         }
     }
 
     @Transactional
-    public List<ChatHistory> findChatHistory(Long chatRoomId, Long memberId) {
+    public ChatHistoryResponse findChatHistory(Long chatRoomId, Long memberId) {
 
         Member findMember = memberRepository.findById(memberId).orElseThrow(
                 () -> new CustomException(ErrorCode.MEMBER_NOT_FOUND)
@@ -93,39 +88,44 @@ public class ChatService {
         return createChatHistoryResponse(chatRoomId, findMember.getId());
     }
 
-    private List<ChatHistory> createChatHistoryResponse(Long chatRoomId, Long memberId) {
+    private ChatHistoryResponse createChatHistoryResponse(Long chatRoomId, Long memberId) {
         List<Chat> chats = chatRepository.findChatHistory(chatRoomId);
 
         if (chats.isEmpty()) {
-            return List.of();
+            return new ChatHistoryResponse(null, List.of());
         }
 
         List<Long> chatIds = chats.stream()
                 .map(Chat::getId)
                 .toList();
 
+        LastChatRead lastChatRead = chatReadRepository.findLastReadChatBy(memberId, chatRoomId)
+                .stream().findFirst().orElse(null);
+        Long lastReadChatId = lastChatRead != null ? lastChatRead.getLastChatReadId() : null;
+
         chatReadRepository.updateUnreadChatReadsToRead(memberId, chatRoomId);
 
-        Map<Long, Long> unreadCountMap = chatReadRepository.countUnreadByChatIds(chatIds).stream()
+        Map<Long, Long> unreadMemberCountMap = chatReadRepository.countUnreadByChatIds(chatIds).stream()
                 .collect(Collectors.toMap(
                         ChatUnreadCount::getChatId,
-                        ChatUnreadCount::getUnreadCount
+                        ChatUnreadCount::getUnreadMemberCount
                 ));
 
-        List<ChatHistory> response = new ArrayList<>(chats.size());
+        List<ChatHistory> messages = new ArrayList<>(chats.size());
         for (Chat chat : chats) {
             Member sender = chat.getMember();
-            Long unreadCount = unreadCountMap.getOrDefault(chat.getId(), 0L);
+            Long unreadCount = unreadMemberCountMap.getOrDefault(chat.getId(), 0L);
 
-            response.add(ChatHistory.builder()
+            messages.add(ChatHistory.builder()
                     .chatId(chat.getId())
                     .senderNickname(sender.getNickname())
                     .senderId(sender.getId())
                     .message(chat.getMessage())
-                    .unReadCount(unreadCount)
+                    .unreadMemberCount(unreadCount)
                     .createdDate(chat.getCreatedDate())
                     .build());
         }
-        return response;
+
+        return new ChatHistoryResponse(lastReadChatId, messages);
     }
 }
