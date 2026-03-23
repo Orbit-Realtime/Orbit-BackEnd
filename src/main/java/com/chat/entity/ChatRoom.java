@@ -26,4 +26,8 @@ public class ChatRoom extends BaseEntity {
     public static ChatRoom of(String title) {
         return new ChatRoom(title);
     }
+
+    public void rename(String title) {
+        this.title = title;
+    }
 }

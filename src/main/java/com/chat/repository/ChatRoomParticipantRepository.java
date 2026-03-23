@@ -2,6 +2,7 @@ package com.chat.repository;
 
 import com.chat.entity.ChatRoomParticipant;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -45,4 +46,9 @@ public interface ChatRoomParticipantRepository extends JpaRepository<ChatRoomPar
             " AND crp.member.id = :memberId")
     ChatRoomParticipant findChatRoomBy(@Param("chatRoomId") Long chatRoomId,
                                        @Param("memberId") Long memberId);
+
+    @Modifying
+    @Query("DELETE FROM ChatRoomParticipant crp" +
+            " WHERE crp.chatRoom.id = :chatRoomId AND crp.member.id = :memberId")
+    void deleteBy(@Param("chatRoomId") Long chatRoomId, @Param("memberId") Long memberId);
 }

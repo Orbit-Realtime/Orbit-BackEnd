@@ -1,5 +1,6 @@
 package com.chat.service;
 
+import com.chat.api.response.chatroom.ChatRoomMemberResponse;
 import com.chat.api.response.chatroom.ChatRoomsResponse;
 import com.chat.api.response.chatroom.OpponentResponse;
 import com.chat.entity.*;
@@ -18,6 +19,7 @@ import com.chat.socket.event.PublishEnterRoomEvent;
 import com.chat.socket.event.PublishMessageEvent;
 import com.chat.socket.manager.ChatRoomManager;
 import com.chat.socket.manager.WebsocketSessionManager;
+import com.chat.utils.consts.SessionConst;
 import com.chat.utils.message.MessageType;
 import com.chat.utils.valid.IdValidator;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -45,7 +47,6 @@ public class ChatRoomService {
 
     private final ApplicationEventPublisher publisher;
 
-    private final ChatRoomParticipantService chatRoomParticipantService;
     private final ChatService chatService;
 
     private final WebsocketSessionManager websocketSessionManager;
@@ -58,11 +59,9 @@ public class ChatRoomService {
     private final ChatReadRepository chatReadRepository;
     private final MemberRepository memberRepository;
 
-    @Transactional
     public void connectChatRoomSocket(WebSocketSession session, Long memberId, Long chatRoomId) {
 
         IdValidator.requireIds(memberId, chatRoomId);
-        chatRoomParticipantService.enterChatRoom(chatRoomId, memberId);
         publisher.publishEvent(new PublishEnterRoomEvent(session, chatRoomId));
     }
 
@@ -127,6 +126,8 @@ public class ChatRoomService {
             return;
         }
 
+        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElse(null);
+
         Chat lastChat = chatRepository.findLastChatBy(chatRoomId, createLimitOne())
                 .stream().findFirst().orElse(null);
 
@@ -150,6 +151,7 @@ public class ChatRoomService {
             UpdateChatRoom updateChatRoom = UpdateChatRoom.builder()
                     .messageType(MessageType.UPDATE_CHAT_ROOM)
                     .chatRoomId(chatRoomId)
+                    .title(chatRoom != null ? chatRoom.getTitle() : null)
                     .lastMessage(lastChat != null ? lastChat.getMessage() : null)
                     .createdDate(lastChat != null ? lastChat.getCreatedDate() : null)
                     .unreadMessageCount(unreadMessageCount)
@@ -353,5 +355,91 @@ public class ChatRoomService {
 
     private Pageable createLimitOne() {
         return PageRequest.of(0, 1);
+    }
+
+    @Transactional
+    public void leaveChatRoom(Long memberId, Long chatRoomId) {
+        ChatRoomParticipant participant
+                = chatRoomParticipantRepository.findChatRoomBy(chatRoomId, memberId);
+        if (participant == null) {
+            throw new CustomException(ErrorCode.CHAT_ROOM_NOT_EXIST);
+        }
+
+        chatRoomParticipantRepository.deleteBy(chatRoomId, memberId);
+
+        Set<WebSocketSession> sessions = new HashSet<>(chatRoomManager.getWebSocketSessionBy(chatRoomId));
+        for (WebSocketSession session : sessions) {
+            Long sessionMemberId = (Long) session.getAttributes().get(SessionConst.SESSION_ID);
+            if (memberId.equals(sessionMemberId)) {
+                chatRoomManager.removeChatRoomSession(chatRoomId, session);
+            }
+        }
+
+        broadcastToChatRoomMembers(chatRoomId);
+    }
+
+    @Transactional
+    public void renameChatRoom(Long memberId, Long chatRoomId, String title) {
+
+        ChatRoomParticipant participant = chatRoomParticipantRepository.findChatRoomBy(chatRoomId, memberId);
+        if (participant == null) {
+            throw new CustomException(ErrorCode.CHAT_ROOM_NOT_EXIST);
+        }
+
+        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new CustomException(ErrorCode.CHAT_ROOM_NOT_EXIST));
+        chatRoom.rename(title);
+
+        broadcastToChatRoomMembers(chatRoomId);
+    }
+
+    public List<ChatRoomMemberResponse> findChatRoomMembers(Long memberId, Long chatRoomId) {
+
+        ChatRoomParticipant participant = chatRoomParticipantRepository.findChatRoomBy(chatRoomId, memberId);
+        if (participant == null) {
+            throw new CustomException(ErrorCode.CHAT_ROOM_NOT_EXIST);
+        }
+
+        return chatRoomParticipantRepository.findAllFetchMemberBy(chatRoomId)
+                .stream()
+                .map(crp -> new ChatRoomMemberResponse(
+                        crp.getMember().getId(),
+                        crp.getMember().getNickname()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void inviteMembers(Long memberId, Long chatRoomId, Set<Long> inviteeIds) {
+
+        ChatRoomParticipant participant = chatRoomParticipantRepository.findChatRoomBy(chatRoomId, memberId);
+        if (participant == null) {
+            throw new CustomException(ErrorCode.CHAT_ROOM_NOT_EXIST);
+        }
+
+        Set<Long> existingMemberIds = chatRoomParticipantRepository
+                .findAllFetchMemberBy(chatRoomId)
+                .stream()
+                .map(crp -> crp.getMember().getId())
+                .collect(Collectors.toSet());
+
+        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElseThrow(
+                () -> new CustomException(ErrorCode.CHAT_ROOM_NOT_EXIST)
+        );
+
+        List<Member> invitees = memberRepository.findAllById(inviteeIds);
+        for (Member invitee : invitees) {
+            if (!existingMemberIds.contains(invitee.getId())) {
+                chatRoomParticipantRepository.save(
+                        ChatRoomParticipant
+                                .builder()
+                                .chatRoom(chatRoom)
+                                .member(invitee)
+                                .build()
+                );
+            }
+        }
+
+        broadcastToChatRoomMembers(chatRoomId);
     }
 }

@@ -33,7 +33,6 @@ public class MemberService {
     private final PasswordEncoder passwordEncoder;
     private final WebsocketSessionManager websocketSessionManager;
     private final ChatRoomManager chatRoomManager;
-    private final ChatRoomParticipantService chatRoomParticipantService;
 
     @Transactional
     public Long join(JoinRequest request) {
@@ -97,10 +96,7 @@ public class MemberService {
 
         Set<Long> snapshot = new HashSet<>(chatRoomIds);  // live Set 순회 방지
         for (Long chatRoomId : snapshot) {
-            boolean memberLeftRoom = chatRoomManager.removeChatRoomSession(chatRoomId, closingSession);
-            if (memberLeftRoom) {
-                chatRoomParticipantService.leaveChatRoom(chatRoomId, memberId);
-            }
+            chatRoomManager.removeChatRoomSession(chatRoomId, closingSession);
         }
 
         websocketSessionManager.removeSession(memberId, closingSession);
