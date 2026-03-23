@@ -7,16 +7,23 @@ import com.chat.repository.dtos.MemberUnreadCount;
 import com.chat.service.dtos.ChatHistory;
 import com.chat.service.dtos.ChatHistoryResponse;
 import com.chat.service.dtos.SaveChatData;
+import com.chat.socket.manager.ChatRoomManager;
+import com.chat.utils.consts.SessionConst;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.socket.WebSocketSession;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 
 @Transactional
 @SpringBootTest
@@ -30,6 +37,13 @@ class ChatServiceTest {
     private ChatReadRepository chatReadRepository;
     @Autowired
     private TestDataFixture fixture;
+    @Autowired
+    private ChatRoomManager chatRoomManager;
+
+    @AfterEach
+    void tearDown() {
+        chatRoomManager.clearAll();
+    }
 
     @Test
     @DisplayName("채팅 메시지를 저장한다.")
@@ -143,6 +157,38 @@ class ChatServiceTest {
         assertThat(remainingUnread).isEmpty();
 
         assertThat(firstChat.getMessage()).isEqualTo("message");
+    }
+
+    @Test
+    @DisplayName("채팅방에 접속 중인 수신자는 메시지 저장 시 isRead=true로 저장된다.")
+    void saveChatTest_receiverInRoom_isReadTrue() {
+        // given
+        Member sender = fixture.savedMemberBy("sender");
+        Member receiverInRoom = fixture.savedMemberBy("receiverInRoom");
+        Member receiverNotInRoom = fixture.savedMemberBy("receiverNotInRoom");
+
+        ChatRoom chatRoom = fixture.savedChatRoomBy("title", List.of(sender, receiverInRoom, receiverNotInRoom));
+        Long chatRoomId = chatRoom.getId();
+
+        // receiverInRoom을 ChatRoomManager에 등록 (방에 접속 중인 상태 시뮬레이션)
+        WebSocketSession mockSession = mock(WebSocketSession.class);
+        given(mockSession.getAttributes()).willReturn(Map.of(SessionConst.SESSION_ID, receiverInRoom.getId()));
+        chatRoomManager.addSessionToRoom(mockSession, chatRoomId);
+
+        // when
+        Long savedChatId = chatService.saveChat(sender.getId(), chatRoomId, "hello");
+
+        // then
+        ChatRead senderRead = chatReadRepository.findBy(savedChatId, sender.getId());
+        assertThat(senderRead.getIsRead()).isTrue();
+
+        // 방에 접속 중인 수신자 → isRead=true
+        ChatRead receiverInRoomRead = chatReadRepository.findBy(savedChatId, receiverInRoom.getId());
+        assertThat(receiverInRoomRead.getIsRead()).isTrue();
+
+        // 방에 없는 수신자 → isRead=false
+        ChatRead receiverNotInRoomRead = chatReadRepository.findBy(savedChatId, receiverNotInRoom.getId());
+        assertThat(receiverNotInRoomRead.getIsRead()).isFalse();
     }
 
     @Test

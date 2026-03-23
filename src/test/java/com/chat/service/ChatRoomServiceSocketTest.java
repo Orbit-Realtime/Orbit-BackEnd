@@ -30,6 +30,7 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -197,7 +198,7 @@ public class ChatRoomServiceSocketTest {
         assertThat(node.get("senderId").asLong()).isEqualTo(firstId);
         assertThat(node.get("senderNickname").asText()).isEqualTo(first.getNickname());
         assertThat(node.get("chatId").isNull()).isFalse();
-        assertThat(node.get("unReadCount").isNull()).isFalse();
+        assertThat(node.has("unreadMemberCount")).isTrue();
         Long chatId = node.get("chatId").asLong();
         Chat findChat = chatRepository.findById(chatId).get();
         assertThat(findChat.getMessage()).isEqualTo(message);
@@ -303,6 +304,67 @@ public class ChatRoomServiceSocketTest {
         assertThat(node.get("messageType").asText()).isEqualTo("UPDATE_CHAT_ROOM");
         assertThat(node.get("chatRoomId").asLong()).isEqualTo(chatRoomId);
         assertThat(node.get("lastMessage").asText()).isEqualTo("secondChat");
-        assertThat(node.get("unReadCount").asLong()).isEqualTo(1L);
+        assertThat(node.get("unreadMessageCount").asLong()).isEqualTo(1L);
+    }
+
+    @Test
+    @DisplayName("broadcastAfterRead는 방에 접속 중인 세션에 UPDATE_CHAT_ROOM과 READ_EVENT를 전송한다.")
+    void broadcastAfterReadTest() throws ExecutionException, InterruptedException, JsonProcessingException {
+        // given
+        String firstUsername = "first";
+        Member first = memberFixture.saveEncryptPasswordBy(firstUsername);
+        Long firstId = first.getId();
+
+        String secondUsername = "second";
+        Member second = memberFixture.saveEncryptPasswordBy(secondUsername);
+        Long secondId = second.getId();
+
+        List<Member> participants = new ArrayList<>();
+        participants.add(first);
+        participants.add(second);
+
+        ChatRoom chatRoom = fixture.savedChatRoomBy("title", participants);
+        Long chatRoomId = chatRoom.getId();
+
+        // second가 아직 방에 없는 상태에서 first가 메시지 전송 → second.isRead=false
+        chatService.saveChat(firstId, chatRoomId, "hello");
+
+        // second가 WS 연결 및 방 입장
+        String secondJSessionId = memberFixture.loginRequestBy(secondUsername, port);
+        CountDownLatch latch = new CountDownLatch(2); // UPDATE_CHAT_ROOM + READ_EVENT
+        List<String> secondMessages = new ArrayList<>();
+        socketFixture.connectSocket(secondJSessionId, secondId, port, secondMessages, latch);
+
+        WebSocketSession secondServerSession = websocketSessionManager.getSessionBy(secondId).iterator().next();
+        chatRoomService.connectChatRoomSocket(secondServerSession, secondId, chatRoomId);
+        Thread.sleep(500); // AFTER_COMMIT 대기
+
+        // when: getChatHistory 호출 후 broadcastAfterRead 호출하는 상황 시뮬레이션
+        chatRoomService.broadcastAfterRead(secondId, chatRoomId);
+
+        // then: UPDATE_CHAT_ROOM + READ_EVENT 수신 대기
+        boolean received = latch.await(3, TimeUnit.SECONDS);
+        assertThat(received).isTrue();
+        assertThat(secondMessages).hasSize(2);
+
+        List<String> messageTypes = secondMessages.stream()
+                .map(msg -> {
+                    try {
+                        return objectMapper.readTree(msg).get("messageType").asText();
+                    } catch (Exception e) {
+                        return "";
+                    }
+                })
+                .collect(Collectors.toList());
+        assertThat(messageTypes).containsExactlyInAnyOrder("UPDATE_CHAT_ROOM", "READ_EVENT");
+
+        // READ_EVENT의 memberId, chatRoomId 검증
+        String readEventPayload = secondMessages.stream()
+                .filter(msg -> msg.contains("READ_EVENT"))
+                .findFirst()
+                .orElseThrow();
+        JsonNode readEventNode = objectMapper.readTree(readEventPayload);
+        assertThat(readEventNode.get("memberId").asLong()).isEqualTo(secondId);
+        assertThat(readEventNode.get("chatRoomId").asLong()).isEqualTo(chatRoomId);
     }
 }

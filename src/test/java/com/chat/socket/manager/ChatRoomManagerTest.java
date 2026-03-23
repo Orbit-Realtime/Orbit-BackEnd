@@ -269,4 +269,105 @@ class ChatRoomManagerTest {
         assertThat(chatRoomManager.getWebSocketSessionBy(chatRoomId)).isEmpty();
     }
 
+    @Test
+    @DisplayName("채팅방에 접속 중인 멤버는 isInRoom이 true를 반환한다.")
+    void isInRoom_returnsTrueWhenMemberInRoom() {
+        // given
+        Long chatRoomId = 1L;
+        Long memberId = 10L;
+
+        WebSocketSession session = mock(WebSocketSession.class);
+        given(session.getAttributes()).willReturn(Map.of(SessionConst.SESSION_ID, memberId));
+        chatRoomManager.addSessionToRoom(session, chatRoomId);
+
+        // when & then
+        assertThat(chatRoomManager.isInRoom(chatRoomId, memberId)).isTrue();
+    }
+
+    @Test
+    @DisplayName("채팅방에 접속 중이지 않은 멤버는 isInRoom이 false를 반환한다.")
+    void isInRoom_returnsFalseWhenMemberNotInRoom() {
+        // given
+        Long chatRoomId = 1L;
+        Long memberInRoom = 10L;
+        Long memberNotInRoom = 99L;
+
+        WebSocketSession session = mock(WebSocketSession.class);
+        given(session.getAttributes()).willReturn(Map.of(SessionConst.SESSION_ID, memberInRoom));
+        chatRoomManager.addSessionToRoom(session, chatRoomId);
+
+        // when & then
+        assertThat(chatRoomManager.isInRoom(chatRoomId, memberNotInRoom)).isFalse();
+    }
+
+    @Test
+    @DisplayName("채팅방 자체가 없으면 isInRoom이 false를 반환한다.")
+    void isInRoom_returnsFalseForNonExistentRoom() {
+        // given
+        Long chatRoomId = 999L;
+        Long memberId = 10L;
+
+        // when & then
+        assertThat(chatRoomManager.isInRoom(chatRoomId, memberId)).isFalse();
+    }
+
+    @Test
+    @DisplayName("동일 멤버의 세션이 여러 개여도 isInRoom이 true를 반환한다.")
+    void isInRoom_returnsTrueForMultipleSessionsSameMember() {
+        // given
+        Long chatRoomId = 1L;
+        Long memberId = 10L;
+
+        WebSocketSession sessionA = mock(WebSocketSession.class);
+        given(sessionA.getAttributes()).willReturn(Map.of(SessionConst.SESSION_ID, memberId));
+        WebSocketSession sessionB = mock(WebSocketSession.class);
+        given(sessionB.getAttributes()).willReturn(Map.of(SessionConst.SESSION_ID, memberId));
+
+        chatRoomManager.addSessionToRoom(sessionA, chatRoomId);
+        chatRoomManager.addSessionToRoom(sessionB, chatRoomId);
+
+        // when & then
+        assertThat(chatRoomManager.isInRoom(chatRoomId, memberId)).isTrue();
+    }
+
+    @Test
+    @DisplayName("마지막 세션 제거 후 isInRoom이 false를 반환한다.")
+    void isInRoom_returnsFalseAfterSessionRemoved() {
+        // given
+        Long chatRoomId = 1L;
+        Long memberId = 10L;
+
+        WebSocketSession session = mock(WebSocketSession.class);
+        given(session.getAttributes()).willReturn(Map.of(SessionConst.SESSION_ID, memberId));
+        chatRoomManager.addSessionToRoom(session, chatRoomId);
+        chatRoomManager.removeChatRoomSession(chatRoomId, session);
+
+        // when & then
+        assertThat(chatRoomManager.isInRoom(chatRoomId, memberId)).isFalse();
+    }
+
+    @Test
+    @DisplayName("다른 방으로 이동 시 이전 방에서 세션이 자동으로 제거된다.")
+    void addSessionToRoom_switchRoomTest() {
+        // given
+        Long room1 = 1L;
+        Long room2 = 2L;
+        Long memberId = 10L;
+
+        WebSocketSession session = mock(WebSocketSession.class);
+        given(session.getAttributes()).willReturn(Map.of(SessionConst.SESSION_ID,
+                memberId));
+
+        chatRoomManager.addSessionToRoom(session, room1);
+        assertThat(chatRoomManager.isInRoom(room1, memberId)).isTrue();
+
+        // when: 2방으로 이동
+        chatRoomManager.addSessionToRoom(session, room2);
+
+        // then: 1방에서 제거, 2방에만 존재
+        assertThat(chatRoomManager.isInRoom(room1, memberId)).isFalse();
+        assertThat(chatRoomManager.isInRoom(room2, memberId)).isTrue();
+        assertThat(chatRoomManager.getWebSocketSessionBy(room1)).isEmpty();
+        assertThat(chatRoomManager.getChatRoomIdsBy(memberId)).containsExactly(room2);
+    }
 }
