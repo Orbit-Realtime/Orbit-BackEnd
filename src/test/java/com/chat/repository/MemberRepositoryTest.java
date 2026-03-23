@@ -92,12 +92,9 @@ class MemberRepositoryTest {
         ChatRoom chatRoom = ChatRoom.of(title);
         ChatRoom savedChatRoom = chatRoomRepository.save(chatRoom);
 
-        ChatRoomParticipant firstrChatRoomParticipant = new ChatRoomParticipant(true, firstMember, savedChatRoom);
-        chatRoomParticipantRepository.save(firstrChatRoomParticipant);
-        ChatRoomParticipant secondChatRoomParticipant = new ChatRoomParticipant(true, secondMember, savedChatRoom);
-        chatRoomParticipantRepository.save(secondChatRoomParticipant);
-        ChatRoomParticipant thirdChatRoomParticipant = new ChatRoomParticipant(false, thirdMember, savedChatRoom);
-        chatRoomParticipantRepository.save(thirdChatRoomParticipant);
+        chatRoomParticipantRepository.save(ChatRoomParticipant.builder().member(firstMember).chatRoom(savedChatRoom).build());
+        chatRoomParticipantRepository.save(ChatRoomParticipant.builder().member(secondMember).chatRoom(savedChatRoom).build());
+        chatRoomParticipantRepository.save(ChatRoomParticipant.builder().member(thirdMember).chatRoom(savedChatRoom).build());
 
         // when
         List<Long> memberIds = memberRepository.findMemberIdsIn(chatRoom.getId());

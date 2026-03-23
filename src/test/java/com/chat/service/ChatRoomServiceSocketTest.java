@@ -303,6 +303,7 @@ public class ChatRoomServiceSocketTest {
         assertThat(payload).isNotEmpty();
         assertThat(node.get("messageType").asText()).isEqualTo("UPDATE_CHAT_ROOM");
         assertThat(node.get("chatRoomId").asLong()).isEqualTo(chatRoomId);
+        assertThat(node.get("title").asText()).isEqualTo("title");
         assertThat(node.get("lastMessage").asText()).isEqualTo("secondChat");
         assertThat(node.get("unreadMessageCount").asLong()).isEqualTo(1L);
     }

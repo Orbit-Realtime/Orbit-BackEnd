@@ -54,7 +54,6 @@ public class TestDataFixture {
             ChatRoomParticipant chatRoomParticipant = ChatRoomParticipant.builder()
                     .chatRoom(savedChatRoom)
                     .member(participant)
-                    .isParticipate(false)
                     .build();
             chatRoomParticipantRepository.save(chatRoomParticipant);
         }
