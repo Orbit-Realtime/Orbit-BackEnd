@@ -6,7 +6,7 @@ import com.chat.fixture.ChatFixture;
 import com.chat.fixture.MemberFixture;
 import com.chat.fixture.TestDataFixture;
 import com.chat.repository.ChatRoomParticipantRepository;
-import com.chat.service.ChatRoomService;
+import com.chat.service.dtos.chat.EnterRoomRequest;
 import com.chat.service.dtos.chat.SendChat;
 import com.chat.socket.manager.ChatRoomManager;
 import com.chat.socket.manager.WebsocketSessionManager;
@@ -48,9 +48,6 @@ class IntegrationTextSocketHandlerTest {
     private MemberFixture memberFixture;
     @Autowired
     private ChatFixture chatFixture;
-    @Autowired
-    private ChatRoomService chatRoomService;
-
     @Autowired
     private ChatRoomParticipantRepository chatRoomParticipantRepository;
 
@@ -135,7 +132,7 @@ class IntegrationTextSocketHandlerTest {
                 .get();
 
         WebSocketSession serverSession = websocketSessionManager.getSessionBy(memberId).iterator().next();
-        chatRoomService.connectChatRoomSocket(serverSession, memberId, chatRoomId);
+        chatRoomManager.addSessionToRoom(serverSession, chatRoomId);
 
         ObjectMapper objectMapper = new ObjectMapper();
         SendChat sendChat = SendChat
@@ -200,6 +197,50 @@ class IntegrationTextSocketHandlerTest {
         assertThat(anyMessageReceived).isFalse();
         assertThat(receivedMessages).isEmpty();
         assertThat(chatRoomManager.getWebSocketSessionBy(chatRoomId)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("ENTER_ROOM 메시지 전송 시 chatRoomManager에 세션이 등록된다.")
+    void enterRoomTest() throws ExecutionException, InterruptedException, IOException {
+        // given
+        String username = "username";
+        Member member = memberFixture.saveEncryptPasswordBy(username);
+        Long memberId = member.getId();
+
+        List<Member> participants = new ArrayList<>();
+        participants.add(member);
+        ChatRoom chatRoom = fixture.savedChatRoomBy("title", participants);
+        Long chatRoomId = chatRoom.getId();
+
+        String JSessionId = memberFixture.loginRequestBy(username, port);
+
+        WebSocketHttpHeaders headers = new WebSocketHttpHeaders();
+        headers.add("Cookie", "JSESSIONID=" + JSessionId);
+
+        CountDownLatch latch = new CountDownLatch(1);
+        List<String> receivedMessages = new ArrayList<>();
+        TestWebSocketHandler handler = new TestWebSocketHandler(memberId, receivedMessages, latch);
+
+        WebSocketClient client = new StandardWebSocketClient();
+        client.execute(handler,
+                        headers,
+                        URI.create("ws://localhost:" + port + "/ws/chat"))
+                .get();
+
+        EnterRoomRequest enterRoomRequest = EnterRoomRequest.builder()
+                .messageType(MessageType.ENTER_ROOM)
+                .chatRoomId(chatRoomId)
+                .build();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        // when
+        WebSocketSession serverSession = websocketSessionManager.getSessionBy(memberId).iterator().next();
+        serverSession.sendMessage(new TextMessage(objectMapper.writeValueAsString(enterRoomRequest)));
+
+        // then
+        latch.await(1, TimeUnit.SECONDS);
+        assertThat(chatRoomManager.getWebSocketSessionBy(chatRoomId)).isNotEmpty();
     }
 
     @Test
