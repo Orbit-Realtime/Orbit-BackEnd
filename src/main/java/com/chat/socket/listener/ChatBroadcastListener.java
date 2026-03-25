@@ -3,7 +3,6 @@ package com.chat.socket.listener;
 import com.chat.exception.CustomException;
 import com.chat.exception.ErrorCode;
 import com.chat.service.ChatRoomService;
-import com.chat.socket.event.PublishEnterRoomEvent;
 import com.chat.socket.event.PublishMessageEvent;
 import com.chat.socket.manager.ChatRoomManager;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -54,10 +53,5 @@ public class ChatBroadcastListener {
         }
 
         chatRoomService.broadcastToChatRoomMembers(event.getChatRoomId());
-    }
-
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void publishEventRoomToSessions(PublishEnterRoomEvent event) {
-        chatRoomManager.addSessionToRoom(event.getSession(), event.getChatRoomId());
     }
 }

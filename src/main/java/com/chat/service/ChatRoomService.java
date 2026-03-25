@@ -15,13 +15,11 @@ import com.chat.service.dtos.chat.BroadcastChat;
 import com.chat.service.dtos.chat.ReadEvent;
 import com.chat.service.dtos.chat.SendChat;
 import com.chat.service.dtos.chat.UpdateChatRoom;
-import com.chat.socket.event.PublishEnterRoomEvent;
 import com.chat.socket.event.PublishMessageEvent;
 import com.chat.socket.manager.ChatRoomManager;
 import com.chat.socket.manager.WebsocketSessionManager;
 import com.chat.utils.consts.SessionConst;
 import com.chat.utils.message.MessageType;
-import com.chat.utils.valid.IdValidator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -58,12 +56,6 @@ public class ChatRoomService {
     private final ChatRepository chatRepository;
     private final ChatReadRepository chatReadRepository;
     private final MemberRepository memberRepository;
-
-    public void connectChatRoomSocket(WebSocketSession session, Long memberId, Long chatRoomId) {
-
-        IdValidator.requireIds(memberId, chatRoomId);
-        publisher.publishEvent(new PublishEnterRoomEvent(session, chatRoomId));
-    }
 
     @Transactional
     public void broadCastMessage(Long memberId, SendChat sendChat) {

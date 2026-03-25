@@ -10,6 +10,7 @@ import com.chat.socket.manager.ChatRoomManager;
 import com.chat.socket.manager.WebsocketSessionManager;
 import com.chat.utils.consts.SessionConst;
 import com.chat.utils.message.BaseWebSocketMessage;
+import com.chat.utils.valid.IdValidator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -69,8 +70,8 @@ public class IntegrationTextSocketHandler extends TextWebSocketHandler {
                 break;
             case ENTER_ROOM:
                 EnterRoomRequest enterRoomRequest = (EnterRoomRequest) baseMessage;
-                Long memberId = (Long) session.getAttributes().get(SessionConst.SESSION_ID);
-                chatRoomService.connectChatRoomSocket(session, memberId, enterRoomRequest.getChatRoomId());
+                IdValidator.requireChatRoomId(enterRoomRequest.getChatRoomId());
+                chatRoomManager.addSessionToRoom(session, enterRoomRequest.getChatRoomId());
 
                 break;
             default:
