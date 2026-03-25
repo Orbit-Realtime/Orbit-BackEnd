@@ -90,7 +90,7 @@ public class ChatRoomService {
         publisher.publishEvent(new PublishMessageEvent(broadcastChat, chatRoomId));
     }
 
-    public void broadcastAfterRead(Long memberId, Long chatRoomId) {
+    public void broadcastAfterRead(Long memberId, Long chatRoomId, Long lastReadChatId) {
 
         broadcastToChatRoomMembers(chatRoomId);
 
@@ -99,7 +99,7 @@ public class ChatRoomService {
             return;
         }
 
-        ReadEvent readEvent = new ReadEvent(memberId, chatRoomId);
+        ReadEvent readEvent = new ReadEvent(memberId, chatRoomId, lastReadChatId);
         String message;
         try {
             message = objectMapper.writeValueAsString(readEvent);

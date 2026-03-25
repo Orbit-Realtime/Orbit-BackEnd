@@ -96,7 +96,7 @@ public class ChatService {
         List<Chat> chats = chatRepository.findChatHistory(chatRoomId);
 
         if (chats.isEmpty()) {
-            return new ChatHistoryResponse(null, List.of());
+            return new ChatHistoryResponse(null, List.of(), 0);
         }
 
         List<Long> chatIds = chats.stream()
@@ -107,7 +107,7 @@ public class ChatService {
                 .stream().findFirst().orElse(null);
         Long lastReadChatId = lastChatRead != null ? lastChatRead.getLastChatReadId() : null;
 
-        chatReadRepository.updateUnreadChatReadsToRead(memberId, chatRoomId);
+        int updatedCount = chatReadRepository.updateUnreadChatReadsToRead(memberId, chatRoomId);
 
         Map<Long, Long> unreadMemberCountMap = chatReadRepository.countUnreadByChatIds(chatIds).stream()
                 .collect(Collectors.toMap(
@@ -130,6 +130,6 @@ public class ChatService {
                     .build());
         }
 
-        return new ChatHistoryResponse(lastReadChatId, messages);
+        return new ChatHistoryResponse(lastReadChatId, messages, updatedCount);
     }
 }

@@ -86,6 +86,26 @@ public class MemberService {
         return getMembersResponses;
     }
 
+    @Transactional
+    public void changeNickname(Long memberId, String nickname) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
+        member.changeNickname(nickname);
+    }
+
+    @Transactional
+    public void changePassword(Long memberId, String currentPassword, String newPassword) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
+
+        boolean isMatch = passwordEncoder.match(currentPassword, member.getPassword());
+        if (!isMatch) {
+            throw new CustomException(ErrorCode.PASSWORD_NOT_MATCH);
+        }
+
+        member.changePassword(passwordEncoder.encode(newPassword));
+    }
+
     public void removeSession(Long memberId, WebSocketSession closingSession) {
 
         Set<Long> chatRoomIds = chatRoomManager.getChatRoomIdsBy(memberId);

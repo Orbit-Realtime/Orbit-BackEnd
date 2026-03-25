@@ -27,7 +27,9 @@ public class ChatApiController {
         // 채팅 내역 조회
         ChatHistoryResponse chatHistory = chatService.findChatHistory(chatRoomId, loginMemberId);
 
-        chatRoomService.broadcastAfterRead(loginMemberId, chatRoomId);
+        if (chatHistory.getUpdatedCount() > 0) {
+            chatRoomService.broadcastAfterRead(loginMemberId, chatRoomId, chatHistory.getLastReadChatId());
+        }
 
         return Result
                 .<ChatHistoryResponse>builder()

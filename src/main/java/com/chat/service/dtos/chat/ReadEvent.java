@@ -11,4 +11,5 @@ public class ReadEvent {
     private final MessageType messageType = MessageType.READ_EVENT;
     private final Long memberId;
     private final Long chatRoomId;
+    private final Long lastReadChatId;
 }
