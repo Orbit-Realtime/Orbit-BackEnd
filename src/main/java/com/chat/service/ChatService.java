@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -116,7 +117,7 @@ public class ChatService {
 
         int updatedCount = chatReadRepository.updateUnreadChatReadsToRead(memberId, chatRoomId);
         if (updatedCount > 0) {
-            Map<Long, UpdateChatRoom> updatesByMemberId = broadcastDataBuilder.build(chatRoomId);
+            Map<Long, UpdateChatRoom> updatesByMemberId = broadcastDataBuilder.build(chatRoomId, Set.of(memberId));
             publisher.publishEvent(new PublishReadEvent(
                     memberId,
                     chatRoomId,

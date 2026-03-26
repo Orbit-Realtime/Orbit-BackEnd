@@ -16,9 +16,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
@@ -32,13 +30,16 @@ public class BroadcastDataBuilder {
     private final ChatReadRepository chatReadRepository;
 
     public Map<Long, UpdateChatRoom> build(Long chatRoomId) {
-
-        if (chatRoomId == null) {
-            return Map.of();
-        }
+        if (chatRoomId == null) return Map.of();
 
         List<Long> memberIds = memberRepository.findMemberIdsIn(chatRoomId);
-        if (memberIds.isEmpty()) {
+        if (memberIds.isEmpty()) return Map.of();
+
+        return build(chatRoomId, new HashSet<>(memberIds));
+    }
+
+    public Map<Long, UpdateChatRoom> build(Long chatRoomId, Set<Long> targetMemberIds) {
+        if (chatRoomId == null || targetMemberIds == null || targetMemberIds.isEmpty()) {
             return Map.of();
         }
 
@@ -48,31 +49,27 @@ public class BroadcastDataBuilder {
 
         Chat lastChat = chatRepository
                 .findLastChatBy(chatRoomId, PageRequest.of(0, 1))
-                .stream()
-                .findFirst()
-                .orElse(null);
+                .stream().findFirst().orElse(null);
 
         Map<Long, Long> unreadCountMap = chatReadRepository
-                .findUnReadCountsBy(chatRoomId, memberIds)
+                .findUnReadCountsBy(chatRoomId, new ArrayList<>(targetMemberIds))
                 .stream()
                 .collect(Collectors.toMap(
                         MemberUnreadCount::getMemberId,
                         MemberUnreadCount::getUnreadMemberCount
                 ));
 
-        Map<Long, UpdateChatRoom> result = new HashMap<>();
-        for (Long memberId : memberIds) {
-            UpdateChatRoom updateChatRoom = UpdateChatRoom.builder()
-                    .messageType(MessageType.UPDATE_CHAT_ROOM)
-                    .chatRoomId(chatRoomId)
-                    .title(chatRoom.getTitle())
-                    .lastMessage(lastChat != null ? lastChat.getMessage() : null)
-                    .createdDate(lastChat != null ? lastChat.getCreatedDate() : null)
-                    .unreadMessageCount(unreadCountMap.getOrDefault(memberId, 0L))
-                    .build();
-            result.put(memberId, updateChatRoom);
-        }
-
-        return result;
+        return targetMemberIds.stream()
+                .collect(Collectors.toMap(
+                        memberId -> memberId,
+                        memberId -> UpdateChatRoom.builder()
+                                .messageType(MessageType.UPDATE_CHAT_ROOM)
+                                .chatRoomId(chatRoomId)
+                                .title(chatRoom.getTitle())
+                                .lastMessage(lastChat != null ? lastChat.getMessage() : null)
+                                .createdDate(lastChat != null ? lastChat.getCreatedDate() : null)
+                                .unreadMessageCount(unreadCountMap.getOrDefault(memberId, 0L))
+                                .build()
+                ));
     }
 }
