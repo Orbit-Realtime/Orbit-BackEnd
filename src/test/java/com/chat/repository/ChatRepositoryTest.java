@@ -156,6 +156,150 @@ class ChatRepositoryTest {
         assertThat(lastChats.get(0).getId()).isEqualTo(chat.getId());
     }
 
+    @Test
+    @DisplayName("채팅방 ID로 최신 메시지를 id 내림차순으로 조회한다.")
+    void findLatestChatsTest() {
+        // given
+        Member member = createMember("user");
+        ChatRoom chatRoom = createChatRoom("room");
+
+        Chat first = chatRepository.save(new Chat("first", member, chatRoom));
+        Chat second = chatRepository.save(new Chat("second", member, chatRoom));
+        Chat third = chatRepository.save(new Chat("third", member, chatRoom));
+
+        Pageable limit2 = PageRequest.of(0, 2);
+
+        // when
+        List<Chat> result = chatRepository.findLatestChats(chatRoom.getId(), limit2);
+
+        // then
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0)).isEqualTo(third);
+        assertThat(result.get(1)).isEqualTo(second);
+    }
+
+    @Test
+    @DisplayName("최신 메시지 조회 시 다른 채팅방의 메시지는 포함되지 않는다.")
+    void findLatestChats_doesNotIncludeOtherRoomsTest() {
+        // given
+        Member member = createMember("user");
+        ChatRoom targetRoom = createChatRoom("target");
+        ChatRoom otherRoom = createChatRoom("other");
+
+        Chat targetChat = chatRepository.save(new Chat("target message", member, targetRoom));
+        chatRepository.save(new Chat("other message", member, otherRoom));
+
+        Pageable limit10 = PageRequest.of(0, 10);
+
+        // when
+        List<Chat> result = chatRepository.findLatestChats(targetRoom.getId(), limit10);
+
+        // then
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0)).isEqualTo(targetChat);
+    }
+
+    @Test
+    @DisplayName("메시지가 없는 채팅방의 최신 메시지 조회는 빈 리스트를 반환한다.")
+    void findLatestChats_emptyRoom_returnsEmptyListTest() {
+        // given
+        ChatRoom emptyRoom = createChatRoom("empty");
+        Pageable limit10 = PageRequest.of(0, 10);
+
+        // when
+        List<Chat> result = chatRepository.findLatestChats(emptyRoom.getId(), limit10);
+
+        // then
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    @DisplayName("커서 id보다 작은 메시지를 id 내림차순으로 조회한다.")
+    void findChatsBeforeIdTest() {
+        // given
+        Member member = createMember("user");
+        ChatRoom chatRoom = createChatRoom("room");
+
+        Chat first = chatRepository.save(new Chat("first", member, chatRoom));
+        Chat second = chatRepository.save(new Chat("second", member, chatRoom));
+        Chat third = chatRepository.save(new Chat("third", member, chatRoom));
+
+        Pageable limit10 = PageRequest.of(0, 10);
+
+        // when
+        List<Chat> result = chatRepository.findChatsBeforeId(chatRoom.getId(), third.getId(), limit10);
+
+        // then
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0)).isEqualTo(second);
+        assertThat(result.get(1)).isEqualTo(first);
+    }
+
+    @Test
+    @DisplayName("커서 id보다 오래된 메시지가 없으면 빈 리스트를 반환한다.")
+    void findChatsBeforeId_noPreviousMessages_returnsEmptyTest() {
+        // given
+        Member member = createMember("user");
+        ChatRoom chatRoom = createChatRoom("room");
+
+        Chat firstChat = chatRepository.save(new Chat("only message", member, chatRoom));
+
+        Pageable limit10 = PageRequest.of(0, 10);
+
+        // when
+        List<Chat> result = chatRepository.findChatsBeforeId(chatRoom.getId(), firstChat.getId(), limit10);
+
+        // then
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    @DisplayName("커서 기반 조회는 Pageable size 만큼만 반환한다.")
+    void findChatsBeforeId_respectsPageableLimitTest() {
+        // given
+        Member member = createMember("user");
+        ChatRoom chatRoom = createChatRoom("room");
+
+        Chat first = chatRepository.save(new Chat("first", member, chatRoom));
+        Chat second = chatRepository.save(new Chat("second", member, chatRoom));
+        Chat third = chatRepository.save(new Chat("third", member, chatRoom));
+        Chat fourth = chatRepository.save(new Chat("fourth", member, chatRoom));
+        Chat fifth = chatRepository.save(new Chat("fifth", member, chatRoom));
+
+        Pageable limit2 = PageRequest.of(0, 2);
+
+        // when
+        List<Chat> result = chatRepository.findChatsBeforeId(chatRoom.getId(), fifth.getId(), limit2);
+
+        // then
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0)).isEqualTo(fourth);
+        assertThat(result.get(1)).isEqualTo(third);
+    }
+
+    @Test
+    @DisplayName("커서 기반 조회 시 다른 채팅방의 메시지는 포함되지 않는다.")
+    void findChatsBeforeId_doesNotIncludeOtherRoomsTest() {
+        // given
+        Member member = createMember("user");
+        ChatRoom targetRoom = createChatRoom("target");
+        ChatRoom otherRoom = createChatRoom("other");
+
+        chatRepository.save(new Chat("other message", member, otherRoom));
+        Chat targetFirst = chatRepository.save(new Chat("target first", member, targetRoom));
+        Chat targetSecond = chatRepository.save(new Chat("target second", member, targetRoom));
+
+        Pageable limit10 = PageRequest.of(0, 10);
+
+        // when
+        List<Chat> result = chatRepository.findChatsBeforeId(
+                targetRoom.getId(), targetSecond.getId(), limit10);
+
+        // then
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0)).isEqualTo(targetFirst);
+    }
+
     private Member createMember(String username) {
         String commonPassword = "password";
         Member member = Member.of(username, commonPassword, username);
