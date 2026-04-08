@@ -31,4 +31,21 @@ public interface ChatRepository extends JpaRepository<Chat, Long> {
             "   GROUP BY c2.chatRoom.id" +
             " )")
     List<Chat> findLastChatsBy(@Param("chatRoomIds") List<Long> chatRoomIds);
+
+    @Query("SELECT c" +
+            " FROM Chat c" +
+            " JOIN FETCH c.member" +
+            " WHERE c.chatRoom.id = :chatRoomId" +
+            " ORDER BY c.id DESC")
+    List<Chat> findLatestChats(@Param("chatRoomId") Long chatRoomId, Pageable pageable);
+
+    @Query("SELECT c" +
+            " FROM Chat c" +
+            " JOIN FETCH c.member" +
+            " WHERE c.chatRoom.id = :chatRoomId" +
+            " AND c.id < :beforeChatId" +
+            " ORDER BY c.id DESC")
+    List<Chat> findChatsBeforeId(@Param("chatRoomId") Long chatRoomId,
+                                 @Param("beforeChatId") Long beforeChatId,
+                                 Pageable pageable);
 }
