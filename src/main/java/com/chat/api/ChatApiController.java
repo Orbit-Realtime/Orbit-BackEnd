@@ -20,10 +20,11 @@ public class ChatApiController {
 
     @GetMapping("/api/chats")
     public Result<ChatHistoryResponse> chatHistory(@RequestParam("chatRoomId") Long chatRoomId,
+                                                 @RequestParam(value = "beforeChatId", required = false) Long beforeChatId,
                                                  @SessionAttribute(name = SessionConst.SESSION_ID) Long loginMemberId) {
 
         // 채팅 내역 조회
-        ChatHistoryResponse chatHistory = chatService.findChatHistory(chatRoomId, loginMemberId);
+        ChatHistoryResponse chatHistory = chatService.findChatHistory(chatRoomId, loginMemberId, beforeChatId);
 
         return Result
                 .<ChatHistoryResponse>builder()
