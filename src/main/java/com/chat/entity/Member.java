@@ -2,10 +2,7 @@ package com.chat.entity;
 
 import com.chat.exception.CustomException;
 import com.chat.exception.ErrorCode;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,6 +10,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(indexes = {@Index(name = "idx_member_username", columnList = "username", unique = true)})
 public class Member extends BaseEntity {
 
     @Id @GeneratedValue

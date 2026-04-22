@@ -11,6 +11,10 @@ import static jakarta.persistence.FetchType.LAZY;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(indexes = {
+        @Index(name = "idx_chat_room_participant_chat_room_id", columnList = "chat_room_id"),
+        @Index(name = "idx_chat_room_participant_member_id",   columnList = "member_id")
+})
 public class ChatRoomParticipant extends BaseEntity {
 
     @Id
