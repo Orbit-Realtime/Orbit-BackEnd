@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketSession;
+import org.springframework.web.socket.handler.ConcurrentWebSocketSessionDecorator;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -21,9 +22,21 @@ public class WebsocketSessionManager {
     private final Map<Long, Set<WebSocketSession>> activeMemberSessions = new ConcurrentHashMap<>();
 
     public void addSession(Long memberId, WebSocketSession session) {
+
+        ConcurrentWebSocketSessionDecorator safeSession
+                = new ConcurrentWebSocketSessionDecorator(session, 10_000, 256 * 1024);
+
         activeMemberSessions
                 .computeIfAbsent(memberId, k -> ConcurrentHashMap.newKeySet())
-                .add(session);
+                .add(safeSession);
+    }
+
+    public WebSocketSession getWrappedSession(WebSocketSession rawSession) {
+        return activeMemberSessions.values().stream()
+                .flatMap(Set::stream)
+                .filter(s -> s.getId().equals(rawSession.getId()))
+                .findFirst()
+                .orElse(rawSession);
     }
 
     public Collection<WebSocketSession> getSessionBy(Long memberId) {
@@ -34,7 +47,7 @@ public class WebsocketSessionManager {
     public void removeSession(Long memberId, WebSocketSession session) {
 
         activeMemberSessions.computeIfPresent(memberId, (k, sessions) -> {
-            sessions.remove(session);
+            sessions.removeIf(s -> s.getId().equals(session.getId()));
             return sessions.isEmpty() ? null : sessions;
         });
     }

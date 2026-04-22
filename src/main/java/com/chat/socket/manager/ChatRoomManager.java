@@ -58,7 +58,7 @@ public class ChatRoomManager {
             return false;
         }
 
-        sessions.remove(closingSession);
+        sessions.removeIf(s -> s.getId().equals(closingSession.getId()));
 
         Long memberId = (Long) closingSession.getAttributes().get(SessionConst.SESSION_ID);
         // 이 방에 같은 memberId의 다른 세션이 남아있는지 확인

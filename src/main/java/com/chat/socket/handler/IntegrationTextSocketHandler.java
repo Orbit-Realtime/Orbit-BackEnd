@@ -57,8 +57,10 @@ public class IntegrationTextSocketHandler extends TextWebSocketHandler {
                 Long chatRoomId = sendChat.getChatRoomId();
                 Long loginMemberId = (Long) session.getAttributes().get(SessionConst.SESSION_ID);
 
-                if (!chatRoomManager.getWebSocketSessionBy(chatRoomId).contains(session)) {
-                    log.warn("session not in room: session={}, chatRoomId={}", session.getId(), chatRoomId);
+                if (chatRoomManager.getWebSocketSessionBy(chatRoomId).stream()
+                        .noneMatch(s -> s.getId().equals(session.getId()))) {
+                    log.warn("session not in room: session={}, chatRoomId={}", session.getId(),
+                            chatRoomId);
                     break;
                 }
 
@@ -70,7 +72,8 @@ public class IntegrationTextSocketHandler extends TextWebSocketHandler {
             case ENTER_ROOM:
                 EnterRoomRequest enterRoomRequest = (EnterRoomRequest) baseMessage;
                 IdValidator.requireChatRoomId(enterRoomRequest.getChatRoomId());
-                chatRoomManager.addSessionToRoom(session, enterRoomRequest.getChatRoomId());
+                WebSocketSession safeSession = websocketSessionManager.getWrappedSession(session);
+                chatRoomManager.addSessionToRoom(safeSession, enterRoomRequest.getChatRoomId());
 
                 break;
             default:
