@@ -4,14 +4,11 @@ import com.chat.api.response.chatroom.ChatRoomMemberResponse;
 import com.chat.api.response.chatroom.ChatRoomsResponse;
 import com.chat.api.response.chatroom.OpponentResponse;
 import com.chat.entity.Chat;
-import com.chat.entity.ChatRead;
 import com.chat.entity.ChatRoom;
 import com.chat.entity.ChatRoomParticipant;
 import com.chat.entity.Member;
 import com.chat.exception.CustomException;
 import com.chat.fixture.TestDataFixture;
-import com.chat.repository.ChatReadRepository;
-import com.chat.repository.ChatRepository;
 import com.chat.repository.ChatRoomParticipantRepository;
 import com.chat.repository.ChatRoomRepository;
 import com.chat.service.dtos.SaveChatRoomDTO;
@@ -39,10 +36,6 @@ class ChatRoomServiceTest {
     private ChatRoomRepository chatRoomRepository;
     @Autowired
     private ChatRoomParticipantRepository chatRoomParticipantRepository;
-    @Autowired
-    private ChatRepository chatRepository;
-    @Autowired
-    private ChatReadRepository chatReadRepository;
     @Autowired
     private TestDataFixture fixture;
 
@@ -156,7 +149,7 @@ class ChatRoomServiceTest {
     }
 
     @Test
-    @DisplayName("채팅방 목록 조회 시 읽지 않은 메시지 수가 포함된다.")
+    @DisplayName("채팅방 목록 조회 시 cursor 이후 메시지 수가 unread count로 반환된다.")
     void findChatRooms_unReadCountTest() {
         // given
         Member me = fixture.savedMemberBy("me");
@@ -164,17 +157,18 @@ class ChatRoomServiceTest {
         ChatRoom chatRoom = fixture.savedChatRoomBy("title", List.of(me, other));
 
         Chat firstChat = fixture.savedSimpleChat("msg1", other, chatRoom);
-        Chat secondChat = fixture.savedSimpleChat("msg2", other, chatRoom);
+        fixture.savedSimpleChat("msg2", other, chatRoom);
 
-        chatReadRepository.save(new ChatRead(false, me, firstChat));
-        chatReadRepository.save(new ChatRead(false, me, secondChat));
+        // me cursor를 첫 번째 메시지까지만 읽음 → 두 번째 메시지만 unread
+        chatRoomParticipantRepository.updateLastReadChatId(
+                me.getId(), chatRoom.getId(), firstChat.getId());
 
         // when
         List<ChatRoomsResponse> chatRooms = chatRoomService.findChatRooms(me.getId());
 
         // then
         assertThat(chatRooms).hasSize(1);
-        assertThat(chatRooms.get(0).getUnreadMessageCount()).isEqualTo(2L);
+        assertThat(chatRooms.get(0).getUnreadMessageCount()).isEqualTo(1L);
     }
 
     @Test
@@ -305,7 +299,46 @@ class ChatRoomServiceTest {
         assertThat(participants).hasSize(2);
     }
 
-    // todo connect & broadCastMessage 테스트 필요
+    @Test
+    @DisplayName("lastReadChatId가 null이면 채팅방의 모든 메시지가 unread count에 포함된다.")
+    void findChatRooms_nullCursor_allMessagesUnreadTest() {
+        // given
+        Member me = fixture.savedMemberBy("me");
+        Member other = fixture.savedMemberBy("other");
+        ChatRoom chatRoom = fixture.savedChatRoomBy("title", List.of(me, other));
+
+        fixture.savedSimpleChat("msg1", other, chatRoom);
+        fixture.savedSimpleChat("msg2", other, chatRoom);
+        // me cursor: null — 한 번도 읽지 않음
+
+        // when
+        List<ChatRoomsResponse> chatRooms = chatRoomService.findChatRooms(me.getId());
+
+        // then
+        assertThat(chatRooms.get(0).getUnreadMessageCount()).isEqualTo(2L);
+    }
+
+    @Test
+    @DisplayName("cursor가 최신 메시지와 같으면 unread count는 0이다.")
+    void findChatRooms_cursorAtLatest_unreadZeroTest() {
+        // given
+        Member me = fixture.savedMemberBy("me");
+        Member other = fixture.savedMemberBy("other");
+        ChatRoom chatRoom = fixture.savedChatRoomBy("title", List.of(me, other));
+
+        fixture.savedSimpleChat("msg1", other, chatRoom);
+        Chat lastChat = fixture.savedSimpleChat("msg2", other, chatRoom);
+
+        // me cursor를 최신 메시지로 설정
+        chatRoomParticipantRepository.updateLastReadChatId(
+                me.getId(), chatRoom.getId(), lastChat.getId());
+
+        // when
+        List<ChatRoomsResponse> chatRooms = chatRoomService.findChatRooms(me.getId());
+
+        // then
+        assertThat(chatRooms.get(0).getUnreadMessageCount()).isEqualTo(0L);
+    }
 
     private List<Member> createParticipantsBy(Member first, Member second) {
         List<Member> participants = new ArrayList<>();
