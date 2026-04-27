@@ -1,6 +1,7 @@
 package com.chat.repository;
 
 import com.chat.entity.ChatRoomParticipant;
+import com.chat.repository.dtos.ChatRoomUnreadCount;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -51,4 +52,24 @@ public interface ChatRoomParticipantRepository extends JpaRepository<ChatRoomPar
     @Query("DELETE FROM ChatRoomParticipant crp" +
             " WHERE crp.chatRoom.id = :chatRoomId AND crp.member.id = :memberId")
     void deleteBy(@Param("chatRoomId") Long chatRoomId, @Param("memberId") Long memberId);
+
+    @Modifying
+    @Query("UPDATE ChatRoomParticipant crp" +
+            " SET crp.lastReadChatId = :chatId" +
+            " WHERE crp.member.id = :memberId" +
+            " AND crp.chatRoom.id = :chatRoomId" +
+            " AND (crp.lastReadChatId IS NULL OR crp.lastReadChatId < :chatId)")
+    int updateLastReadChatId(@Param("memberId") Long memberId,
+                             @Param("chatRoomId") Long chatRoomId,
+                             @Param("chatId") Long chatId);
+
+    @Query("SELECT new com.chat.repository.dtos.ChatRoomUnreadCount(crp.chatRoom.id, COUNT(c))" +
+            " FROM ChatRoomParticipant crp" +
+            " JOIN Chat c ON c.chatRoom.id = crp.chatRoom.id" +
+            " WHERE crp.chatRoom.id IN :chatRoomIds" +
+            " AND crp.member.id = :memberId" +
+            " AND (crp.lastReadChatId IS NULL OR c.id > crp.lastReadChatId)" +
+            " GROUP BY crp.chatRoom.id")
+    List<ChatRoomUnreadCount> findCursorUnreadCountsBy(@Param("chatRoomIds") List<Long> chatRoomIds,
+                                                       @Param("memberId") Long memberId);
 }

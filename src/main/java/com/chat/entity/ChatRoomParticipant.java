@@ -22,6 +22,9 @@ public class ChatRoomParticipant extends BaseEntity {
     @Column(name = "chat_room_participant_id")
     private Long id;
 
+    @Column(name = "last_read_chat_id")
+    private Long lastReadChatId;
+
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "member_id")
     private Member member;
@@ -34,5 +37,15 @@ public class ChatRoomParticipant extends BaseEntity {
     public ChatRoomParticipant(Member member, ChatRoom chatRoom) {
         this.member = member;
         this.chatRoom = chatRoom;
+    }
+
+    public void updateLastReadChatId(Long chatId) {
+        if (chatId == null) {
+            return;
+        }
+
+        if (this.lastReadChatId == null || this.lastReadChatId < chatId) {
+            this.lastReadChatId = chatId;
+        }
     }
 }
