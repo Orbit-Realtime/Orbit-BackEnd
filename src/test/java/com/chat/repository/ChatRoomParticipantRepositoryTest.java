@@ -1,8 +1,10 @@
 package com.chat.repository;
 
+import com.chat.entity.Chat;
 import com.chat.entity.ChatRoom;
 import com.chat.entity.ChatRoomParticipant;
 import com.chat.entity.Member;
+import com.chat.repository.dtos.ChatRoomUnreadCount;
 import jakarta.persistence.EntityManager;
 import org.hibernate.Session;
 import org.junit.jupiter.api.DisplayName;
@@ -28,6 +30,8 @@ class ChatRoomParticipantRepositoryTest {
     private ChatRoomRepository chatRoomRepository;
     @Autowired
     private MemberRepository memberRepository;
+    @Autowired
+    private ChatRepository chatRepository;
     @Autowired
     private EntityManager em;
 
@@ -276,6 +280,101 @@ class ChatRoomParticipantRepositoryTest {
         // then
         ChatRoomParticipant result = chatRoomParticipantRepository.findChatRoomBy(chatRoom.getId(), member.getId());
         assertThat(result).isNull();
+    }
+
+    @Test
+    @DisplayName("채팅방 참여 생성 시 lastReadChatId 기본값은 null 이다.")
+    void lastReadChatIdDefaultNullTest() {
+        // given
+        Member member = createMemberBy("member");
+        ChatRoom chatRoom = createChatRoomBy("room");
+
+        // when
+        ChatRoomParticipant saved = chatRoomParticipantRepository.save(
+                ChatRoomParticipant.builder().member(member).chatRoom(chatRoom).build()
+        );
+
+        // then
+        assertThat(saved.getLastReadChatId()).isNull();
+    }
+
+    @Test
+    @DisplayName("lastReadChatId 가 null 인 경우 특정 chatId 로 갱신된다.")
+    void updateLastReadChatIdFromNullTest() {
+        // given
+        Member member = createMemberBy("member");
+        ChatRoom chatRoom = createChatRoomBy("room");
+        chatRoomParticipantRepository.save(
+                ChatRoomParticipant.builder().member(member).chatRoom(chatRoom).build()
+        );
+        em.flush();
+        em.clear();
+
+        int updated = chatRoomParticipantRepository.updateLastReadChatId(member.getId(), chatRoom.getId(), 100L);
+        em.flush();
+        em.clear();
+
+        assertThat(updated).isEqualTo(1);
+        ChatRoomParticipant found =
+                chatRoomParticipantRepository.findChatRoomBy(chatRoom.getId(), member.getId());
+        assertThat(found.getLastReadChatId()).isEqualTo(100L);
+    }
+
+    @Test
+    @DisplayName("현재 cursor 보다 작은 chatId 로는 갱신되지 않는다.")
+    void updateLastReadChatIdDoesNotDecreaseTest() {
+        // given
+        Member member = createMemberBy("member");
+        ChatRoom chatRoom = createChatRoomBy("room");
+        chatRoomParticipantRepository.save(
+                ChatRoomParticipant.builder().member(member).chatRoom(chatRoom).build());
+        chatRoomParticipantRepository.updateLastReadChatId(member.getId(), chatRoom.getId(),
+                200L);
+        em.flush();
+        em.clear();
+
+        // when
+        int updated = chatRoomParticipantRepository.updateLastReadChatId(
+                member.getId(), chatRoom.getId(), 100L
+        );
+        em.flush();
+        em.clear();
+
+        // then
+        assertThat(updated).isEqualTo(0);
+        ChatRoomParticipant found =
+                chatRoomParticipantRepository.findChatRoomBy(chatRoom.getId(), member.getId());
+        assertThat(found.getLastReadChatId()).isEqualTo(200L);
+    }
+
+    @Test
+    @DisplayName("cursor 이후 메시지만 미읽음으로 집계된다.")
+    void findCursorUnreadCountsByTest() {
+        // given
+        Member me = createMemberBy("me");
+        Member other = createMemberBy("other");
+        ChatRoom chatRoom = createChatRoomBy("room");
+        chatRoomParticipantRepository.save(
+                ChatRoomParticipant.builder().member(me).chatRoom(chatRoom).build());
+        chatRoomParticipantRepository.save(
+                ChatRoomParticipant.builder().member(other).chatRoom(chatRoom).build());
+
+        Chat first  = chatRepository.save(new Chat("msg1", other, chatRoom));
+        Chat second = chatRepository.save(new Chat("msg2", other, chatRoom));
+        Chat third  = chatRepository.save(new Chat("msg3", other, chatRoom));
+
+        chatRoomParticipantRepository.updateLastReadChatId(me.getId(), chatRoom.getId(),
+                first.getId());
+        em.flush();
+        em.clear();
+
+        // when
+        List<ChatRoomUnreadCount> result = chatRoomParticipantRepository
+                .findCursorUnreadCountsBy(List.of(chatRoom.getId()), me.getId());
+
+        // then
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getUnreadMessageCount()).isEqualTo(2L);
     }
 
     private Member createMemberBy(String username) {
