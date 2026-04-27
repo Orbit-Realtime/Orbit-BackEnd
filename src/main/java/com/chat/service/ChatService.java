@@ -89,6 +89,9 @@ public class ChatService {
                 })
                 .toList();
         chatReadRepository.saveAll(chatReads);
+
+        // TODO: 수신자 cursor 갱신은 FE read event 정책 확정 후 진행
+        chatRoomParticipantRepository.updateLastReadChatId(senderId, chatRoomId, chat.getId());
     }
 
     @Transactional
@@ -139,6 +142,10 @@ public class ChatService {
             lastReadChatId = lastChatRead != null ? lastChatRead.getLastChatReadId() : null;
 
             int updatedCount = chatReadRepository.updateUnreadChatReadsToRead(memberId, chatRoomId);
+
+            chatRoomParticipantRepository.updateLastReadChatId(
+                    memberId, chatRoomId, chats.get(chats.size() - 1).getId());
+
             if (updatedCount > 0) {
                 Map<Long, UpdateChatRoom> updatesByMemberId = broadcastDataBuilder.build(chatRoomId, Set.of(memberId));
                 publisher.publishEvent(new PublishReadEvent(
