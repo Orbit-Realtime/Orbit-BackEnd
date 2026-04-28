@@ -298,7 +298,7 @@ public class ChatRoomServiceSocketTest {
         Thread.sleep(500);
 
         // when: second가 채팅 내역 조회 → updatedCount > 0 이면 READ_EVENT + UPDATE_CHAT_ROOM 발행
-        chatService.findChatHistory(chatRoomId, secondId);
+        chatService.findChatHistory(chatRoomId, secondId, null);
 
         // then: UPDATE_CHAT_ROOM + READ_EVENT 수신 대기
         boolean received = latch.await(3, TimeUnit.SECONDS);
@@ -346,7 +346,7 @@ public class ChatRoomServiceSocketTest {
         Long firstChatId = chatService.saveChat(firstId, chatRoomId, "first message");
 
         // second 첫 번째 입장: firstChat 읽음 처리 (lastReadChatId=null, updatedCount=1)
-        chatService.findChatHistory(chatRoomId, secondId);
+        chatService.findChatHistory(chatRoomId, secondId, null);
 
         // first가 두 번째 메시지 전송 → second.isRead=false
         chatService.saveChat(firstId, chatRoomId, "second message");
@@ -362,7 +362,7 @@ public class ChatRoomServiceSocketTest {
         Thread.sleep(500);
 
         // when: second 두 번째 채팅 내역 조회 → lastReadChatId = firstChatId (이전 방문 시 firstChat까지 읽었음)
-        chatService.findChatHistory(chatRoomId, secondId);
+        chatService.findChatHistory(chatRoomId, secondId, null);
 
         // then: READ_EVENT에 lastReadChatId 포함 검증
         boolean received = latch.await(3, TimeUnit.SECONDS);

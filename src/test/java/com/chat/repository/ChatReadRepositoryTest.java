@@ -5,9 +5,7 @@ import com.chat.entity.ChatRead;
 import com.chat.entity.ChatRoom;
 import com.chat.entity.Member;
 import com.chat.fixture.TestDataFixture;
-import com.chat.repository.dtos.ChatRoomUnreadCount;
 import com.chat.repository.dtos.MemberUnreadCount;
-import com.chat.service.dtos.LastChatRead;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -84,92 +82,6 @@ class ChatReadRepositoryTest {
 
         // then
         assertThat(findChatRead).isEqualTo(savedChatRead);
-    }
-
-    @Test
-    @DisplayName("채팅방의 회원별 마지막으로 읽은 메시지 ID 를 조회한다.")
-    void findLastReadChatsByChatRoomIdTest() {
-        // given
-        String firstUsername = "firstUsername";
-        Member firstMember = createMember(firstUsername);
-        String secondUsername = "secondUsername";
-        Member secondMember = createMember(secondUsername);
-        String thirdUsername = "thirdUsername";
-        Member thirdMember = createMember(thirdUsername);
-
-        String title = "title";
-        ChatRoom chatRoom = createChatRoom(title);
-
-        String message = "message";
-        Chat firstChat = createChat(message, firstMember, chatRoom);
-        boolean isRead = true;
-        ChatRead firstChatFirstMember = new ChatRead(isRead, firstMember, firstChat);
-        chatReadRepository.save(firstChatFirstMember);
-        ChatRead firstChatSecondMember = new ChatRead(isRead, secondMember, firstChat);
-        chatReadRepository.save(firstChatSecondMember);
-        isRead = false;
-        ChatRead firstChatThirdMember = new ChatRead(isRead, thirdMember, firstChat);
-        chatReadRepository.save(firstChatThirdMember);
-
-        Chat secondChat = createChat(message, secondMember, chatRoom);
-        ChatRead secondChatFirstMember = new ChatRead(isRead, firstMember, secondChat);
-        chatReadRepository.save(secondChatFirstMember);
-        ChatRead secondChatThirdMember = new ChatRead(isRead, thirdMember, secondChat);
-        chatReadRepository.save(secondChatThirdMember);
-
-        isRead = true;
-        ChatRead secondChatSecondMember = new ChatRead(isRead, secondMember, secondChat);
-        chatReadRepository.save(secondChatSecondMember);
-
-        // when
-        List<LastChatRead> lastReadChats = chatReadRepository.findLastReadChatsBy(chatRoom.getId());
-
-        // then
-        Map<Long, Long> memberIdToLastReadChatId = lastReadChats.stream()
-                .collect(Collectors.toMap(lcr -> lcr.getMemberId(), lcr -> lcr.getLastChatReadId()));
-
-        assertThat(memberIdToLastReadChatId).hasSize(3);
-        assertThat(memberIdToLastReadChatId.get(firstMember.getId())).isEqualTo(firstChat.getId());
-        assertThat(memberIdToLastReadChatId.get(secondMember.getId())).isEqualTo(secondChat.getId());
-        assertThat(memberIdToLastReadChatId.get(thirdMember.getId())).isEqualTo(0L);
-    }
-
-    @Test
-    @DisplayName("채팅방에 특정 회원이 마지막으로 읽은 채팅 읽음 정보를 조회한다.")
-    void findLastReadChatByMemberIdAndChatRoomIdTest() {
-        // given
-        Member firstMember = createMember("firstUser");
-        Member secondMember = createMember("secondUser");
-
-        ChatRoom chatRoom = createChatRoom("title");
-
-        Chat firstChat = createChat("message", firstMember, chatRoom);
-        Chat secondChat = createChat("message", secondMember, chatRoom);
-        Chat thirdChat = createChat("message", firstMember, chatRoom);
-
-        chatReadRepository.save(new ChatRead(true, firstMember, firstChat));
-        chatReadRepository.save(new ChatRead(true, firstMember, secondChat));
-        chatReadRepository.save(new ChatRead(true, firstMember, thirdChat));
-
-        chatReadRepository.save(new ChatRead(true, secondMember, firstChat));
-        chatReadRepository.save(new ChatRead(true, secondMember, secondChat));
-        chatReadRepository.save(new ChatRead(false, secondMember, thirdChat));
-
-        // when
-        List<LastChatRead> firstMemberLastRead =
-                chatReadRepository.findLastReadChatBy(firstMember.getId(), chatRoom.getId());
-
-        List<LastChatRead> secondMemberLastRead =
-                chatReadRepository.findLastReadChatBy(secondMember.getId(), chatRoom.getId());
-
-        // then
-        assertThat(firstMemberLastRead).hasSize(1);
-        assertThat(firstMemberLastRead.get(0).getMemberId()).isEqualTo(firstMember.getId());
-        assertThat(firstMemberLastRead.get(0).getLastChatReadId()).isEqualTo(thirdChat.getId());
-
-        assertThat(secondMemberLastRead).hasSize(1);
-        assertThat(secondMemberLastRead.get(0).getMemberId()).isEqualTo(secondMember.getId());
-        assertThat(secondMemberLastRead.get(0).getLastChatReadId()).isEqualTo(secondChat.getId());
     }
 
     @Test
@@ -269,75 +181,6 @@ class ChatReadRepositoryTest {
 
         // then
         assertThat(result).isEmpty();
-    }
-
-    @Test
-    @DisplayName("여러 채팅방의 읽지 않은 메시지 수를 회원별로 일괄 조회한다.")
-    void findChatRoomUnreadCountsByTest() {
-        // given
-        Member me = createMember("me");
-        Member other = createMember("other");
-
-        ChatRoom firstRoom = createChatRoom("firstRoom");
-        ChatRoom secondRoom = createChatRoom("secondRoom");
-
-        // firstRoom: me 기준 2개 미읽음
-        Chat firstRoomChat1 = createChat("msg1", other, firstRoom);
-        Chat firstRoomChat2 = createChat("msg2", other, firstRoom);
-        chatReadRepository.save(new ChatRead(false, me, firstRoomChat1));
-        chatReadRepository.save(new ChatRead(false, me, firstRoomChat2));
-
-        // secondRoom: me 기준 1개 미읽음, 1개 읽음
-        Chat secondRoomChat1 = createChat("msg3", other, secondRoom);
-        Chat secondRoomChat2 = createChat("msg4", other, secondRoom);
-        chatReadRepository.save(new ChatRead(false, me, secondRoomChat1));
-        chatReadRepository.save(new ChatRead(true, me, secondRoomChat2));
-
-        // when
-        Map<Long, Long> unreadCountMap = chatReadRepository
-                .findChatRoomUnreadCountsBy(
-                        List.of(firstRoom.getId(), secondRoom.getId()),
-                        me.getId()
-                )
-                .stream()
-                .collect(Collectors.toMap(
-                        ChatRoomUnreadCount::getChatRoomId,
-                        ChatRoomUnreadCount::getUnreadMessageCount
-                ));
-
-        // then
-        assertThat(unreadCountMap).hasSize(2);
-        assertThat(unreadCountMap.get(firstRoom.getId())).isEqualTo(2L);
-        assertThat(unreadCountMap.get(secondRoom.getId())).isEqualTo(1L);
-    }
-
-    @Test
-    @DisplayName("모든 메시지를 읽은 채팅방은 일괄 조회 결과에 포함되지 않는다.")
-    void findChatRoomUnreadCountsBy_allReadRoomNotIncludedTest() {
-        // given
-        Member me = createMember("me");
-        Member other = createMember("other");
-
-        ChatRoom roomWithUnread = createChatRoom("withUnread");
-        ChatRoom allReadRoom = createChatRoom("allRead");
-
-        Chat unreadChat = createChat("msg", other, roomWithUnread);
-        chatReadRepository.save(new ChatRead(false, me, unreadChat));
-
-        Chat readChat = createChat("msg", other, allReadRoom);
-        chatReadRepository.save(new ChatRead(true, me, readChat));
-
-        // when
-        List<ChatRoomUnreadCount> result = chatReadRepository
-                .findChatRoomUnreadCountsBy(
-                        List.of(roomWithUnread.getId(), allReadRoom.getId()),
-                        me.getId()
-                );
-
-        // then
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).getChatRoomId()).isEqualTo(roomWithUnread.getId());
-        assertThat(result.get(0).getUnreadMessageCount()).isEqualTo(1L);
     }
 
     private Member createMember(String username) {
