@@ -602,4 +602,70 @@ class ChatServiceTest {
                 .findChatRoomBy(chatRoom.getId(), receiverNotInRoom.getId());
         assertThat(notInRoomParticipant.getLastReadChatId()).isNull();
     }
+
+    @Test
+    @DisplayName("수신자 첫 입장 시 lastReadChatId는 null이다.")
+    void findChatHistory_firstEnter_lastReadChatIdIsNull() {
+        // given
+        Member sender = fixture.savedMemberBy("sender");
+        Member receiver = fixture.savedMemberBy("receiver");
+        ChatRoom chatRoom = fixture.savedChatRoomBy("room", List.of(sender, receiver));
+        Long chatRoomId = chatRoom.getId();
+
+        chatService.saveChat(sender.getId(), chatRoomId, "first");
+        chatService.saveChat(sender.getId(), chatRoomId, "second");
+
+        // when
+        ChatHistoryResponse response = chatService.findChatHistory(chatRoomId,
+                receiver.getId(), null);
+
+        // then
+        assertThat(response.getLastReadChatId()).isNull();
+    }
+
+    @Test
+    @DisplayName("두 번째 입장 시 lastReadChatId는 직전 입장에서 갱신된 cursor 값이다.")
+    void findChatHistory_secondEnter_lastReadChatIdEqualsPreUpdateCursor() {
+        // given
+        Member sender = fixture.savedMemberBy("sender");
+        Member me = fixture.savedMemberBy("me");
+        ChatRoom chatRoom = fixture.savedChatRoomBy("room", List.of(sender, me));
+        Long chatRoomId = chatRoom.getId();
+
+        chatService.saveChat(sender.getId(), chatRoomId, "first");
+        Long secondChatId = chatService.saveChat(sender.getId(), chatRoomId, "second");
+
+        // 첫 입장: cursor가 secondChatId로 갱신됨
+        chatService.findChatHistory(chatRoomId, me.getId(), null);
+
+        // 새 메시지 도착
+        chatService.saveChat(sender.getId(), chatRoomId, "third");
+
+        // when: 두 번째 입장
+        ChatHistoryResponse response = chatService.findChatHistory(chatRoomId, me.getId(),
+                null);
+
+        // then: cursor 갱신 이전 값 = 첫 입장 때 갱신된 secondChatId
+        assertThat(response.getLastReadChatId()).isEqualTo(secondChatId);
+    }
+
+    @Test
+    @DisplayName("발신자 재입장 시 lastReadChatId는 자신이 마지막으로 보낸 메시지 ID이다.")
+    void findChatHistory_senderReenter_lastReadChatIdEqualsSentMessageCursor() {
+        // given
+        Member sender = fixture.savedMemberBy("sender");
+        Member receiver = fixture.savedMemberBy("receiver");
+        ChatRoom chatRoom = fixture.savedChatRoomBy("room", List.of(sender, receiver));
+        Long chatRoomId = chatRoom.getId();
+
+        Long sentChatId = chatService.saveChat(sender.getId(), chatRoomId, "hello");
+        chatService.saveChat(receiver.getId(), chatRoomId, "reply"); // sender cursor 변화 없음
+
+        // when
+        ChatHistoryResponse response = chatService.findChatHistory(chatRoomId, sender.getId(),
+                null);
+
+        // then: saveChat에서 갱신된 cursor = sentChatId
+        assertThat(response.getLastReadChatId()).isEqualTo(sentChatId);
+    }
 }

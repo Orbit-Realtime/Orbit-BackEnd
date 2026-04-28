@@ -420,6 +420,46 @@ class ChatRoomParticipantRepositoryTest {
         assertThat(countMap.get(other.getId())).isEqualTo(1L);
     }
 
+    @Test
+    @DisplayName("lastReadChatId가 null이면 findLastReadChatIdBy는 null을 반환한다.")
+    void findLastReadChatIdBy_returnsNullWhenNotRead() {
+        // given
+        Member member = createMemberBy("member");
+        ChatRoom chatRoom = createChatRoomBy("room");
+        chatRoomParticipantRepository.save(
+                ChatRoomParticipant.builder().member(member).chatRoom(chatRoom).build());
+        em.flush();
+        em.clear();
+
+        // when
+        Long result = chatRoomParticipantRepository
+                .findLastReadChatIdBy(member.getId(), chatRoom.getId());
+
+        // then
+        assertThat(result).isNull();
+    }
+
+    @Test
+    @DisplayName("lastReadChatId 갱신 후 findLastReadChatIdBy는 갱신된 값을 반환한다.")
+    void findLastReadChatIdBy_returnsValueAfterUpdate() {
+        // given
+        Member member = createMemberBy("member");
+        ChatRoom chatRoom = createChatRoomBy("room");
+        chatRoomParticipantRepository.save(
+                ChatRoomParticipant.builder().member(member).chatRoom(chatRoom).build());
+        chatRoomParticipantRepository.updateLastReadChatId(member.getId(), chatRoom.getId(),
+                100L);
+        em.flush();
+        em.clear();
+
+        // when
+        Long result = chatRoomParticipantRepository
+                .findLastReadChatIdBy(member.getId(), chatRoom.getId());
+
+        // then
+        assertThat(result).isEqualTo(100L);
+    }
+
     private Member createMemberBy(String username) {
         String commonPassword = "commonPassword";
         Member member = Member.of(username, commonPassword, username);
