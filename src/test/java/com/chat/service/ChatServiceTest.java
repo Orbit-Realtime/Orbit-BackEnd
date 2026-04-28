@@ -3,7 +3,6 @@ package com.chat.service;
 import com.chat.entity.*;
 import com.chat.fixture.TestDataFixture;
 import com.chat.repository.*;
-import com.chat.repository.dtos.MemberUnreadCount;
 import com.chat.service.dtos.ChatHistory;
 import com.chat.service.dtos.ChatHistoryResponse;
 import com.chat.service.dtos.SaveChatData;
@@ -38,8 +37,6 @@ class ChatServiceTest {
     private ChatService chatService;
     @Autowired
     private ChatRepository chatRepository;
-    @Autowired
-    private ChatReadRepository chatReadRepository;
     @Autowired
     private ChatRoomParticipantRepository chatRoomParticipantRepository;
     @Autowired
@@ -79,15 +76,6 @@ class ChatServiceTest {
         assertThat(chat.getMessage()).isEqualTo(message);
         assertThat(chat.getChatRoom()).isEqualTo(chatRoom);
         assertThat(chat.getMember()).isEqualTo(sender);
-
-        ChatRead chatReadSender = chatReadRepository.findBy(savedChatId, sender.getId());
-        assertThat(chatReadSender.getIsRead()).isTrue();
-
-        ChatRead chatReadReceiver1 = chatReadRepository.findBy(savedChatId, receiver1.getId());
-        assertThat(chatReadReceiver1.getIsRead()).isFalse();
-
-        ChatRead chatReadReceiver2 = chatReadRepository.findBy(savedChatId, receiver2.getId());
-        assertThat(chatReadReceiver2.getIsRead()).isFalse();
     }
 
     @Test
@@ -153,51 +141,14 @@ class ChatServiceTest {
         assertThat(firstChat.getSenderId()).isEqualTo(firstMember.getId());
         assertThat(firstChat.getUnreadMemberCount()).isEqualTo(1L);
 
-        // updateUnreadChatReadsToRead 이후 count → firstMember 읽음 제외한 값
+        // cursor 갱신 이후 count → firstMember 읽음 제외한 값
         ChatHistory secondChat = messages.get(1);
         assertThat(secondChat.getUnreadMemberCount()).isEqualTo(1L);
 
         ChatHistory thirdChat = messages.get(2);
         assertThat(thirdChat.getUnreadMemberCount()).isEqualTo(1L);
 
-        // firstMember의 미읽음이 0인지 확인 — 배치 쿼리 사용
-        List<MemberUnreadCount> remainingUnread = chatReadRepository
-                .findUnReadCountsBy(chatRoomId, List.of(firstMember.getId()));
-        assertThat(remainingUnread).isEmpty();
-
         assertThat(firstChat.getMessage()).isEqualTo("message");
-    }
-
-    @Test
-    @DisplayName("채팅방에 접속 중인 수신자는 메시지 저장 시 isRead=true로 저장된다.")
-    void saveChatTest_receiverInRoom_isReadTrue() {
-        // given
-        Member sender = fixture.savedMemberBy("sender");
-        Member receiverInRoom = fixture.savedMemberBy("receiverInRoom");
-        Member receiverNotInRoom = fixture.savedMemberBy("receiverNotInRoom");
-
-        ChatRoom chatRoom = fixture.savedChatRoomBy("title", List.of(sender, receiverInRoom, receiverNotInRoom));
-        Long chatRoomId = chatRoom.getId();
-
-        // receiverInRoom을 ChatRoomManager에 등록 (방에 접속 중인 상태 시뮬레이션)
-        WebSocketSession mockSession = mock(WebSocketSession.class);
-        given(mockSession.getAttributes()).willReturn(Map.of(SessionConst.SESSION_ID, receiverInRoom.getId()));
-        chatRoomManager.addSessionToRoom(mockSession, chatRoomId);
-
-        // when
-        Long savedChatId = chatService.saveChat(sender.getId(), chatRoomId, "hello");
-
-        // then
-        ChatRead senderRead = chatReadRepository.findBy(savedChatId, sender.getId());
-        assertThat(senderRead.getIsRead()).isTrue();
-
-        // 방에 접속 중인 수신자 → isRead=true
-        ChatRead receiverInRoomRead = chatReadRepository.findBy(savedChatId, receiverInRoom.getId());
-        assertThat(receiverInRoomRead.getIsRead()).isTrue();
-
-        // 방에 없는 수신자 → isRead=false
-        ChatRead receiverNotInRoomRead = chatReadRepository.findBy(savedChatId, receiverNotInRoom.getId());
-        assertThat(receiverNotInRoomRead.getIsRead()).isFalse();
     }
 
     @Test
@@ -236,17 +187,19 @@ class ChatServiceTest {
         // 첫 번째 입장: secondMember의 미읽음 1개 → 읽음 처리
         chatService.findChatHistory(chatRoomId, secondMember.getId(), null);
 
-        List<MemberUnreadCount> afterFirst = chatReadRepository
-                .findUnReadCountsBy(chatRoomId, List.of(secondMember.getId()));
-        assertThat(afterFirst).isEmpty();
+        em.flush(); em.clear();
+        Long cursorAfterFirst = chatRoomParticipantRepository
+                .findLastReadChatIdBy(secondMember.getId(), chatRoomId);
+        assertThat(cursorAfterFirst).isNotNull();
 
         // when: 재입장 — 이미 모두 읽음 처리된 상태
         chatService.findChatHistory(chatRoomId, secondMember.getId(), null);
 
         // then: 재입장 후에도 미읽음 없음
-        List<MemberUnreadCount> afterSecond = chatReadRepository
-                .findUnReadCountsBy(chatRoomId, List.of(secondMember.getId()));
-        assertThat(afterSecond).isEmpty();
+        em.flush(); em.clear();
+        Long cursorAfterSecond = chatRoomParticipantRepository
+                .findLastReadChatIdBy(secondMember.getId(), chatRoomId);
+        assertThat(cursorAfterSecond).isEqualTo(cursorAfterFirst);
     }
 
     @Test
@@ -380,10 +333,10 @@ class ChatServiceTest {
         chatService.findChatHistory(chatRoomId, receiver.getId(), thirdChatId);
 
         // then: receiver의 미읽음 상태 그대로 (읽음 처리 안 됨)
-        List<MemberUnreadCount> after = chatReadRepository
-                .findUnReadCountsBy(chatRoomId, List.of(receiver.getId()));
-        assertThat(after).isNotEmpty();
-        assertThat(after.get(0).getUnreadMemberCount()).isEqualTo(3L);
+        em.flush(); em.clear();
+        Long receiverCursor = chatRoomParticipantRepository
+                .findLastReadChatIdBy(receiver.getId(), chatRoomId);
+        assertThat(receiverCursor).isNull();
     }
 
     @Test

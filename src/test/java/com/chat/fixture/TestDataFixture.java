@@ -10,7 +10,6 @@ import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -30,8 +29,6 @@ public class TestDataFixture {
     private ChatRoomParticipantRepository chatRoomParticipantRepository;
     @Autowired
     private ChatRepository chatRepository;
-    @Autowired
-    private ChatReadRepository chatReadRepository;
     @PersistenceContext
     private EntityManager em;
 
@@ -73,7 +70,6 @@ public class TestDataFixture {
 
     @Transactional
     public void deleteAllData() {
-        em.createQuery("DELETE FROM ChatRead").executeUpdate();
         em.createQuery("DELETE FROM Chat").executeUpdate();
         em.createQuery("DELETE FROM ChatRoomParticipant").executeUpdate();
         em.createQuery("DELETE FROM ChatRoom").executeUpdate();
