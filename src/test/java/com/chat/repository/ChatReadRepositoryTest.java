@@ -6,7 +6,6 @@ import com.chat.entity.ChatRoom;
 import com.chat.entity.Member;
 import com.chat.fixture.TestDataFixture;
 import com.chat.repository.dtos.ChatRoomUnreadCount;
-import com.chat.repository.dtos.ChatUnreadCount;
 import com.chat.repository.dtos.MemberUnreadCount;
 import com.chat.service.dtos.LastChatRead;
 import org.junit.jupiter.api.DisplayName;
@@ -62,40 +61,6 @@ class ChatReadRepositoryTest {
         assertThat(savedChatRead.getChat()).isEqualTo(savedChat);
     }
     
-    @Test
-    @DisplayName("특정 채팅을 읽지 않은 사용자 수를 조회한다.")
-    void findUnReadCountByChatIdTest() {
-        // given
-        String firstUsername = "firstUsername";
-        Member firstMember = createMember(firstUsername);
-        String secondUsername = "secondUsername";
-        Member secondMember = createMember(secondUsername);
-        String thirdUsername = "thirdUsername";
-        Member thirdMember = createMember(thirdUsername);
-
-        String title = "title";
-        ChatRoom chatRoom = createChatRoom(title);
-
-        String message = "message";
-        Chat chat = createChat(message, firstMember, chatRoom);
-
-        boolean isRead = true;
-        ChatRead firstMemberChatRead = new ChatRead(isRead, firstMember, chat);
-        chatReadRepository.save(firstMemberChatRead);
-
-        isRead = false;
-        ChatRead secondMemberChatRead = new ChatRead(isRead, secondMember, chat);
-        chatReadRepository.save(secondMemberChatRead);
-        ChatRead thirdMemberChatRead = new ChatRead(isRead, thirdMember, chat);
-        chatReadRepository.save(thirdMemberChatRead);
-
-        // when
-        Long unReadCount = chatReadRepository.findUnReadCountBy(chat.getId());
-
-        // then
-        assertThat(unReadCount).isEqualTo(2L);
-    }
-
     @Test
     @DisplayName("채팅 ID 와 사용자 ID 를 이용해 채팅읽음 정보를 조회한다.")
     void findByChatIdAndMemberIdTest() {
@@ -244,48 +209,6 @@ class ChatReadRepositoryTest {
         List<MemberUnreadCount> unReadCounts = chatReadRepository
                 .findUnReadCountsBy(chatRoom.getId(), List.of(thirdMember.getId()));
         assertThat(unReadCounts).isEmpty();
-    }
-
-    @Test
-    @DisplayName("여러 채팅 ID 를 이용해 읽지 않은 메시지 수를 일괄 조회한다.")
-    void countUnreadByChatIdsTest() {
-        // given
-        Member firstMember = fixture.savedMemberBy("firstMember");
-        Member secondMember = fixture.savedMemberBy("secondMember");
-        Member thirdMember = fixture.savedMemberBy("thirdMember");
-
-        ChatRoom chatRoom = fixture.savedSimpleChatRoom("title");
-
-        Chat firstChat = fixture.savedSimpleChat("message1", firstMember, chatRoom);
-        Chat secondChat = fixture.savedSimpleChat("message2", secondMember, chatRoom);
-        Chat thirdChat = fixture.savedSimpleChat("message3", thirdMember, chatRoom);
-
-        chatReadRepository.save(new ChatRead(true, firstMember, firstChat));
-        chatReadRepository.save(new ChatRead(true, secondMember, firstChat));
-        chatReadRepository.save(new ChatRead(true, thirdMember, firstChat));
-
-        chatReadRepository.save(new ChatRead(false, firstMember, secondChat));
-        chatReadRepository.save(new ChatRead(true, secondMember, secondChat));
-        chatReadRepository.save(new ChatRead(true, thirdMember, secondChat));
-
-        chatReadRepository.save(new ChatRead(false, firstMember, thirdChat));
-        chatReadRepository.save(new ChatRead(false, secondMember, thirdChat));
-        chatReadRepository.save(new ChatRead(true, thirdMember, thirdChat));
-
-        List<Long> chatIds = List.of(firstChat.getId(), secondChat.getId(), thirdChat.getId());
-
-        // when
-        Map<Long, Long> unreadCountMap = chatReadRepository.countUnreadByChatIds(chatIds).stream()
-                .collect(Collectors.toMap(
-                        ChatUnreadCount::getChatId,
-                        ChatUnreadCount::getUnreadMemberCount
-                ));
-
-        // then
-        assertThat(unreadCountMap).hasSize(2);
-        assertThat(unreadCountMap).doesNotContainKey(firstChat.getId());
-        assertThat(unreadCountMap.get(secondChat.getId())).isEqualTo(1L);
-        assertThat(unreadCountMap.get(thirdChat.getId())).isEqualTo(2L);
     }
     
     @Test
