@@ -4,7 +4,7 @@ import com.chat.entity.*;
 import com.chat.exception.CustomException;
 import com.chat.exception.ErrorCode;
 import com.chat.repository.*;
-import com.chat.repository.dtos.ChatUnreadCount;
+import com.chat.repository.dtos.MessageUnreadMemberCount;
 import com.chat.service.dtos.ChatHistory;
 import com.chat.service.dtos.ChatHistoryResponse;
 import com.chat.service.dtos.SaveChatData;
@@ -152,8 +152,8 @@ public class ChatService {
         Map<Long, Long> unreadMemberCountMap = chatRoomParticipantRepository
                 .countUnreadMembers(chatIds).stream()
                 .collect(Collectors.toMap(
-                        ChatUnreadCount::getChatId,
-                        ChatUnreadCount::getUnreadMemberCount
+                        MessageUnreadMemberCount::getChatId,
+                        MessageUnreadMemberCount::getUnreadMemberCount
                 ));
 
         List<ChatHistory> messages = new ArrayList<>(chats.size());

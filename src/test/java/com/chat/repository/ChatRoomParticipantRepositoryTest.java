@@ -4,9 +4,9 @@ import com.chat.entity.Chat;
 import com.chat.entity.ChatRoom;
 import com.chat.entity.ChatRoomParticipant;
 import com.chat.entity.Member;
-import com.chat.repository.dtos.ChatRoomUnreadCount;
-import com.chat.repository.dtos.ChatUnreadCount;
+import com.chat.repository.dtos.MessageUnreadMemberCount;
 import com.chat.repository.dtos.MemberUnreadCount;
+import com.chat.repository.dtos.RoomUnreadMessageCount;
 import jakarta.persistence.EntityManager;
 import org.hibernate.Session;
 import org.junit.jupiter.api.DisplayName;
@@ -371,7 +371,7 @@ class ChatRoomParticipantRepositoryTest {
         em.clear();
 
         // when
-        List<ChatRoomUnreadCount> result = chatRoomParticipantRepository
+        List<RoomUnreadMessageCount> result = chatRoomParticipantRepository
                 .findCursorUnreadCountsBy(List.of(chatRoom.getId()), me.getId());
 
         // then
@@ -414,7 +414,7 @@ class ChatRoomParticipantRepositoryTest {
         Map<Long, Long> countMap = result.stream()
                 .collect(Collectors.toMap(
                         MemberUnreadCount::getMemberId,
-                        MemberUnreadCount::getUnreadMemberCount));
+                        MemberUnreadCount::getUnreadMessageCount));
 
         assertThat(countMap.get(me.getId())).isEqualTo(2L);
         assertThat(countMap.get(other.getId())).isEqualTo(1L);
@@ -569,11 +569,11 @@ class ChatRoomParticipantRepositoryTest {
         em.flush(); em.clear();
 
         // when
-        List<ChatUnreadCount> result = chatRoomParticipantRepository
+        List<MessageUnreadMemberCount> result = chatRoomParticipantRepository
                 .countUnreadMembers(List.of(first.getId(), second.getId()));
         Map<Long, Long> countMap = result.stream()
-                .collect(Collectors.toMap(ChatUnreadCount::getChatId,
-                                          ChatUnreadCount::getUnreadMemberCount));
+                .collect(Collectors.toMap(MessageUnreadMemberCount::getChatId,
+                                          MessageUnreadMemberCount::getUnreadMemberCount));
 
         // then: 두 메시지 모두 receiver(null) → 1
         assertThat(countMap.get(first.getId())).isEqualTo(1L);
@@ -607,11 +607,11 @@ class ChatRoomParticipantRepositoryTest {
         em.flush(); em.clear();
 
         // when
-        List<ChatUnreadCount> result = chatRoomParticipantRepository
+        List<MessageUnreadMemberCount> result = chatRoomParticipantRepository
                 .countUnreadMembers(List.of(first.getId(), second.getId()));
         Map<Long, Long> countMap = result.stream()
-                .collect(Collectors.toMap(ChatUnreadCount::getChatId,
-                                          ChatUnreadCount::getUnreadMemberCount));
+                .collect(Collectors.toMap(MessageUnreadMemberCount::getChatId,
+                                          MessageUnreadMemberCount::getUnreadMemberCount));
 
         // then
         // firstMessage: noReader(null) → 1

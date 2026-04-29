@@ -7,7 +7,7 @@ import com.chat.entity.*;
 import com.chat.exception.CustomException;
 import com.chat.exception.ErrorCode;
 import com.chat.repository.*;
-import com.chat.repository.dtos.ChatRoomUnreadCount;
+import com.chat.repository.dtos.RoomUnreadMessageCount;
 import com.chat.service.dtos.SaveChatData;
 import com.chat.service.dtos.SaveChatRoomDTO;
 import com.chat.service.dtos.chat.BroadcastChat;
@@ -194,8 +194,8 @@ public class ChatRoomService {
                 .findCursorUnreadCountsBy(chatRoomIds, memberId)
                 .stream()
                 .collect(Collectors.toMap(
-                        ChatRoomUnreadCount::getChatRoomId,
-                        ChatRoomUnreadCount::getUnreadMessageCount
+                        RoomUnreadMessageCount::getChatRoomId,
+                        RoomUnreadMessageCount::getUnreadMessageCount
                 ));
 
         // 채팅방별 참여자 목록 일괄 조회

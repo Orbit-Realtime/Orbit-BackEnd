@@ -5,12 +5,12 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
-public class ChatRoomUnreadCount {
+public class RoomUnreadMessageCount {
 
     private Long chatRoomId;
     private Long unreadMessageCount;
 
-    public ChatRoomUnreadCount(Long chatRoomId, Long unreadMessageCount) {
+    public RoomUnreadMessageCount(Long chatRoomId, Long unreadMessageCount) {
         this.chatRoomId = chatRoomId;
         this.unreadMessageCount = unreadMessageCount;
     }

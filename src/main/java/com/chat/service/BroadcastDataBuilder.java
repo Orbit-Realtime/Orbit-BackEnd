@@ -53,7 +53,7 @@ public class BroadcastDataBuilder {
                 .stream()
                 .collect(Collectors.toMap(
                         MemberUnreadCount::getMemberId,
-                        MemberUnreadCount::getUnreadMemberCount
+                        MemberUnreadCount::getUnreadMessageCount
                 ));
 
         return targetMemberIds.stream()
