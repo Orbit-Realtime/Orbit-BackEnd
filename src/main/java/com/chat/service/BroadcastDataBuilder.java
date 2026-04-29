@@ -49,7 +49,7 @@ public class BroadcastDataBuilder {
                 .stream().findFirst().orElse(null);
 
         Map<Long, Long> unreadCountMap = chatRoomParticipantRepository
-                .findCursorUnreadCountsByMembers(chatRoomId, new ArrayList<>(targetMemberIds))
+                .findMemberUnreadMessageCountsBy(chatRoomId, new ArrayList<>(targetMemberIds))
                 .stream()
                 .collect(Collectors.toMap(
                         MemberUnreadCount::getMemberId,

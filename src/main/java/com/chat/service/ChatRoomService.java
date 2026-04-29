@@ -191,7 +191,7 @@ public class ChatRoomService {
 
         // 채팅방별 안 읽은 메시지 수 일괄 조회
         Map<Long, Long> unreadMessageCountMap = chatRoomParticipantRepository
-                .findCursorUnreadCountsBy(chatRoomIds, memberId)
+                .findRoomUnreadMessageCountsBy(chatRoomIds, memberId)
                 .stream()
                 .collect(Collectors.toMap(
                         RoomUnreadMessageCount::getChatRoomId,

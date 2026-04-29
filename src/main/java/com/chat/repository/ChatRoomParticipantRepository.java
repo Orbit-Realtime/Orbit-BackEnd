@@ -72,8 +72,8 @@ public interface ChatRoomParticipantRepository extends JpaRepository<ChatRoomPar
             " AND crp.member.id = :memberId" +
             " AND (crp.lastReadChatId IS NULL OR c.id > crp.lastReadChatId)" +
             " GROUP BY crp.chatRoom.id")
-    List<RoomUnreadMessageCount> findCursorUnreadCountsBy(@Param("chatRoomIds") List<Long> chatRoomIds,
-                                                          @Param("memberId") Long memberId);
+    List<RoomUnreadMessageCount> findRoomUnreadMessageCountsBy(@Param("chatRoomIds") List<Long> chatRoomIds,
+                                                               @Param("memberId") Long memberId);
 
     @Query("SELECT new com.chat.repository.dtos.MemberUnreadCount(crp.member.id, COUNT(c))" +
             " FROM ChatRoomParticipant crp" +
@@ -82,8 +82,8 @@ public interface ChatRoomParticipantRepository extends JpaRepository<ChatRoomPar
             " AND crp.member.id IN :memberIds" +
             " AND (crp.lastReadChatId IS NULL OR c.id > crp.lastReadChatId)" +
             " GROUP BY crp.member.id")
-    List<MemberUnreadCount> findCursorUnreadCountsByMembers(@Param("chatRoomId") Long chatRoomId,
-                                                            @Param("memberIds") List<Long> memberIds);
+    List<MemberUnreadCount> findMemberUnreadMessageCountsBy(@Param("chatRoomId") Long chatRoomId,
+                                                             @Param("memberIds") List<Long> memberIds);
 
     @Query("SELECT crp.lastReadChatId" +
             " FROM ChatRoomParticipant crp" +
@@ -97,7 +97,7 @@ public interface ChatRoomParticipantRepository extends JpaRepository<ChatRoomPar
             " JOIN ChatRoomParticipant crp ON crp.chatRoom.id = c.chatRoom.id" +
             " WHERE c.id = :messageId" +
             " AND (crp.lastReadChatId IS NULL OR crp.lastReadChatId < :messageId)")
-    Long countUnreadMembers(@Param("messageId") Long messageId);
+    Long countMessageUnreadMembers(@Param("messageId") Long messageId);
 
     @Query("SELECT new com.chat.repository.dtos.MessageUnreadMemberCount(c.id, COUNT(crp))" +
             " FROM Chat c" +
@@ -105,5 +105,5 @@ public interface ChatRoomParticipantRepository extends JpaRepository<ChatRoomPar
             " WHERE c.id IN :messageIds" +
             " AND (crp.lastReadChatId IS NULL OR crp.lastReadChatId < c.id)" +
             " GROUP BY c.id")
-    List<MessageUnreadMemberCount> countUnreadMembers(@Param("messageIds") List<Long> messageIds);
+    List<MessageUnreadMemberCount> countMessageUnreadMembers(@Param("messageIds") List<Long> messageIds);
 }

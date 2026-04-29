@@ -351,7 +351,7 @@ class ChatRoomParticipantRepositoryTest {
 
     @Test
     @DisplayName("cursor 이후 메시지만 미읽음으로 집계된다.")
-    void findCursorUnreadCountsByTest() {
+    void findRoomUnreadMessageCountsByTest() {
         // given
         Member me = createMemberBy("me");
         Member other = createMemberBy("other");
@@ -372,7 +372,7 @@ class ChatRoomParticipantRepositoryTest {
 
         // when
         List<RoomUnreadMessageCount> result = chatRoomParticipantRepository
-                .findCursorUnreadCountsBy(List.of(chatRoom.getId()), me.getId());
+                .findRoomUnreadMessageCountsBy(List.of(chatRoom.getId()), me.getId());
 
         // then
         assertThat(result).hasSize(1);
@@ -381,7 +381,7 @@ class ChatRoomParticipantRepositoryTest {
 
     @Test
     @DisplayName("방 내 여러 멤버의 cursor 기반 미읽음 수를 일괄 조회한다.")
-    void findCursorUnreadCountsByMembersTest() {
+    void findMemberUnreadMessageCountsByTest() {
         // given
         Member me = createMemberBy("me");
         Member other = createMemberBy("other");
@@ -406,7 +406,7 @@ class ChatRoomParticipantRepositoryTest {
 
         // when
         List<MemberUnreadCount> result = chatRoomParticipantRepository
-                .findCursorUnreadCountsByMembers(
+                .findMemberUnreadMessageCountsBy(
                         chatRoom.getId(),
                         List.of(me.getId(), other.getId()));
 
@@ -462,7 +462,7 @@ class ChatRoomParticipantRepositoryTest {
 
     @Test
     @DisplayName("메시지를 보낸 발신자는 unreadMemberCount 집계에서 제외된다.")
-    void countUnreadMembers_senderNotCounted() {
+    void countMessageUnreadMembers_senderNotCounted() {
         // given
         Member sender = createMemberBy("sender");
         ChatRoom chatRoom = createChatRoomBy("room");
@@ -477,7 +477,7 @@ class ChatRoomParticipantRepositoryTest {
 
         // when
         Long count = chatRoomParticipantRepository
-                .countUnreadMembers(chat.getId());
+                .countMessageUnreadMembers(chat.getId());
 
         // then: cursor = chatId → lastReadChatId < chatId 불충족 → 제외
         assertThat(count).isEqualTo(0L);
@@ -485,7 +485,7 @@ class ChatRoomParticipantRepositoryTest {
 
     @Test
     @DisplayName("cursor가 null인 수신자는 unreadMemberCount 집계에 포함된다.")
-    void countUnreadMembers_receiverNotRead() {
+    void countMessageUnreadMembers_receiverNotRead() {
         // given
         Member sender = createMemberBy("sender");
         Member receiver1 = createMemberBy("receiver1");
@@ -506,7 +506,7 @@ class ChatRoomParticipantRepositoryTest {
 
         // when
         Long count = chatRoomParticipantRepository
-                .countUnreadMembers(chat.getId());
+                .countMessageUnreadMembers(chat.getId());
 
         // then: receiver1, receiver2 cursor=null → 2
         assertThat(count).isEqualTo(2L);
@@ -514,7 +514,7 @@ class ChatRoomParticipantRepositoryTest {
 
     @Test
     @DisplayName("수신자 cursor가 갱신되면 해당 메시지의 unreadMemberCount가 감소한다.")
-    void countUnreadMembers_afterReceiverReads() {
+    void countMessageUnreadMembers_afterReceiverReads() {
         // given
         Member sender = createMemberBy("sender");
         Member receiver = createMemberBy("receiver");
@@ -531,7 +531,7 @@ class ChatRoomParticipantRepositoryTest {
         em.flush(); em.clear();
 
         Long beforeRead = chatRoomParticipantRepository
-                .countUnreadMembers(chat.getId());
+                .countMessageUnreadMembers(chat.getId());
         assertThat(beforeRead).isEqualTo(1L);
 
         // receiver 입장 → cursor 갱신
@@ -541,7 +541,7 @@ class ChatRoomParticipantRepositoryTest {
 
         // when
         Long afterRead = chatRoomParticipantRepository
-                .countUnreadMembers(chat.getId());
+                .countMessageUnreadMembers(chat.getId());
 
         // then
         assertThat(afterRead).isEqualTo(0L);
@@ -549,7 +549,7 @@ class ChatRoomParticipantRepositoryTest {
 
     @Test
     @DisplayName("여러 메시지의 unreadMemberCount를 일괄 조회한다.")
-    void countUnreadMembers_bulkPerMessage() {
+    void countMessageUnreadMembers_bulkPerMessage() {
         // given
         Member sender = createMemberBy("sender");
         Member receiver = createMemberBy("receiver");
@@ -570,7 +570,7 @@ class ChatRoomParticipantRepositoryTest {
 
         // when
         List<MessageUnreadMemberCount> result = chatRoomParticipantRepository
-                .countUnreadMembers(List.of(first.getId(), second.getId()));
+                .countMessageUnreadMembers(List.of(first.getId(), second.getId()));
         Map<Long, Long> countMap = result.stream()
                 .collect(Collectors.toMap(MessageUnreadMemberCount::getChatId,
                                           MessageUnreadMemberCount::getUnreadMemberCount));
@@ -582,7 +582,7 @@ class ChatRoomParticipantRepositoryTest {
 
     @Test
     @DisplayName("멤버마다 cursor 위치가 다를 때 각 메시지별 unreadMemberCount를 정확히 반환한다.")
-    void countUnreadMembers_differentCursorPositions() {
+    void countMessageUnreadMembers_differentCursorPositions() {
         // given
         Member sender = createMemberBy("sender");
         Member readerOfFirst = createMemberBy("readerOfFirst");
@@ -608,7 +608,7 @@ class ChatRoomParticipantRepositoryTest {
 
         // when
         List<MessageUnreadMemberCount> result = chatRoomParticipantRepository
-                .countUnreadMembers(List.of(first.getId(), second.getId()));
+                .countMessageUnreadMembers(List.of(first.getId(), second.getId()));
         Map<Long, Long> countMap = result.stream()
                 .collect(Collectors.toMap(MessageUnreadMemberCount::getChatId,
                                           MessageUnreadMemberCount::getUnreadMemberCount));
