@@ -527,33 +527,63 @@ class ChatServiceTest {
     }
 
     @Test
-    @DisplayName("메시지 전송 시 방에 접속 중인 수신자의 cursor가 갱신된다.")
-    void saveChat_inRoomReceiverCursorUpdatedTest() {
+    @DisplayName("메시지 전송 시 ROOM_ACTIVE 상태인 수신자의 cursor가 갱신된다.")
+    void saveChat_activeRoomReceiverCursorUpdatedTest() {
         // given
         Member sender = fixture.savedMemberBy("sender");
-        Member receiverInRoom = fixture.savedMemberBy("receiverInRoom");
-        Member receiverNotInRoom = fixture.savedMemberBy("receiverNotInRoom");
+        Member activeReceiver = fixture.savedMemberBy("activeReceiver");
+        Member inactiveReceiver = fixture.savedMemberBy("inactiveReceiver");
         ChatRoom chatRoom = fixture.savedChatRoomBy("room",
-                List.of(sender, receiverInRoom, receiverNotInRoom));
+                List.of(sender, activeReceiver, inactiveReceiver));
 
-        // receiverInRoom을 방에 접속 중 상태로 설정
+        // activeReceiver: 세션 등록 + 방 입장 (ENTER_ROOM으로 자동 active 설정)
         WebSocketSession mockSession = mock(WebSocketSession.class);
+        given(mockSession.getId()).willReturn("session-active");
         given(mockSession.getAttributes())
-                .willReturn(Map.of(SessionConst.SESSION_ID, receiverInRoom.getId()));
+                .willReturn(Map.of(SessionConst.SESSION_ID, activeReceiver.getId()));
+        chatRoomManager.registerSession(mockSession);
         chatRoomManager.addSessionToRoom(mockSession, chatRoom.getId());
 
         // when
         Long savedChatId = chatService.saveChat(sender.getId(), chatRoom.getId(), "hello");
         em.clear();
 
-        // then
-        ChatRoomParticipant inRoomParticipant = chatRoomParticipantRepository
-                .findChatRoomBy(chatRoom.getId(), receiverInRoom.getId());
-        assertThat(inRoomParticipant.getLastReadChatId()).isEqualTo(savedChatId);
+        // then: activeReceiver → cursor 갱신됨
+        ChatRoomParticipant activeParticipant = chatRoomParticipantRepository
+                .findChatRoomBy(chatRoom.getId(), activeReceiver.getId());
+        assertThat(activeParticipant.getLastReadChatId()).isEqualTo(savedChatId);
 
-        ChatRoomParticipant notInRoomParticipant = chatRoomParticipantRepository
-                .findChatRoomBy(chatRoom.getId(), receiverNotInRoom.getId());
-        assertThat(notInRoomParticipant.getLastReadChatId()).isNull();
+        // inactiveReceiver → cursor 갱신 안 됨
+        ChatRoomParticipant inactiveParticipant = chatRoomParticipantRepository
+                .findChatRoomBy(chatRoom.getId(), inactiveReceiver.getId());
+        assertThat(inactiveParticipant.getLastReadChatId()).isNull();
+    }
+
+    @Test
+    @DisplayName("메시지 전송 시 방에 접속 중이어도 ROOM_ACTIVE 상태가 아니면 cursor가 갱신되지 않는다.")
+    void saveChat_inRoomButInactiveReceiverCursorNotUpdatedTest() {
+        // given
+        Member sender = fixture.savedMemberBy("sender");
+        Member inRoomReceiver = fixture.savedMemberBy("inRoomReceiver");
+        ChatRoom chatRoom = fixture.savedChatRoomBy("room", List.of(sender, inRoomReceiver));
+
+        // 방 입장(ENTER_ROOM) 후 즉시 ROOM_INACTIVE로 inactive 전환
+        WebSocketSession mockSession = mock(WebSocketSession.class);
+        given(mockSession.getId()).willReturn("session-in-room");
+        given(mockSession.getAttributes())
+                .willReturn(Map.of(SessionConst.SESSION_ID, inRoomReceiver.getId()));
+        chatRoomManager.registerSession(mockSession);
+        chatRoomManager.addSessionToRoom(mockSession, chatRoom.getId());        // auto-activate
+        chatRoomManager.deactivateRoom(mockSession.getId(), chatRoom.getId());  // ROOM_INACTIVE
+
+        // when
+        chatService.saveChat(sender.getId(), chatRoom.getId(), "hello");
+        em.clear();
+
+        // then: cursor 갱신 없음
+        ChatRoomParticipant participant = chatRoomParticipantRepository
+                .findChatRoomBy(chatRoom.getId(), inRoomReceiver.getId());
+        assertThat(participant.getLastReadChatId()).isNull();
     }
 
     @Test
