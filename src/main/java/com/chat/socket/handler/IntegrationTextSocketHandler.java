@@ -5,6 +5,8 @@ import com.chat.exception.ErrorCode;
 import com.chat.service.ChatRoomService;
 import com.chat.service.MemberService;
 import com.chat.service.dtos.chat.EnterRoomRequest;
+import com.chat.service.dtos.chat.RoomActiveRequest;
+import com.chat.service.dtos.chat.RoomInactiveRequest;
 import com.chat.service.dtos.chat.SendChat;
 import com.chat.socket.manager.ChatRoomManager;
 import com.chat.socket.manager.WebsocketSessionManager;
@@ -42,6 +44,7 @@ public class IntegrationTextSocketHandler extends TextWebSocketHandler {
 
         Long loginMemberId = (Long) sessionObject;
         websocketSessionManager.addSession(loginMemberId, session);
+        chatRoomManager.registerSession(session);
 
         log.info("Connect Websocket member : {}", loginMemberId);
     }
@@ -75,6 +78,14 @@ public class IntegrationTextSocketHandler extends TextWebSocketHandler {
                 WebSocketSession safeSession = websocketSessionManager.getWrappedSession(session);
                 chatRoomManager.addSessionToRoom(safeSession, enterRoomRequest.getChatRoomId());
 
+                break;
+            case ROOM_ACTIVE:
+                RoomActiveRequest activeRequest = (RoomActiveRequest) baseMessage;
+                chatRoomManager.activateRoom(session.getId(), activeRequest.getChatRoomId());
+                break;
+            case ROOM_INACTIVE:
+                RoomInactiveRequest inactiveRequest = (RoomInactiveRequest) baseMessage;
+                chatRoomManager.deactivateRoom(session.getId(), inactiveRequest.getChatRoomId());
                 break;
             default:
                 //todo 채팅 메시지 예외처리

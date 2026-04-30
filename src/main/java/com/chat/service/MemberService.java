@@ -111,6 +111,7 @@ public class MemberService {
         Set<Long> chatRoomIds = chatRoomManager.getChatRoomIdsBy(memberId);
         if (chatRoomIds == null || chatRoomIds.isEmpty()) {
             websocketSessionManager.removeSession(memberId, closingSession);
+            chatRoomManager.removeSessionState(closingSession);
             return;
         }
 
@@ -120,5 +121,6 @@ public class MemberService {
         }
 
         websocketSessionManager.removeSession(memberId, closingSession);
+        chatRoomManager.removeSessionState(closingSession);
     }
 }

@@ -18,6 +18,7 @@ public class ChatRoomManager {
 
     private final Map<Long, Set<WebSocketSession>> chatRooms = new ConcurrentHashMap<>();
     private final Map<Long, Set<Long>> memberToRoomsMap = new ConcurrentHashMap<>();
+    private final Map<String, SessionState> sessionStates = new ConcurrentHashMap<>();
 
     public void addSessionToRoom(WebSocketSession session, Long chatRoomId) {
 
@@ -28,11 +29,24 @@ public class ChatRoomManager {
         chatRooms.forEach((roomId, sessions) -> {
             if (!roomId.equals(chatRoomId) && sessions.contains(session)) {
                 removeChatRoomSession(roomId, session);
+
+                SessionState state = sessionStates.get(session.getId());
+                if (state != null) {
+                    state.deactivatedIfRoom(roomId);
+                } else {
+                    log.warn("addSessionToRoom: no SessionState for sessionId={}", session.getId());
+                }
             }
         });
 
         chatRooms.computeIfAbsent(chatRoomId, key -> ConcurrentHashMap.newKeySet()).add(session);
         memberToRoomsMap.computeIfAbsent(loginMemberId, k -> ConcurrentHashMap.newKeySet()).add(chatRoomId);
+        SessionState state = sessionStates.get(session.getId());
+        if (state != null) {
+            state.activate(chatRoomId);
+        } else {
+            log.warn("addSessionToRoom: no SessionState for sessionId={}", session.getId());
+        }
     }
 
     public boolean isInRoom(Long chatRoomId, Long memberId) {
@@ -81,9 +95,50 @@ public class ChatRoomManager {
         return !memberStillInRoom;
     }
 
+    public void registerSession(WebSocketSession session) {
+        Long memberId = (Long) session.getAttributes().get(SessionConst.SESSION_ID);
+        sessionStates.put(session.getId(), new SessionState(memberId));
+    }
+
+    public void activateRoom(String sessionId, Long chatRoomId) {
+        SessionState state = sessionStates.get(sessionId);
+        if (state == null) {
+            log.warn("activateRoom: no SessionState for sessionId={}", sessionId);
+            return;
+        }
+
+        Set<WebSocketSession> sessions = chatRooms.get(chatRoomId);
+        if (sessions == null ||
+                sessions.stream().noneMatch(s -> s.getId().equals(sessionId))) {
+
+            log.warn("activateRoom rejected: session={} not in room={}", sessionId, chatRoomId);
+            return;
+        }
+        state.activate(chatRoomId);
+    }
+
+    public boolean isRoomActive(Long memberId, Long chatRoomId) {
+        return sessionStates.values().stream()
+                .anyMatch(state -> memberId.equals(state.getMemberId())
+                        && chatRoomId.equals(state.getActiveRoomId()));
+    }
+
+    public void deactivateRoom(String sessionId, Long chatRoomId) {
+        SessionState state = sessionStates.get(sessionId);
+        if (state == null) {
+            return;
+        }
+        state.deactivatedIfRoom(chatRoomId);
+    }
+
+    public void removeSessionState(WebSocketSession session) {
+        sessionStates.remove(session.getId());
+    }
+
     @VisibleForTesting
     public void clearAll() {
         chatRooms.clear();
         memberToRoomsMap.clear();
+        sessionStates.clear();
     }
 }

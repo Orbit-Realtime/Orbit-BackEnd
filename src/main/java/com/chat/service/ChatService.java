@@ -80,7 +80,7 @@ public class ChatService {
         for (ChatRoomParticipant crp : findChatRoomParticipants) {
             Long memberId = crp.getMember().getId();
             boolean isRead = memberId.equals(senderId)
-                    || chatRoomManager.isInRoom(chatRoomId, memberId);
+                    || chatRoomManager.isRoomActive(memberId, chatRoomId);
             if (isRead) {
                 readMemberIds.add(memberId);
             }
