@@ -1,6 +1,7 @@
 package com.chat.repository;
 
 import com.chat.entity.ChatRoomParticipant;
+import com.chat.entity.Member;
 import com.chat.repository.dtos.MessageUnreadMemberCount;
 import com.chat.repository.dtos.MemberUnreadCount;
 import com.chat.repository.dtos.RoomUnreadMessageCount;
@@ -106,4 +107,6 @@ public interface ChatRoomParticipantRepository extends JpaRepository<ChatRoomPar
             " AND (crp.lastReadChatId IS NULL OR crp.lastReadChatId < c.id)" +
             " GROUP BY c.id")
     List<MessageUnreadMemberCount> countMessageUnreadMembers(@Param("messageIds") List<Long> messageIds);
+
+    Long member(Member member);
 }

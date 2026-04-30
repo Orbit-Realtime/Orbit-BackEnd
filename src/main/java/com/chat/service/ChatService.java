@@ -173,4 +173,31 @@ public class ChatService {
 
         return new ChatHistoryResponse(lastReadChatId, messages, hasMore);
     }
+
+    @Transactional
+    public void onRoomActive(Long memberId, Long chatRoomId) {
+        Optional<Long> latestChatIdOpt = chatRepository.findLastChatIdBy(chatRoomId);
+        if (latestChatIdOpt.isEmpty()) {
+            return;
+        }
+        Long latestChatId = latestChatIdOpt.get();
+
+        Long previousLastReadChatId =
+                chatRoomParticipantRepository.findLastReadChatIdBy(memberId, chatRoomId);
+
+        int updateCount =
+                chatRoomParticipantRepository.updateLastReadChatId(memberId, chatRoomId, latestChatId);
+
+        if (updateCount == 0) {
+            return;
+        }
+
+        Map<Long, UpdateChatRoom> updatesByMemberId = broadcastDataBuilder.build(chatRoomId, Set.of(memberId));
+        publisher.publishEvent(new PublishReadEvent(
+                memberId,
+                chatRoomId,
+                previousLastReadChatId,
+                updatesByMemberId
+        ));
+    }
 }

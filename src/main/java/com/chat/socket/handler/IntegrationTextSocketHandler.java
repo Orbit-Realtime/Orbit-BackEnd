@@ -3,6 +3,7 @@ package com.chat.socket.handler;
 import com.chat.exception.CustomException;
 import com.chat.exception.ErrorCode;
 import com.chat.service.ChatRoomService;
+import com.chat.service.ChatService;
 import com.chat.service.MemberService;
 import com.chat.service.dtos.chat.EnterRoomRequest;
 import com.chat.service.dtos.chat.RoomActiveRequest;
@@ -30,6 +31,7 @@ public class IntegrationTextSocketHandler extends TextWebSocketHandler {
     private final WebsocketSessionManager websocketSessionManager;
     private final ChatRoomManager chatRoomManager;
     private final ChatRoomService chatRoomService;
+    private final ChatService chatService;
     private final MemberService memberService;
     private final ObjectMapper objectMapper;
 
@@ -81,7 +83,11 @@ public class IntegrationTextSocketHandler extends TextWebSocketHandler {
                 break;
             case ROOM_ACTIVE:
                 RoomActiveRequest activeRequest = (RoomActiveRequest) baseMessage;
-                chatRoomManager.activateRoom(session.getId(), activeRequest.getChatRoomId());
+                Long activeRoomId = activeRequest.getChatRoomId();
+                Long activeMemberId = (Long) session.getAttributes().get(SessionConst.SESSION_ID);
+
+                chatRoomManager.activateRoom(session.getId(), activeRoomId);
+                chatService.onRoomActive(activeMemberId, activeRoomId);
                 break;
             case ROOM_INACTIVE:
                 RoomInactiveRequest inactiveRequest = (RoomInactiveRequest) baseMessage;

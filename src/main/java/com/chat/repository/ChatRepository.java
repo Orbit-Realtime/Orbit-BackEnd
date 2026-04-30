@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ChatRepository extends JpaRepository<Chat, Long> {
 
@@ -14,6 +15,11 @@ public interface ChatRepository extends JpaRepository<Chat, Long> {
             " FROM Chat c" +
             " WHERE c.chatRoom.id = :chatRoomId ORDER BY c.id DESC")
     List<Chat> findLastChatBy(@Param("chatRoomId") Long chatRoomId, Pageable pageable);
+
+    @Query("SELECT MAX(c.id)" +
+            " FROM Chat c" +
+            " WHERE c.chatRoom.id = :chatRoomId")
+    Optional<Long> findLastChatIdBy(@Param("chatRoomId") Long chatRoomId);
 
     // todo delete (no usage)
     @Query("SELECT c" +
