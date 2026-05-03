@@ -19,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -109,14 +108,13 @@ public class MemberService {
     public void removeSession(Long memberId, WebSocketSession closingSession) {
 
         Set<Long> chatRoomIds = chatRoomManager.getChatRoomIdsBy(memberId);
-        if (chatRoomIds == null || chatRoomIds.isEmpty()) {
+        if (chatRoomIds.isEmpty()) {
             websocketSessionManager.removeSession(memberId, closingSession);
             chatRoomManager.removeSessionState(closingSession);
             return;
         }
 
-        Set<Long> snapshot = new HashSet<>(chatRoomIds);  // live Set 순회 방지
-        for (Long chatRoomId : snapshot) {
+        for (Long chatRoomId : chatRoomIds) {
             chatRoomManager.removeChatRoomSession(chatRoomId, closingSession);
         }
 

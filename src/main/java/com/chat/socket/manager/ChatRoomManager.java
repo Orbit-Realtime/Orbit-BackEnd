@@ -64,7 +64,9 @@ public class ChatRoomManager {
     }
 
     public Set<Long> getChatRoomIdsBy(Long memberId) {
-        return memberToRoomsMap.get(memberId);
+        Set<Long> rooms = memberToRoomsMap.get(memberId);
+        if (rooms == null) return Collections.emptySet();
+        return Set.copyOf(rooms);
     }
 
     public boolean removeChatRoomSession(Long chatRoomId, WebSocketSession closingSession) {
