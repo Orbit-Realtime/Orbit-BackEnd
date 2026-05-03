@@ -14,6 +14,7 @@ public enum MessageType {
     READ_EVENT("읽음 이벤트"),
     ROOM_ACTIVE("방 활성화"),
     ROOM_INACTIVE("방 비활성화"),
+    ERROR("에러 응답"),
     ;
 
     private final String description;
