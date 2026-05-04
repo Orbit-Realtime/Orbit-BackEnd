@@ -65,7 +65,7 @@ class ChatServiceTest {
         participants.add(receiver1);
         participants.add(receiver2);
 
-        ChatRoom chatRoom = fixture.savedChatRoomBy("title", participants);
+        Space chatRoom = fixture.savedChatRoomBy("title", participants);
 
         String message = "message";
 
@@ -92,7 +92,7 @@ class ChatServiceTest {
         participants.add(receiver1);
         participants.add(receiver2);
 
-        ChatRoom chatRoom = fixture.savedChatRoomBy("title", participants);
+        Space chatRoom = fixture.savedChatRoomBy("title", participants);
 
         String message = "message";
 
@@ -120,7 +120,7 @@ class ChatServiceTest {
         participants.add(secondMember);
         participants.add(thirdMember);
 
-        ChatRoom chatRoom = fixture.savedChatRoomBy("title", participants);
+        Space chatRoom = fixture.savedChatRoomBy("title", participants);
         Long chatRoomId = chatRoom.getId();
 
         Long firstChatId = chatService.saveChat(firstMember.getId(), chatRoomId, "message");
@@ -163,7 +163,7 @@ class ChatServiceTest {
         participants.add(firstMember);
         participants.add(secondMember);
 
-        ChatRoom chatRoom = fixture.savedChatRoomBy("title", participants);
+        Space chatRoom = fixture.savedChatRoomBy("title", participants);
 
         // when
         ChatHistoryResponse response = chatService.findChatHistory(chatRoom.getId(), firstMember.getId(), null);
@@ -180,7 +180,7 @@ class ChatServiceTest {
         Member firstMember = fixture.savedMemberBy("firstMember");
         Member secondMember = fixture.savedMemberBy("secondMember");
 
-        ChatRoom chatRoom = fixture.savedChatRoomBy("title", List.of(firstMember, secondMember));
+        Space chatRoom = fixture.savedChatRoomBy("title", List.of(firstMember, secondMember));
         Long chatRoomId = chatRoom.getId();
 
         chatService.saveChat(firstMember.getId(), chatRoomId, "message");
@@ -210,7 +210,7 @@ class ChatServiceTest {
         Member firstMember = fixture.savedMemberBy("firstMember");
         Member secondMember = fixture.savedMemberBy("secondMember");
 
-        ChatRoom chatRoom = fixture.savedChatRoomBy("title", List.of(firstMember, secondMember));
+        Space chatRoom = fixture.savedChatRoomBy("title", List.of(firstMember, secondMember));
         Long chatRoomId = chatRoom.getId();
 
         Long firstChatId = chatService.saveChat(firstMember.getId(), chatRoomId, "message");
@@ -237,7 +237,7 @@ class ChatServiceTest {
     void findChatHistory_initialLoad_hasMoreTrueTest() {
         // given
         Member member = fixture.savedMemberBy("member");
-        ChatRoom chatRoom = fixture.savedChatRoomBy("room", List.of(member));
+        Space chatRoom = fixture.savedChatRoomBy("room", List.of(member));
         Long chatRoomId = chatRoom.getId();
 
         for (int i = 0; i < 31; i++) {
@@ -257,7 +257,7 @@ class ChatServiceTest {
     void findChatHistory_initialLoad_hasMoreFalseTest() {
         // given
         Member member = fixture.savedMemberBy("member");
-        ChatRoom chatRoom = fixture.savedChatRoomBy("room", List.of(member));
+        Space chatRoom = fixture.savedChatRoomBy("room", List.of(member));
         Long chatRoomId = chatRoom.getId();
 
         for (int i = 0; i < 5; i++) {
@@ -277,7 +277,7 @@ class ChatServiceTest {
     void findChatHistory_initialLoad_messagesInAscendingOrderTest() {
         // given
         Member member = fixture.savedMemberBy("member");
-        ChatRoom chatRoom = fixture.savedChatRoomBy("room", List.of(member));
+        Space chatRoom = fixture.savedChatRoomBy("room", List.of(member));
         Long chatRoomId = chatRoom.getId();
 
         Long firstChatId = chatService.saveChat(member.getId(), chatRoomId, "first");
@@ -300,7 +300,7 @@ class ChatServiceTest {
     void findChatHistory_cursorLoad_returnsMessagesBeforeCursorTest() {
         // given
         Member member = fixture.savedMemberBy("member");
-        ChatRoom chatRoom = fixture.savedChatRoomBy("room", List.of(member));
+        Space chatRoom = fixture.savedChatRoomBy("room", List.of(member));
         Long chatRoomId = chatRoom.getId();
 
         Long firstChatId = chatService.saveChat(member.getId(), chatRoomId, "first");
@@ -323,7 +323,7 @@ class ChatServiceTest {
         // given
         Member sender = fixture.savedMemberBy("sender");
         Member receiver = fixture.savedMemberBy("receiver");
-        ChatRoom chatRoom = fixture.savedChatRoomBy("room", List.of(sender, receiver));
+        Space chatRoom = fixture.savedChatRoomBy("room", List.of(sender, receiver));
         Long chatRoomId = chatRoom.getId();
 
         chatService.saveChat(sender.getId(), chatRoomId, "first");
@@ -345,7 +345,7 @@ class ChatServiceTest {
     void findChatHistory_cursorLoad_lastReadChatIdIsNullTest() {
         // given
         Member member = fixture.savedMemberBy("member");
-        ChatRoom chatRoom = fixture.savedChatRoomBy("room", List.of(member));
+        Space chatRoom = fixture.savedChatRoomBy("room", List.of(member));
         Long chatRoomId = chatRoom.getId();
 
         chatService.saveChat(member.getId(), chatRoomId, "first");
@@ -363,7 +363,7 @@ class ChatServiceTest {
     void findChatHistory_cursorLoad_hasMoreTrueTest() {
         // given
         Member member = fixture.savedMemberBy("member");
-        ChatRoom chatRoom = fixture.savedChatRoomBy("room", List.of(member));
+        Space chatRoom = fixture.savedChatRoomBy("room", List.of(member));
         Long chatRoomId = chatRoom.getId();
 
         // 32개 저장 후 마지막 id를 커서로 → 이전 31개 존재 → hasMore=true
@@ -385,7 +385,7 @@ class ChatServiceTest {
     void findChatHistory_cursorLoad_noPreviousMessages_returnsEmptyTest() {
         // given
         Member member = fixture.savedMemberBy("member");
-        ChatRoom chatRoom = fixture.savedChatRoomBy("room", List.of(member));
+        Space chatRoom = fixture.savedChatRoomBy("room", List.of(member));
         Long chatRoomId = chatRoom.getId();
 
         Long firstChatId = chatService.saveChat(member.getId(), chatRoomId, "only message");
@@ -405,7 +405,7 @@ class ChatServiceTest {
         Member firstMember = fixture.savedMemberBy("firstMember");
         Member secondMember = fixture.savedMemberBy("secondMember");
 
-        ChatRoom chatRoom = fixture.savedChatRoomBy("title", List.of(firstMember, secondMember));
+        Space chatRoom = fixture.savedChatRoomBy("title", List.of(firstMember, secondMember));
         Long chatRoomId = chatRoom.getId();
 
         chatService.saveChat(firstMember.getId(), chatRoomId, "message");
@@ -427,7 +427,7 @@ class ChatServiceTest {
         // given
         Member sender = fixture.savedMemberBy("sender");
         Member receiver = fixture.savedMemberBy("receiver");
-        ChatRoom chatRoom = fixture.savedChatRoomBy("room", List.of(sender, receiver));
+        Space chatRoom = fixture.savedChatRoomBy("room", List.of(sender, receiver));
 
         // when
         Long savedChatId = chatService.saveChat(sender.getId(), chatRoom.getId(), "hello");
@@ -445,7 +445,7 @@ class ChatServiceTest {
         // given
         Member sender = fixture.savedMemberBy("sender");
         Member receiver = fixture.savedMemberBy("receiver");
-        ChatRoom chatRoom = fixture.savedChatRoomBy("room", List.of(sender, receiver));
+        Space chatRoom = fixture.savedChatRoomBy("room", List.of(sender, receiver));
 
         // when
         chatService.saveChat(sender.getId(), chatRoom.getId(), "hello");
@@ -463,7 +463,7 @@ class ChatServiceTest {
         // given
         Member me = fixture.savedMemberBy("me");
         Member other = fixture.savedMemberBy("other");
-        ChatRoom chatRoom = fixture.savedChatRoomBy("room", List.of(me, other));
+        Space chatRoom = fixture.savedChatRoomBy("room", List.of(me, other));
         Long chatRoomId = chatRoom.getId();
 
         chatService.saveChat(other.getId(), chatRoomId, "first");
@@ -485,7 +485,7 @@ class ChatServiceTest {
         // given
         Member me = fixture.savedMemberBy("me");
         Member other = fixture.savedMemberBy("other");
-        ChatRoom chatRoom = fixture.savedChatRoomBy("room", List.of(me, other));
+        Space chatRoom = fixture.savedChatRoomBy("room", List.of(me, other));
         Long chatRoomId = chatRoom.getId();
 
         // other가 메시지 2개 전송 → me는 receiver, cursor 갱신 없음
@@ -515,7 +515,7 @@ class ChatServiceTest {
     void findChatHistory_emptyRoom_cursorNotUpdatedTest() {
         // given
         Member me = fixture.savedMemberBy("me");
-        ChatRoom chatRoom = fixture.savedChatRoomBy("room", List.of(me));
+        Space chatRoom = fixture.savedChatRoomBy("room", List.of(me));
 
         // when
         chatService.findChatHistory(chatRoom.getId(), me.getId(), null);
@@ -534,7 +534,7 @@ class ChatServiceTest {
         Member sender = fixture.savedMemberBy("sender");
         Member activeReceiver = fixture.savedMemberBy("activeReceiver");
         Member inactiveReceiver = fixture.savedMemberBy("inactiveReceiver");
-        ChatRoom chatRoom = fixture.savedChatRoomBy("room",
+        Space chatRoom = fixture.savedChatRoomBy("room",
                 List.of(sender, activeReceiver, inactiveReceiver));
 
         // activeReceiver: 세션 등록 + 방 입장 (ENTER_ROOM으로 자동 active 설정)
@@ -566,7 +566,7 @@ class ChatServiceTest {
         // given
         Member sender = fixture.savedMemberBy("sender");
         Member inRoomReceiver = fixture.savedMemberBy("inRoomReceiver");
-        ChatRoom chatRoom = fixture.savedChatRoomBy("room", List.of(sender, inRoomReceiver));
+        Space chatRoom = fixture.savedChatRoomBy("room", List.of(sender, inRoomReceiver));
 
         // 방 입장(ENTER_ROOM) 후 즉시 ROOM_INACTIVE로 inactive 전환
         WebSocketSession mockSession = mock(WebSocketSession.class);
@@ -593,7 +593,7 @@ class ChatServiceTest {
         // given
         Member sender = fixture.savedMemberBy("sender");
         Member receiver = fixture.savedMemberBy("receiver");
-        ChatRoom chatRoom = fixture.savedChatRoomBy("room", List.of(sender, receiver));
+        Space chatRoom = fixture.savedChatRoomBy("room", List.of(sender, receiver));
         Long chatRoomId = chatRoom.getId();
 
         chatService.saveChat(sender.getId(), chatRoomId, "first");
@@ -613,7 +613,7 @@ class ChatServiceTest {
         // given
         Member sender = fixture.savedMemberBy("sender");
         Member me = fixture.savedMemberBy("me");
-        ChatRoom chatRoom = fixture.savedChatRoomBy("room", List.of(sender, me));
+        Space chatRoom = fixture.savedChatRoomBy("room", List.of(sender, me));
         Long chatRoomId = chatRoom.getId();
 
         chatService.saveChat(sender.getId(), chatRoomId, "first");
@@ -639,7 +639,7 @@ class ChatServiceTest {
         // given
         Member sender = fixture.savedMemberBy("sender");
         Member receiver = fixture.savedMemberBy("receiver");
-        ChatRoom chatRoom = fixture.savedChatRoomBy("room", List.of(sender, receiver));
+        Space chatRoom = fixture.savedChatRoomBy("room", List.of(sender, receiver));
         Long chatRoomId = chatRoom.getId();
 
         Long sentChatId = chatService.saveChat(sender.getId(), chatRoomId, "hello");
@@ -659,7 +659,7 @@ class ChatServiceTest {
         // given
         Member sender = fixture.savedMemberBy("sender");
         Member receiver = fixture.savedMemberBy("receiver");
-        ChatRoom chatRoom = fixture.savedChatRoomBy("room", List.of(sender, receiver));
+        Space chatRoom = fixture.savedChatRoomBy("room", List.of(sender, receiver));
         Long chatRoomId = chatRoom.getId();
 
         // receiver: ENTER_ROOM(auto-activate) 후 ROOM_INACTIVE
@@ -693,7 +693,7 @@ class ChatServiceTest {
     void onRoomActive_emptyRoom_returnsWithoutExceptionTest() {
         // given
         Member member = fixture.savedMemberBy("member");
-        ChatRoom chatRoom = fixture.savedChatRoomBy("room", List.of(member));
+        Space chatRoom = fixture.savedChatRoomBy("room", List.of(member));
 
         // when & then: 예외 없이 정상 종료
         assertThatCode(() -> chatService.onRoomActive(member.getId(), chatRoom.getId()))
@@ -706,7 +706,7 @@ class ChatServiceTest {
         // given
         Member sender = fixture.savedMemberBy("sender");
         Member receiver = fixture.savedMemberBy("receiver");
-        ChatRoom chatRoom = fixture.savedChatRoomBy("room", List.of(sender, receiver));
+        Space chatRoom = fixture.savedChatRoomBy("room", List.of(sender, receiver));
         Long chatRoomId = chatRoom.getId();
 
         // receiver: ENTER_ROOM(auto-activate)
@@ -734,7 +734,7 @@ class ChatServiceTest {
         // given
         Member sender = fixture.savedMemberBy("sender");
         Member receiver = fixture.savedMemberBy("receiver");
-        ChatRoom chatRoom = fixture.savedChatRoomBy("room", List.of(sender, receiver));
+        Space chatRoom = fixture.savedChatRoomBy("room", List.of(sender, receiver));
         Long chatRoomId = chatRoom.getId();
 
         // receiver: ENTER_ROOM 후 ROOM_INACTIVE
@@ -779,7 +779,7 @@ class ChatServiceTest {
         // given
         Member sender = fixture.savedMemberBy("sender");
         Member receiver = fixture.savedMemberBy("receiver");
-        ChatRoom chatRoom = fixture.savedChatRoomBy("room", List.of(sender, receiver));
+        Space chatRoom = fixture.savedChatRoomBy("room", List.of(sender, receiver));
         Long chatRoomId = chatRoom.getId();
 
         // inactive 동안 메시지 1개

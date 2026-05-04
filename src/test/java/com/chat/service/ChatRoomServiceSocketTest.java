@@ -1,7 +1,7 @@
 package com.chat.service;
 
 import com.chat.entity.Chat;
-import com.chat.entity.ChatRoom;
+import com.chat.entity.Space;
 import com.chat.entity.Member;
 import com.chat.fixture.MemberFixture;
 import com.chat.fixture.SocketFixture;
@@ -78,7 +78,7 @@ public class ChatRoomServiceSocketTest {
 
         List<Member> participants = new ArrayList<>();
         participants.add(member);
-        ChatRoom chatRoom = fixture.savedChatRoomBy("title", participants);
+        Space chatRoom = fixture.savedChatRoomBy("title", participants);
         Long chatRoomId = chatRoom.getId();
 
         String JSESSIONID = memberFixture.loginRequestBy(username, port);
@@ -113,7 +113,7 @@ public class ChatRoomServiceSocketTest {
         participants.add(first);
         participants.add(second);
 
-        ChatRoom chatRoom = fixture.savedChatRoomBy("title", participants);
+        Space chatRoom = fixture.savedChatRoomBy("title", participants);
         Long chatRoomId = chatRoom.getId();
 
         chatService.saveChat(firstId, chatRoomId, "firstChat");
@@ -155,7 +155,7 @@ public class ChatRoomServiceSocketTest {
         participants.add(first);
         participants.add(second);
 
-        ChatRoom chatRoom = fixture.savedChatRoomBy("title", participants);
+        Space chatRoom = fixture.savedChatRoomBy("title", participants);
         Long chatRoomId = chatRoom.getId();
 
         CountDownLatch latch = new CountDownLatch(2);
@@ -219,7 +219,7 @@ public class ChatRoomServiceSocketTest {
         List<Member> participants = new ArrayList<>();
         participants.add(first);
         participants.add(second);
-        ChatRoom chatRoom = fixture.savedChatRoomBy("title", participants);
+        Space chatRoom = fixture.savedChatRoomBy("title", participants);
         Long chatRoomId = chatRoom.getId();
 
         CountDownLatch latch = new CountDownLatch(2);
@@ -281,7 +281,7 @@ public class ChatRoomServiceSocketTest {
         participants.add(first);
         participants.add(second);
 
-        ChatRoom chatRoom = fixture.savedChatRoomBy("title", participants);
+        Space chatRoom = fixture.savedChatRoomBy("title", participants);
         Long chatRoomId = chatRoom.getId();
 
         // second가 아직 방에 없는 상태에서 first가 메시지 전송 → second.isRead=false
@@ -340,7 +340,7 @@ public class ChatRoomServiceSocketTest {
         Member second = memberFixture.saveEncryptPasswordBy(secondUsername);
         Long secondId = second.getId();
 
-        ChatRoom chatRoom = fixture.savedChatRoomBy("title", List.of(first, second));
+        Space chatRoom = fixture.savedChatRoomBy("title", List.of(first, second));
         Long chatRoomId = chatRoom.getId();
 
         // first가 첫 번째 메시지 전송 → second.isRead=false
@@ -390,7 +390,7 @@ public class ChatRoomServiceSocketTest {
         Member second = memberFixture.saveEncryptPasswordBy(secondUsername);
         Long secondId = second.getId();
 
-        ChatRoom chatRoom = fixture.savedChatRoomBy("title", List.of(first, second));
+        Space chatRoom = fixture.savedChatRoomBy("title", List.of(first, second));
         Long chatRoomId = chatRoom.getId();
 
         // first가 WS 연결 및 방 입장
@@ -423,7 +423,7 @@ public class ChatRoomServiceSocketTest {
         Member first = memberFixture.saveEncryptPasswordBy(firstUsername);
         Long firstId = first.getId();
 
-        ChatRoom chatRoom = fixture.savedChatRoomBy("oldTitle", List.of(first));
+        Space chatRoom = fixture.savedChatRoomBy("oldTitle", List.of(first));
         Long chatRoomId = chatRoom.getId();
 
         // first가 WS 연결 및 방 입장
@@ -462,7 +462,7 @@ public class ChatRoomServiceSocketTest {
         Long secondId = second.getId();
 
         // 초기 방: first만 참여
-        ChatRoom chatRoom = fixture.savedChatRoomBy("title", List.of(first));
+        Space chatRoom = fixture.savedChatRoomBy("title", List.of(first));
         Long chatRoomId = chatRoom.getId();
 
         // first가 WS 연결 및 방 입장

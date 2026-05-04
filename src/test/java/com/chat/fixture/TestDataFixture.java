@@ -1,7 +1,7 @@
 package com.chat.fixture;
 
 import com.chat.entity.Chat;
-import com.chat.entity.ChatRoom;
+import com.chat.entity.Space;
 import com.chat.entity.ChatRoomParticipant;
 import com.chat.entity.Member;
 import com.chat.repository.*;
@@ -24,7 +24,7 @@ public class TestDataFixture {
     @Autowired
     private MemberRepository memberRepository;
     @Autowired
-    private ChatRoomRepository chatRoomRepository;
+    private SpaceRepository spaceRepository;
     @Autowired
     private ChatRoomParticipantRepository chatRoomParticipantRepository;
     @Autowired
@@ -42,10 +42,10 @@ public class TestDataFixture {
     }
 
 //    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public ChatRoom savedChatRoomBy(String title, List<Member> participants) {
+    public Space savedChatRoomBy(String title, List<Member> participants) {
 
-        ChatRoom chatRoom = ChatRoom.of(title);
-        ChatRoom savedChatRoom = chatRoomRepository.save(chatRoom);
+        Space chatRoom = Space.of(title);
+        Space savedChatRoom = spaceRepository.save(chatRoom);
 
         for (Member participant : participants) {
             ChatRoomParticipant chatRoomParticipant = ChatRoomParticipant.builder()
@@ -58,12 +58,12 @@ public class TestDataFixture {
         return savedChatRoom;
     }
 
-    public ChatRoom savedSimpleChatRoom(String title) {
-        ChatRoom chatRoom = ChatRoom.of(title);
-        return chatRoomRepository.save(chatRoom);
+    public Space savedSimpleChatRoom(String title) {
+        Space chatRoom = Space.of(title);
+        return spaceRepository.save(chatRoom);
     }
 
-    public Chat savedSimpleChat(String message, Member member, ChatRoom chatRoom) {
+    public Chat savedSimpleChat(String message, Member member, Space chatRoom) {
         Chat chat = new Chat(message, member, chatRoom);
         return chatRepository.save(chat);
     }
@@ -72,7 +72,7 @@ public class TestDataFixture {
     public void deleteAllData() {
         em.createQuery("DELETE FROM Chat").executeUpdate();
         em.createQuery("DELETE FROM ChatRoomParticipant").executeUpdate();
-        em.createQuery("DELETE FROM ChatRoom").executeUpdate();
+        em.createQuery("DELETE FROM Space").executeUpdate();
         em.createQuery("DELETE FROM Member").executeUpdate();
         em.flush();
     }

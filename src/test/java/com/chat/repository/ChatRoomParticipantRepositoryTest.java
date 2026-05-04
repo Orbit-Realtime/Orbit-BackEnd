@@ -1,7 +1,7 @@
 package com.chat.repository;
 
 import com.chat.entity.Chat;
-import com.chat.entity.ChatRoom;
+import com.chat.entity.Space;
 import com.chat.entity.ChatRoomParticipant;
 import com.chat.entity.Member;
 import com.chat.repository.dtos.MessageUnreadMemberCount;
@@ -29,7 +29,7 @@ class ChatRoomParticipantRepositoryTest {
     @Autowired
     private ChatRoomParticipantRepository chatRoomParticipantRepository;
     @Autowired
-    private ChatRoomRepository chatRoomRepository;
+    private SpaceRepository spaceRepository;
     @Autowired
     private MemberRepository memberRepository;
     @Autowired
@@ -45,8 +45,8 @@ class ChatRoomParticipantRepositoryTest {
         Member savedMember = createMemberBy(username);
 
         String title = "title";
-        ChatRoom chatRoom = ChatRoom.of(title);
-        ChatRoom savedChatRoom = chatRoomRepository.save(chatRoom);
+        Space chatRoom = Space.of(title);
+        Space savedChatRoom = spaceRepository.save(chatRoom);
         ChatRoomParticipant chatRoomParticipant = ChatRoomParticipant.builder().member(savedMember).chatRoom(savedChatRoom).build();
 
         // when
@@ -76,7 +76,7 @@ class ChatRoomParticipantRepositoryTest {
         memberIds.add(thirdMember.getId());
 
         String title = "title";
-        ChatRoom chatRoom = createChatRoomBy(title);
+        Space chatRoom = createChatRoomBy(title);
 
         chatRoomParticipantRepository.save(ChatRoomParticipant.builder().member(firstMember).chatRoom(chatRoom).build());
         chatRoomParticipantRepository.save(ChatRoomParticipant.builder().member(secondMember).chatRoom(chatRoom).build());
@@ -106,7 +106,7 @@ class ChatRoomParticipantRepositoryTest {
         Member thirdMember = createMemberBy(thirdUsername);
 
         String title = "title";
-        ChatRoom chatRoom = createChatRoomBy(title);
+        Space chatRoom = createChatRoomBy(title);
 
         chatRoomParticipantRepository.save(ChatRoomParticipant.builder().member(firstMember).chatRoom(chatRoom).build());
         chatRoomParticipantRepository.save(ChatRoomParticipant.builder().member(secondMember).chatRoom(chatRoom).build());
@@ -137,7 +137,7 @@ class ChatRoomParticipantRepositoryTest {
         memberIds.add(thirdMember.getId());
 
         String title = "title";
-        ChatRoom chatRoom = createChatRoomBy(title);
+        Space chatRoom = createChatRoomBy(title);
 
         chatRoomParticipantRepository.save(ChatRoomParticipant.builder().member(firstMember).chatRoom(chatRoom).build());
         chatRoomParticipantRepository.save(ChatRoomParticipant.builder().member(secondMember).chatRoom(chatRoom).build());
@@ -157,9 +157,9 @@ class ChatRoomParticipantRepositoryTest {
         Member member = createMemberBy(username);
 
         String firstTitle = "first";
-        ChatRoom first = createChatRoomBy(firstTitle);
+        Space first = createChatRoomBy(firstTitle);
         String secondTitle = "secondTitle";
-        ChatRoom second = createChatRoomBy(secondTitle);
+        Space second = createChatRoomBy(secondTitle);
 
         ChatRoomParticipant firstParticipant = chatRoomParticipantRepository.save(ChatRoomParticipant.builder().member(member).chatRoom(first).build());
         ChatRoomParticipant secondParticipant = chatRoomParticipantRepository.save(ChatRoomParticipant.builder().member(member).chatRoom(second).build());
@@ -179,7 +179,7 @@ class ChatRoomParticipantRepositoryTest {
         String username = "username";
         Member member = createMemberBy(username);
         String title = "chatRoom";
-        ChatRoom chatRoom = createChatRoomBy(title);
+        Space chatRoom = createChatRoomBy(title);
         chatRoomParticipantRepository.save(ChatRoomParticipant.builder().member(member).chatRoom(chatRoom).build());
 
         // when
@@ -197,7 +197,7 @@ class ChatRoomParticipantRepositoryTest {
         String username = "username";
         Member member = createMemberBy(username);
         String title = "chatRoom";
-        ChatRoom chatRoom = createChatRoomBy(title);
+        Space chatRoom = createChatRoomBy(title);
         chatRoomParticipantRepository.save(ChatRoomParticipant.builder().member(member).chatRoom(chatRoom).build());
 
         em.flush();
@@ -226,7 +226,7 @@ class ChatRoomParticipantRepositoryTest {
         String username = "username";
         Member member = createMemberBy(username);
         String title = "chatRoom";
-        ChatRoom chatRoom = createChatRoomBy(title);
+        Space chatRoom = createChatRoomBy(title);
         chatRoomParticipantRepository.save(ChatRoomParticipant.builder().member(member).chatRoom(chatRoom).build());
 
         // when
@@ -245,8 +245,8 @@ class ChatRoomParticipantRepositoryTest {
         Member secondMember = createMemberBy("second");
         Member thirdMember = createMemberBy("third");
 
-        ChatRoom firstRoom = createChatRoomBy("firstRoom");
-        ChatRoom secondRoom = createChatRoomBy("secondRoom");
+        Space firstRoom = createChatRoomBy("firstRoom");
+        Space secondRoom = createChatRoomBy("secondRoom");
 
         chatRoomParticipantRepository.save(ChatRoomParticipant.builder().member(firstMember).chatRoom(firstRoom).build());
         chatRoomParticipantRepository.save(ChatRoomParticipant.builder().member(secondMember).chatRoom(firstRoom).build());
@@ -271,7 +271,7 @@ class ChatRoomParticipantRepositoryTest {
     void deleteByTest() {
         // given
         Member member = createMemberBy("username");
-        ChatRoom chatRoom = createChatRoomBy("chatRoom");
+        Space chatRoom = createChatRoomBy("chatRoom");
         chatRoomParticipantRepository.save(ChatRoomParticipant.builder().member(member).chatRoom(chatRoom).build());
 
         // when
@@ -289,7 +289,7 @@ class ChatRoomParticipantRepositoryTest {
     void lastReadChatIdDefaultNullTest() {
         // given
         Member member = createMemberBy("member");
-        ChatRoom chatRoom = createChatRoomBy("room");
+        Space chatRoom = createChatRoomBy("room");
 
         // when
         ChatRoomParticipant saved = chatRoomParticipantRepository.save(
@@ -305,7 +305,7 @@ class ChatRoomParticipantRepositoryTest {
     void updateLastReadChatIdFromNullTest() {
         // given
         Member member = createMemberBy("member");
-        ChatRoom chatRoom = createChatRoomBy("room");
+        Space chatRoom = createChatRoomBy("room");
         chatRoomParticipantRepository.save(
                 ChatRoomParticipant.builder().member(member).chatRoom(chatRoom).build()
         );
@@ -327,7 +327,7 @@ class ChatRoomParticipantRepositoryTest {
     void updateLastReadChatIdDoesNotDecreaseTest() {
         // given
         Member member = createMemberBy("member");
-        ChatRoom chatRoom = createChatRoomBy("room");
+        Space chatRoom = createChatRoomBy("room");
         chatRoomParticipantRepository.save(
                 ChatRoomParticipant.builder().member(member).chatRoom(chatRoom).build());
         chatRoomParticipantRepository.updateLastReadChatId(member.getId(), chatRoom.getId(),
@@ -355,7 +355,7 @@ class ChatRoomParticipantRepositoryTest {
         // given
         Member me = createMemberBy("me");
         Member other = createMemberBy("other");
-        ChatRoom chatRoom = createChatRoomBy("room");
+        Space chatRoom = createChatRoomBy("room");
         chatRoomParticipantRepository.save(
                 ChatRoomParticipant.builder().member(me).chatRoom(chatRoom).build());
         chatRoomParticipantRepository.save(
@@ -386,7 +386,7 @@ class ChatRoomParticipantRepositoryTest {
         Member me = createMemberBy("me");
         Member other = createMemberBy("other");
         Member sender = createMemberBy("sender");
-        ChatRoom chatRoom = createChatRoomBy("room");
+        Space chatRoom = createChatRoomBy("room");
 
         chatRoomParticipantRepository.save(
                 ChatRoomParticipant.builder().member(me).chatRoom(chatRoom).build());
@@ -425,7 +425,7 @@ class ChatRoomParticipantRepositoryTest {
     void findLastReadChatIdBy_returnsNullWhenNotRead() {
         // given
         Member member = createMemberBy("member");
-        ChatRoom chatRoom = createChatRoomBy("room");
+        Space chatRoom = createChatRoomBy("room");
         chatRoomParticipantRepository.save(
                 ChatRoomParticipant.builder().member(member).chatRoom(chatRoom).build());
         em.flush();
@@ -444,7 +444,7 @@ class ChatRoomParticipantRepositoryTest {
     void findLastReadChatIdBy_returnsValueAfterUpdate() {
         // given
         Member member = createMemberBy("member");
-        ChatRoom chatRoom = createChatRoomBy("room");
+        Space chatRoom = createChatRoomBy("room");
         chatRoomParticipantRepository.save(
                 ChatRoomParticipant.builder().member(member).chatRoom(chatRoom).build());
         chatRoomParticipantRepository.updateLastReadChatId(member.getId(), chatRoom.getId(),
@@ -465,7 +465,7 @@ class ChatRoomParticipantRepositoryTest {
     void countMessageUnreadMembers_senderNotCounted() {
         // given
         Member sender = createMemberBy("sender");
-        ChatRoom chatRoom = createChatRoomBy("room");
+        Space chatRoom = createChatRoomBy("room");
         chatRoomParticipantRepository.save(
                 ChatRoomParticipant.builder().member(sender).chatRoom(chatRoom).build());
 
@@ -490,7 +490,7 @@ class ChatRoomParticipantRepositoryTest {
         Member sender = createMemberBy("sender");
         Member receiver1 = createMemberBy("receiver1");
         Member receiver2 = createMemberBy("receiver2");
-        ChatRoom chatRoom = createChatRoomBy("room");
+        Space chatRoom = createChatRoomBy("room");
 
         chatRoomParticipantRepository.save(
                 ChatRoomParticipant.builder().member(sender).chatRoom(chatRoom).build());
@@ -518,7 +518,7 @@ class ChatRoomParticipantRepositoryTest {
         // given
         Member sender = createMemberBy("sender");
         Member receiver = createMemberBy("receiver");
-        ChatRoom chatRoom = createChatRoomBy("room");
+        Space chatRoom = createChatRoomBy("room");
 
         chatRoomParticipantRepository.save(
                 ChatRoomParticipant.builder().member(sender).chatRoom(chatRoom).build());
@@ -553,7 +553,7 @@ class ChatRoomParticipantRepositoryTest {
         // given
         Member sender = createMemberBy("sender");
         Member receiver = createMemberBy("receiver");
-        ChatRoom chatRoom = createChatRoomBy("room");
+        Space chatRoom = createChatRoomBy("room");
 
         chatRoomParticipantRepository.save(
                 ChatRoomParticipant.builder().member(sender).chatRoom(chatRoom).build());
@@ -587,7 +587,7 @@ class ChatRoomParticipantRepositoryTest {
         Member sender = createMemberBy("sender");
         Member readerOfFirst = createMemberBy("readerOfFirst");
         Member noReader = createMemberBy("noReader");
-        ChatRoom chatRoom = createChatRoomBy("room");
+        Space chatRoom = createChatRoomBy("room");
 
         chatRoomParticipantRepository.save(
                 ChatRoomParticipant.builder().member(sender).chatRoom(chatRoom).build());
@@ -626,8 +626,8 @@ class ChatRoomParticipantRepositoryTest {
         return memberRepository.save(member);
     }
 
-    private ChatRoom createChatRoomBy(String title) {
-        ChatRoom chatRoom = ChatRoom.of(title);
-        return chatRoomRepository.save(chatRoom);
+    private Space createChatRoomBy(String title) {
+        Space chatRoom = Space.of(title);
+        return spaceRepository.save(chatRoom);
     }
 }

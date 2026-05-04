@@ -1,6 +1,6 @@
 package com.chat.repository;
 
-import com.chat.entity.ChatRoom;
+import com.chat.entity.Space;
 import com.chat.entity.ChatRoomParticipant;
 import com.chat.entity.Member;
 import org.junit.jupiter.api.DisplayName;
@@ -21,7 +21,7 @@ class MemberRepositoryTest {
     @Autowired
     private MemberRepository memberRepository;
     @Autowired
-    private ChatRoomRepository chatRoomRepository;
+    private SpaceRepository spaceRepository;
     @Autowired
     private ChatRoomParticipantRepository chatRoomParticipantRepository;
     
@@ -89,8 +89,8 @@ class MemberRepositoryTest {
 
         // when
         String title = "title";
-        ChatRoom chatRoom = ChatRoom.of(title);
-        ChatRoom savedChatRoom = chatRoomRepository.save(chatRoom);
+        Space chatRoom = Space.of(title);
+        Space savedChatRoom = spaceRepository.save(chatRoom);
 
         chatRoomParticipantRepository.save(ChatRoomParticipant.builder().member(firstMember).chatRoom(savedChatRoom).build());
         chatRoomParticipantRepository.save(ChatRoomParticipant.builder().member(secondMember).chatRoom(savedChatRoom).build());

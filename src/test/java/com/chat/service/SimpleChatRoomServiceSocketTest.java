@@ -1,6 +1,6 @@
 package com.chat.service;
 
-import com.chat.entity.ChatRoom;
+import com.chat.entity.Space;
 import com.chat.entity.Member;
 import com.chat.fixture.MemberFixture;
 import com.chat.fixture.SocketFixture;
@@ -75,7 +75,7 @@ public class SimpleChatRoomServiceSocketTest {
 
         List<Member> participants = new ArrayList<>();
         participants.add(encryptMember);
-        ChatRoom chatRoom = fixture.savedChatRoomBy("title", participants);
+        Space chatRoom = fixture.savedChatRoomBy("title", participants);
         Long chatRoomId = chatRoom.getId();
 
         String JSessionId = memberFixture.loginRequestBy(username, port);
@@ -138,7 +138,7 @@ public class SimpleChatRoomServiceSocketTest {
         List<Member> participants = new ArrayList<>();
         participants.add(firstMember);
         participants.add(secondMember);
-        ChatRoom chatRoom = fixture.savedChatRoomBy("title", participants);
+        Space chatRoom = fixture.savedChatRoomBy("title", participants);
         Long chatRoomId = chatRoom.getId();
 
         WebSocketSession firstServerSession = websocketSessionManager.getSessionBy(firstMemberId).iterator().next();

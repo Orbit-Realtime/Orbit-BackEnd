@@ -3,15 +3,12 @@ package com.chat.service;
 import com.chat.api.request.member.JoinRequest;
 import com.chat.api.request.member.LoginRequest;
 import com.chat.api.response.member.GetMembersResponse;
-import com.chat.entity.ChatRoom;
 import com.chat.entity.Member;
 import com.chat.exception.CustomException;
-import com.chat.fixture.TestDataFixture;
 import com.chat.repository.MemberRepository;
 import com.chat.service.dtos.LoginResponse;
 import com.chat.socket.manager.ChatRoomManager;
 import com.chat.socket.manager.WebsocketSessionManager;
-import com.chat.utils.consts.SessionConst;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,15 +16,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.transaction.TestTransaction;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.socket.WebSocketSession;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
 
 @Transactional
 @SpringBootTest
@@ -37,8 +29,6 @@ class MemberServiceTest {
     private MemberService memberService;
     @Autowired
     private MemberRepository memberRepository;
-    @Autowired
-    private TestDataFixture fixture;
     @Autowired
     private WebsocketSessionManager websocketSessionManager;
     @Autowired

@@ -1,7 +1,7 @@
 package com.chat.repository;
 
 import com.chat.entity.Chat;
-import com.chat.entity.ChatRoom;
+import com.chat.entity.Space;
 import com.chat.entity.Member;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,8 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -25,7 +23,7 @@ class ChatRepositoryTest {
     @Autowired
     private ChatRepository chatRepository;
     @Autowired
-    private ChatRoomRepository chatRoomRepository;
+    private SpaceRepository spaceRepository;
     @Autowired
     private MemberRepository memberRepository;
 
@@ -37,8 +35,8 @@ class ChatRepositoryTest {
         Member savedMember = createMember(username);
 
         String title = "title";
-        ChatRoom chatRoom = ChatRoom.of(title);
-        ChatRoom savedChatRoom = chatRoomRepository.save(chatRoom);
+        Space chatRoom = Space.of(title);
+        Space savedChatRoom = spaceRepository.save(chatRoom);
 
         String message = "message";
         Chat chat = new Chat(message, savedMember, savedChatRoom);
@@ -63,7 +61,7 @@ class ChatRepositoryTest {
         Member secondMember = createMember(secondUser);
 
         String title = "title";
-        ChatRoom chatRoom = createChatRoom(title);
+        Space chatRoom = createChatRoom(title);
 
         String firstMessage = "first";
         Chat firstChat = new Chat(firstMessage, firstMember, chatRoom);
@@ -89,8 +87,8 @@ class ChatRepositoryTest {
         // given
         Member member = createMember("user");
 
-        ChatRoom firstRoom = createChatRoom("firstRoom");
-        ChatRoom secondRoom = createChatRoom("secondRoom");
+        Space firstRoom = createChatRoom("firstRoom");
+        Space secondRoom = createChatRoom("secondRoom");
 
         chatRepository.save(new Chat("first-1", member, firstRoom));
         Chat lastOfFirst = chatRepository.save(new Chat("first-2", member, firstRoom));
@@ -114,8 +112,8 @@ class ChatRepositoryTest {
         // given
         Member member = createMember("user");
 
-        ChatRoom roomWithChat = createChatRoom("roomWithChat");
-        ChatRoom emptyRoom = createChatRoom("emptyRoom");
+        Space roomWithChat = createChatRoom("roomWithChat");
+        Space emptyRoom = createChatRoom("emptyRoom");
 
         Chat chat = chatRepository.save(new Chat("message", member, roomWithChat));
 
@@ -133,7 +131,7 @@ class ChatRepositoryTest {
     void findLatestChatsTest() {
         // given
         Member member = createMember("user");
-        ChatRoom chatRoom = createChatRoom("room");
+        Space chatRoom = createChatRoom("room");
 
         Chat first = chatRepository.save(new Chat("first", member, chatRoom));
         Chat second = chatRepository.save(new Chat("second", member, chatRoom));
@@ -155,8 +153,8 @@ class ChatRepositoryTest {
     void findLatestChats_doesNotIncludeOtherRoomsTest() {
         // given
         Member member = createMember("user");
-        ChatRoom targetRoom = createChatRoom("target");
-        ChatRoom otherRoom = createChatRoom("other");
+        Space targetRoom = createChatRoom("target");
+        Space otherRoom = createChatRoom("other");
 
         Chat targetChat = chatRepository.save(new Chat("target message", member, targetRoom));
         chatRepository.save(new Chat("other message", member, otherRoom));
@@ -175,7 +173,7 @@ class ChatRepositoryTest {
     @DisplayName("메시지가 없는 채팅방의 최신 메시지 조회는 빈 리스트를 반환한다.")
     void findLatestChats_emptyRoom_returnsEmptyListTest() {
         // given
-        ChatRoom emptyRoom = createChatRoom("empty");
+        Space emptyRoom = createChatRoom("empty");
         Pageable limit10 = PageRequest.of(0, 10);
 
         // when
@@ -190,7 +188,7 @@ class ChatRepositoryTest {
     void findChatsBeforeIdTest() {
         // given
         Member member = createMember("user");
-        ChatRoom chatRoom = createChatRoom("room");
+        Space chatRoom = createChatRoom("room");
 
         Chat first = chatRepository.save(new Chat("first", member, chatRoom));
         Chat second = chatRepository.save(new Chat("second", member, chatRoom));
@@ -212,7 +210,7 @@ class ChatRepositoryTest {
     void findChatsBeforeId_noPreviousMessages_returnsEmptyTest() {
         // given
         Member member = createMember("user");
-        ChatRoom chatRoom = createChatRoom("room");
+        Space chatRoom = createChatRoom("room");
 
         Chat firstChat = chatRepository.save(new Chat("only message", member, chatRoom));
 
@@ -230,7 +228,7 @@ class ChatRepositoryTest {
     void findChatsBeforeId_respectsPageableLimitTest() {
         // given
         Member member = createMember("user");
-        ChatRoom chatRoom = createChatRoom("room");
+        Space chatRoom = createChatRoom("room");
 
         Chat first = chatRepository.save(new Chat("first", member, chatRoom));
         Chat second = chatRepository.save(new Chat("second", member, chatRoom));
@@ -254,8 +252,8 @@ class ChatRepositoryTest {
     void findChatsBeforeId_doesNotIncludeOtherRoomsTest() {
         // given
         Member member = createMember("user");
-        ChatRoom targetRoom = createChatRoom("target");
-        ChatRoom otherRoom = createChatRoom("other");
+        Space targetRoom = createChatRoom("target");
+        Space otherRoom = createChatRoom("other");
 
         chatRepository.save(new Chat("other message", member, otherRoom));
         Chat targetFirst = chatRepository.save(new Chat("target first", member, targetRoom));
@@ -277,7 +275,7 @@ class ChatRepositoryTest {
     void findLastChatIdBy_returnsLatestChatIdTest() {
         // given
         Member member = createMember("user");
-        ChatRoom chatRoom = createChatRoom("room");
+        Space chatRoom = createChatRoom("room");
 
         chatRepository.save(new Chat("first", member, chatRoom));
         Chat latest = chatRepository.save(new Chat("second", member, chatRoom));
@@ -294,7 +292,7 @@ class ChatRepositoryTest {
     @DisplayName("메시지가 없는 채팅방은 Optional.empty를 반환한다.")
     void findLastChatIdBy_emptyRoom_returnsEmptyTest() {
         // given
-        ChatRoom emptyRoom = createChatRoom("empty");
+        Space emptyRoom = createChatRoom("empty");
 
         // when
         Optional<Long> result = chatRepository.findLastChatIdBy(emptyRoom.getId());
@@ -308,8 +306,8 @@ class ChatRepositoryTest {
     void findLastChatIdBy_doesNotIncludeOtherRoomsTest() {
         // given
         Member member = createMember("user");
-        ChatRoom targetRoom = createChatRoom("target");
-        ChatRoom otherRoom = createChatRoom("other");
+        Space targetRoom = createChatRoom("target");
+        Space otherRoom = createChatRoom("other");
 
         Chat targetChat = chatRepository.save(new Chat("target", member, targetRoom));
         chatRepository.save(new Chat("other", member, otherRoom));
@@ -329,9 +327,9 @@ class ChatRepositoryTest {
         return memberRepository.save(member);
     }
 
-    private ChatRoom createChatRoom(String title) {
-        ChatRoom chatRoom = ChatRoom.of(title);
-        return chatRoomRepository.save(chatRoom);
+    private Space createChatRoom(String title) {
+        Space chatRoom = Space.of(title);
+        return spaceRepository.save(chatRoom);
     }
 
     private Pageable createLimitOne() {

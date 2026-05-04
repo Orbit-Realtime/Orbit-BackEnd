@@ -1,6 +1,6 @@
 package com.chat.api;
 
-import com.chat.entity.ChatRoom;
+import com.chat.entity.Space;
 import com.chat.entity.Member;
 import com.chat.fixture.TestDataFixture;
 import com.chat.service.ChatService;
@@ -42,7 +42,7 @@ class ChatApiControllerTest {
     void chatHistory_initialLoad_returns200WithMessagesTest() throws Exception {
         // given
         Member member = fixture.savedMemberBy("member");
-        ChatRoom chatRoom = fixture.savedChatRoomBy("room", List.of(member));
+        Space chatRoom = fixture.savedChatRoomBy("room", List.of(member));
 
         chatService.saveChat(member.getId(), chatRoom.getId(), "first");
         chatService.saveChat(member.getId(), chatRoom.getId(), "second");
@@ -65,7 +65,7 @@ class ChatApiControllerTest {
     void chatHistory_beforeChatIdIsOptional_returns200Test() throws Exception {
         // given
         Member member = fixture.savedMemberBy("member");
-        ChatRoom chatRoom = fixture.savedChatRoomBy("room", List.of(member));
+        Space chatRoom = fixture.savedChatRoomBy("room", List.of(member));
 
         MockHttpSession session = new MockHttpSession();
         session.setAttribute(SessionConst.SESSION_ID, member.getId());
@@ -82,7 +82,7 @@ class ChatApiControllerTest {
     void chatHistory_cursorLoad_returnsPreviousMessagesAndNullLastReadChatIdTest() throws Exception {
         // given
         Member member = fixture.savedMemberBy("member");
-        ChatRoom chatRoom = fixture.savedChatRoomBy("room", List.of(member));
+        Space chatRoom = fixture.savedChatRoomBy("room", List.of(member));
 
         chatService.saveChat(member.getId(), chatRoom.getId(), "first");
         chatService.saveChat(member.getId(), chatRoom.getId(), "second");
@@ -106,7 +106,7 @@ class ChatApiControllerTest {
     void chatHistory_emptyRoom_returnsEmptyMessagesTest() throws Exception {
         // given
         Member member = fixture.savedMemberBy("member");
-        ChatRoom chatRoom = fixture.savedChatRoomBy("room", List.of(member));
+        Space chatRoom = fixture.savedChatRoomBy("room", List.of(member));
 
         MockHttpSession session = new MockHttpSession();
         session.setAttribute(SessionConst.SESSION_ID, member.getId());

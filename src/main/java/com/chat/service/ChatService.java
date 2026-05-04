@@ -36,7 +36,7 @@ public class ChatService {
     private final ChatRoomManager chatRoomManager;
 
     private final ChatRepository chatRepository;
-    private final ChatRoomRepository chatRoomRepository;
+    private final SpaceRepository spaceRepository;
     private final ChatRoomParticipantRepository chatRoomParticipantRepository;
     private final MemberRepository memberRepository;
 
@@ -60,7 +60,7 @@ public class ChatService {
         Member findSender = memberRepository.findById(senderId).orElseThrow(
                 () -> new CustomException(ErrorCode.MEMBER_NOT_FOUND)
         );
-        ChatRoom findChatRoom = chatRoomRepository.findById(chatRoomId).orElseThrow(
+        Space findChatRoom = spaceRepository.findById(chatRoomId).orElseThrow(
                 () -> new CustomException(ErrorCode.CHAT_ROOM_NOT_EXIST)
         );
 

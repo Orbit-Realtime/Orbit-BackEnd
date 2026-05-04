@@ -3,13 +3,13 @@ package com.chat.service;
 import com.chat.api.response.chatroom.ChatRoomMemberResponse;
 import com.chat.api.response.chatroom.ChatRoomsResponse;
 import com.chat.entity.Chat;
-import com.chat.entity.ChatRoom;
+import com.chat.entity.Space;
 import com.chat.entity.ChatRoomParticipant;
 import com.chat.entity.Member;
 import com.chat.exception.CustomException;
 import com.chat.fixture.TestDataFixture;
 import com.chat.repository.ChatRoomParticipantRepository;
-import com.chat.repository.ChatRoomRepository;
+import com.chat.repository.SpaceRepository;
 import com.chat.service.dtos.SaveChatRoomDTO;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -32,7 +32,7 @@ class ChatRoomServiceTest {
     @Autowired
     private ChatRoomService chatRoomService;
     @Autowired
-    private ChatRoomRepository chatRoomRepository;
+    private SpaceRepository spaceRepository;
     @Autowired
     private ChatRoomParticipantRepository chatRoomParticipantRepository;
     @Autowired
@@ -63,7 +63,7 @@ class ChatRoomServiceTest {
         Long savedChatRoomId = chatRoomService.saveChatRoom(dto);
 
         // then
-        ChatRoom chatRoom = chatRoomRepository.findById(savedChatRoomId).get();
+        Space chatRoom = spaceRepository.findById(savedChatRoomId).get();
 
         List<ChatRoomParticipant> chatRoomParticipants
                 = chatRoomParticipantRepository.findAllFetchMemberBy(savedChatRoomId);
@@ -133,7 +133,7 @@ class ChatRoomServiceTest {
         // given
         Member me = fixture.savedMemberBy("me");
         Member other = fixture.savedMemberBy("other");
-        ChatRoom chatRoom = fixture.savedChatRoomBy("title", List.of(me, other));
+        Space chatRoom = fixture.savedChatRoomBy("title", List.of(me, other));
 
         fixture.savedSimpleChat("first message", other, chatRoom);
         fixture.savedSimpleChat("last message", other, chatRoom);
@@ -153,7 +153,7 @@ class ChatRoomServiceTest {
         // given
         Member me = fixture.savedMemberBy("me");
         Member other = fixture.savedMemberBy("other");
-        ChatRoom chatRoom = fixture.savedChatRoomBy("title", List.of(me, other));
+        Space chatRoom = fixture.savedChatRoomBy("title", List.of(me, other));
 
         Chat firstChat = fixture.savedSimpleChat("msg1", other, chatRoom);
         fixture.savedSimpleChat("msg2", other, chatRoom);
@@ -176,7 +176,7 @@ class ChatRoomServiceTest {
         // given
         Member me = fixture.savedMemberBy("me");
         Member other = fixture.savedMemberBy("other");
-        ChatRoom chatRoom = fixture.savedChatRoomBy("title", List.of(me, other));
+        Space chatRoom = fixture.savedChatRoomBy("title", List.of(me, other));
 
         // when
         chatRoomService.leaveChatRoom(me.getId(), chatRoom.getId());
@@ -196,7 +196,7 @@ class ChatRoomServiceTest {
         // given
         Member me = fixture.savedMemberBy("me");
         Member stranger = fixture.savedMemberBy("stranger");
-        ChatRoom chatRoom = fixture.savedChatRoomBy("title", List.of(me));
+        Space chatRoom = fixture.savedChatRoomBy("title", List.of(me));
 
         // when & then
         assertThatThrownBy(() -> chatRoomService.leaveChatRoom(stranger.getId(), chatRoom.getId()))
@@ -208,13 +208,13 @@ class ChatRoomServiceTest {
     void renameChatRoomTest() {
         // given
         Member me = fixture.savedMemberBy("me");
-        ChatRoom chatRoom = fixture.savedChatRoomBy("original", List.of(me));
+        Space chatRoom = fixture.savedChatRoomBy("original", List.of(me));
 
         // when
         chatRoomService.renameChatRoom(me.getId(), chatRoom.getId(), "changed");
 
         // then
-        ChatRoom found = chatRoomRepository.findById(chatRoom.getId()).get();
+        Space found = spaceRepository.findById(chatRoom.getId()).get();
         assertThat(found.getTitle()).isEqualTo("changed");
     }
 
@@ -224,7 +224,7 @@ class ChatRoomServiceTest {
         // given
         Member me = fixture.savedMemberBy("me");
         Member stranger = fixture.savedMemberBy("stranger");
-        ChatRoom chatRoom = fixture.savedChatRoomBy("title", List.of(me));
+        Space chatRoom = fixture.savedChatRoomBy("title", List.of(me));
 
         // when & then
         assertThatThrownBy(() -> chatRoomService.renameChatRoom(stranger.getId(), chatRoom.getId(), "new"))
@@ -237,7 +237,7 @@ class ChatRoomServiceTest {
         // given
         Member me = fixture.savedMemberBy("me");
         Member other = fixture.savedMemberBy("other");
-        ChatRoom chatRoom = fixture.savedChatRoomBy("title", List.of(me, other));
+        Space chatRoom = fixture.savedChatRoomBy("title", List.of(me, other));
 
         // when
         List<ChatRoomMemberResponse> members = chatRoomService.findChatRoomMembers(me.getId(), chatRoom.getId());
@@ -254,7 +254,7 @@ class ChatRoomServiceTest {
         // given
         Member me = fixture.savedMemberBy("me");
         Member invitee = fixture.savedMemberBy("invitee");
-        ChatRoom chatRoom = fixture.savedChatRoomBy("title", List.of(me));
+        Space chatRoom = fixture.savedChatRoomBy("title", List.of(me));
 
         // when
         chatRoomService.inviteMembers(me.getId(), chatRoom.getId(), Set.of(invitee.getId()));
@@ -270,7 +270,7 @@ class ChatRoomServiceTest {
         // given
         Member me = fixture.savedMemberBy("me");
         Member existing = fixture.savedMemberBy("existing");
-        ChatRoom chatRoom = fixture.savedChatRoomBy("title", List.of(me, existing));
+        Space chatRoom = fixture.savedChatRoomBy("title", List.of(me, existing));
 
         // when
         chatRoomService.inviteMembers(me.getId(), chatRoom.getId(), Set.of(existing.getId()));
@@ -286,7 +286,7 @@ class ChatRoomServiceTest {
         // given
         Member me = fixture.savedMemberBy("me");
         Member other = fixture.savedMemberBy("other");
-        ChatRoom chatRoom = fixture.savedChatRoomBy("title", List.of(me, other));
+        Space chatRoom = fixture.savedChatRoomBy("title", List.of(me, other));
 
         fixture.savedSimpleChat("msg1", other, chatRoom);
         fixture.savedSimpleChat("msg2", other, chatRoom);
@@ -305,7 +305,7 @@ class ChatRoomServiceTest {
         // given
         Member me = fixture.savedMemberBy("me");
         Member other = fixture.savedMemberBy("other");
-        ChatRoom chatRoom = fixture.savedChatRoomBy("title", List.of(me, other));
+        Space chatRoom = fixture.savedChatRoomBy("title", List.of(me, other));
 
         fixture.savedSimpleChat("msg1", other, chatRoom);
         Chat lastChat = fixture.savedSimpleChat("msg2", other, chatRoom);

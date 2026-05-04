@@ -40,7 +40,7 @@ public class ChatRoomService {
 
     private final ChatService chatService;
 
-    private final ChatRoomRepository chatRoomRepository;
+    private final SpaceRepository spaceRepository;
     private final ChatRoomParticipantRepository chatRoomParticipantRepository;
     private final ChatRepository chatRepository;
     private final MemberRepository memberRepository;
@@ -88,8 +88,8 @@ public class ChatRoomService {
 
         String title = ensureTitle(saveChatRoomDTO.getTitle(), participants);
 
-        ChatRoom chatRoom = ChatRoom.of(title);
-        ChatRoom savedChatRoom = chatRoomRepository.save(chatRoom);
+        Space chatRoom = Space.of(title);
+        Space savedChatRoom = spaceRepository.save(chatRoom);
 
         saveChatRoomParticipants(savedChatRoom, findSender, findReceivers);
 
@@ -143,7 +143,7 @@ public class ChatRoomService {
         return receiverUsernames;
     }
 
-    private void saveChatRoomParticipants(ChatRoom chatRoom, Member sender, List<Member> receivers) {
+    private void saveChatRoomParticipants(Space chatRoom, Member sender, List<Member> receivers) {
         ChatRoomParticipant senderChatRoomParticipant
                 = ChatRoomParticipant.builder().chatRoom(chatRoom).member(sender).build();
         chatRoomParticipantRepository.save(senderChatRoomParticipant);
@@ -252,7 +252,7 @@ public class ChatRoomService {
             throw new CustomException(ErrorCode.CHAT_ROOM_NOT_EXIST);
         }
 
-        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
+        Space chatRoom = spaceRepository.findById(chatRoomId)
                 .orElseThrow(() -> new CustomException(ErrorCode.CHAT_ROOM_NOT_EXIST));
         chatRoom.rename(title);
 
@@ -290,7 +290,7 @@ public class ChatRoomService {
                 .map(crp -> crp.getMember().getId())
                 .collect(Collectors.toSet());
 
-        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElseThrow(
+        Space chatRoom = spaceRepository.findById(chatRoomId).orElseThrow(
                 () -> new CustomException(ErrorCode.CHAT_ROOM_NOT_EXIST)
         );
 

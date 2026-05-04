@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,7 +12,8 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ChatRoom extends BaseEntity {
+@Table(name = "space")
+public class Space extends BaseEntity {
 
     @Id @GeneratedValue
     @Column(name = "chat_room_id")
@@ -19,12 +21,12 @@ public class ChatRoom extends BaseEntity {
 
     private String title;
 
-    private ChatRoom(String title) {
+    private Space(String title) {
         this.title = title;
     }
 
-    public static ChatRoom of(String title) {
-        return new ChatRoom(title);
+    public static Space of(String title) {
+        return new Space(title);
     }
 
     public void rename(String title) {

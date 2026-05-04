@@ -31,10 +31,10 @@ public class ChatRoomParticipant extends BaseEntity {
 
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "chat_room_id")
-    private ChatRoom chatRoom;
+    private Space chatRoom;
 
     @Builder
-    public ChatRoomParticipant(Member member, ChatRoom chatRoom) {
+    public ChatRoomParticipant(Member member, Space chatRoom) {
         this.member = member;
         this.chatRoom = chatRoom;
     }

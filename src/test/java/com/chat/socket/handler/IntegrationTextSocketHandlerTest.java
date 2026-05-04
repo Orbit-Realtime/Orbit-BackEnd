@@ -1,12 +1,9 @@
 package com.chat.socket.handler;
 
-import com.chat.entity.ChatRoom;
+import com.chat.entity.Space;
 import com.chat.entity.Member;
-import com.chat.fixture.ChatFixture;
 import com.chat.fixture.MemberFixture;
 import com.chat.fixture.TestDataFixture;
-import com.chat.repository.ChatRoomParticipantRepository;
-import com.chat.service.dtos.chat.EnterRoomRequest;
 import com.chat.service.dtos.chat.SendChat;
 import com.chat.socket.manager.ChatRoomManager;
 import com.chat.socket.manager.WebsocketSessionManager;
@@ -46,11 +43,6 @@ class IntegrationTextSocketHandlerTest {
     private TestDataFixture fixture;
     @Autowired
     private MemberFixture memberFixture;
-    @Autowired
-    private ChatFixture chatFixture;
-    @Autowired
-    private ChatRoomParticipantRepository chatRoomParticipantRepository;
-
 
     @Autowired
     private WebsocketSessionManager websocketSessionManager;
@@ -113,7 +105,7 @@ class IntegrationTextSocketHandlerTest {
 
         List<Member> participants = new ArrayList<>();
         participants.add(member);
-        ChatRoom chatRoom = fixture.savedChatRoomBy("title", participants);
+        Space chatRoom = fixture.savedChatRoomBy("title", participants);
         Long chatRoomId = chatRoom.getId();
 
         String JSessionId = memberFixture.loginRequestBy(username, port);
@@ -161,7 +153,7 @@ class IntegrationTextSocketHandlerTest {
 
         List<Member> participants = new ArrayList<>();
         participants.add(member);
-        ChatRoom chatRoom = fixture.savedChatRoomBy("title", participants);
+        Space chatRoom = fixture.savedChatRoomBy("title", participants);
         Long chatRoomId = chatRoom.getId();
 
         String JSessionId = memberFixture.loginRequestBy(username, port);
@@ -209,7 +201,7 @@ class IntegrationTextSocketHandlerTest {
 
         List<Member> participants = new ArrayList<>();
         participants.add(member);
-        ChatRoom chatRoom = fixture.savedChatRoomBy("title", participants);
+        Space chatRoom = fixture.savedChatRoomBy("title", participants);
 
         String JSessionId = memberFixture.loginRequestBy(username, port);
 

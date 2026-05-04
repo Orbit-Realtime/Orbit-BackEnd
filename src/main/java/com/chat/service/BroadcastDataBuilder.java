@@ -1,7 +1,7 @@
 package com.chat.service;
 
 import com.chat.entity.Chat;
-import com.chat.entity.ChatRoom;
+import com.chat.entity.Space;
 import com.chat.exception.CustomException;
 import com.chat.exception.ErrorCode;
 import com.chat.repository.*;
@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 public class BroadcastDataBuilder {
 
     private final MemberRepository memberRepository;
-    private final ChatRoomRepository chatRoomRepository;
+    private final SpaceRepository spaceRepository;
     private final ChatRepository chatRepository;
     private final ChatRoomParticipantRepository chatRoomParticipantRepository;
 
@@ -40,7 +40,7 @@ public class BroadcastDataBuilder {
             return Map.of();
         }
 
-        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElseThrow(
+        Space space = spaceRepository.findById(chatRoomId).orElseThrow(
                 () -> new CustomException(ErrorCode.CHAT_ROOM_NOT_EXIST)
         );
 
@@ -62,7 +62,7 @@ public class BroadcastDataBuilder {
                         memberId -> UpdateChatRoom.builder()
                                 .messageType(MessageType.UPDATE_CHAT_ROOM)
                                 .chatRoomId(chatRoomId)
-                                .title(chatRoom.getTitle())
+                                .title(space.getTitle())
                                 .lastMessage(lastChat != null ? lastChat.getMessage() : null)
                                 .lastChatId(lastChat != null ? lastChat.getId() : null)
                                 .createdDate(lastChat != null ? lastChat.getCreatedDate() : null)

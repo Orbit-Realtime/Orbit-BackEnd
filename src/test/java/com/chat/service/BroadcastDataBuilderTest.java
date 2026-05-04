@@ -1,10 +1,8 @@
 package com.chat.service;
 
 import com.chat.entity.Chat;
-import com.chat.entity.ChatRoom;
+import com.chat.entity.Space;
 import com.chat.entity.Member;
-import com.chat.exception.CustomException;
-import com.chat.exception.ErrorCode;
 import com.chat.fixture.TestDataFixture;
 import com.chat.repository.ChatRoomParticipantRepository;
 import com.chat.service.dtos.chat.UpdateChatRoom;
@@ -21,7 +19,6 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @Transactional
@@ -40,7 +37,7 @@ class BroadcastDataBuilderTest {
     @DisplayName("채팅방에 참여 중인 멤버가 없으면 빈 Map을 반환한다.")
     void build_noMembers_returnsEmptyMap() {
         // given
-        ChatRoom chatRoom = fixture.savedSimpleChatRoom("title");
+        Space chatRoom = fixture.savedSimpleChatRoom("title");
 
         // when
         Map<Long, UpdateChatRoom> result = broadcastDataBuilder.build(chatRoom.getId());
@@ -55,7 +52,7 @@ class BroadcastDataBuilderTest {
         // given
         Member me = fixture.savedMemberBy("me");
         Member other = fixture.savedMemberBy("other");
-        ChatRoom chatRoom = fixture.savedChatRoomBy("title", List.of(me, other));
+        Space chatRoom = fixture.savedChatRoomBy("title", List.of(me, other));
 
         // when
         Map<Long, UpdateChatRoom> result = broadcastDataBuilder.build(chatRoom.getId());
@@ -73,7 +70,7 @@ class BroadcastDataBuilderTest {
         Member me = fixture.savedMemberBy("me");
         Member other = fixture.savedMemberBy("other");
         Member sender = fixture.savedMemberBy("sender");
-        ChatRoom chatRoom = fixture.savedChatRoomBy("title", List.of(me, other, sender));
+        Space chatRoom = fixture.savedChatRoomBy("title", List.of(me, other, sender));
 
         Chat first = fixture.savedSimpleChat("msg1", sender, chatRoom);
         fixture.savedSimpleChat("msg2", sender, chatRoom);
@@ -97,7 +94,7 @@ class BroadcastDataBuilderTest {
     void buildWithTarget_emptyTargetIds_returnsEmptyMap() {
         // given
         Member me = fixture.savedMemberBy("me");
-        ChatRoom chatRoom = fixture.savedChatRoomBy("title", List.of(me));
+        Space chatRoom = fixture.savedChatRoomBy("title", List.of(me));
 
         // when
         Map<Long, UpdateChatRoom> result = broadcastDataBuilder.build(chatRoom.getId(), Set.of());
@@ -112,7 +109,7 @@ class BroadcastDataBuilderTest {
         // given
         Member me = fixture.savedMemberBy("me");
         Member other = fixture.savedMemberBy("other");
-        ChatRoom chatRoom = fixture.savedChatRoomBy("title", List.of(me, other));
+        Space chatRoom = fixture.savedChatRoomBy("title", List.of(me, other));
 
         // when: me만 타겟
         Map<Long, UpdateChatRoom> result = broadcastDataBuilder.build(chatRoom.getId(), Set.of(me.getId()));
@@ -129,7 +126,7 @@ class BroadcastDataBuilderTest {
         // given
         Member me = fixture.savedMemberBy("me");
         Member sender = fixture.savedMemberBy("sender");
-        ChatRoom chatRoom = fixture.savedChatRoomBy("title", List.of(me, sender));
+        Space chatRoom = fixture.savedChatRoomBy("title", List.of(me, sender));
 
         fixture.savedSimpleChat("msg", sender, chatRoom);
         // me: cursor null → 1개 unread
@@ -147,7 +144,7 @@ class BroadcastDataBuilderTest {
         // given
         Member me = fixture.savedMemberBy("me");
         Member other = fixture.savedMemberBy("other");
-        ChatRoom chatRoom = fixture.savedChatRoomBy("myTitle", List.of(me, other));
+        Space chatRoom = fixture.savedChatRoomBy("myTitle", List.of(me, other));
 
         fixture.savedSimpleChat("first message", other, chatRoom);
         fixture.savedSimpleChat("last message", other, chatRoom);
