@@ -35,7 +35,7 @@ public class IntegrationTextSocketHandler extends TextWebSocketHandler {
 
     private final WebsocketSessionManager websocketSessionManager;
     private final ChatRoomManager chatRoomManager;
-    private final SpaceService chatRoomService;
+    private final SpaceService spaceService;
     private final ChatService chatService;
     private final MemberService memberService;
     private final ObjectMapper objectMapper;
@@ -85,14 +85,14 @@ public class IntegrationTextSocketHandler extends TextWebSocketHandler {
 
                     log.info("chat : {} member : {}", payload, loginMemberId);
 
-                    chatRoomService.broadCastMessage(loginMemberId, sendChat);
+                    spaceService.broadCastMessage(loginMemberId, sendChat);
 
                     break;
                 case ENTER_ROOM:
                     EnterRoomRequest enterRoomRequest = (EnterRoomRequest) baseMessage;
                     IdValidator.requireChatRoomId(enterRoomRequest.getChatRoomId());
                     Long enterMemberId = (Long) session.getAttributes().get(SessionConst.SESSION_ID);
-                    chatRoomService.validateParticipant(enterMemberId, enterRoomRequest.getChatRoomId());
+                    spaceService.validateParticipant(enterMemberId, enterRoomRequest.getChatRoomId());
                     WebSocketSession safeSession = websocketSessionManager.getWrappedSession(session);
                     chatRoomManager.addSessionToRoom(safeSession, enterRoomRequest.getChatRoomId());
 

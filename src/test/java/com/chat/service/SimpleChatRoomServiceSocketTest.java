@@ -46,7 +46,7 @@ public class SimpleChatRoomServiceSocketTest {
     @Autowired
     private SocketFixture socketFixture;
     @Autowired
-    private SpaceService chatRoomService;
+    private SpaceService spaceService;
 
     @Autowired
     private ChatRoomManager chatRoomManager;
@@ -157,7 +157,7 @@ public class SimpleChatRoomServiceSocketTest {
                 .build();
 
         // when
-        chatRoomService.broadCastMessage(firstMemberId, sendChat);
+        spaceService.broadCastMessage(firstMemberId, sendChat);
 
         // then: CHAT_MESSAGE가 second에 도착할 때까지 대기
         long deadline = System.currentTimeMillis() + 3000;

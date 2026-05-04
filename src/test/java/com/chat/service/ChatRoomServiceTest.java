@@ -30,7 +30,7 @@ import static org.assertj.core.api.Assertions.*;
 class ChatRoomServiceTest {
 
     @Autowired
-    private SpaceService chatRoomService;
+    private SpaceService spaceService;
     @Autowired
     private SpaceRepository spaceRepository;
     @Autowired
@@ -60,7 +60,7 @@ class ChatRoomServiceTest {
                 .build();
 
         // when
-        Long savedChatRoomId = chatRoomService.saveChatRoom(dto);
+        Long savedChatRoomId = spaceService.saveSpace(dto);
 
         // then
         Space chatRoom = spaceRepository.findById(savedChatRoomId).get();
@@ -104,7 +104,7 @@ class ChatRoomServiceTest {
         fixture.savedChatRoomBy("title", fourthParticipants);
 
         // when
-        List<SpaceSummaryResponse> chatRooms = chatRoomService.findChatRooms(first.getId());
+        List<SpaceSummaryResponse> chatRooms = spaceService.findSpaces(first.getId());
 
         // then
         assertThat(chatRooms).hasSize(3);
@@ -119,7 +119,7 @@ class ChatRoomServiceTest {
         fixture.savedChatRoomBy("title", List.of(me, other));
 
         // when
-        List<SpaceSummaryResponse> chatRooms = chatRoomService.findChatRooms(me.getId());
+        List<SpaceSummaryResponse> chatRooms = spaceService.findSpaces(me.getId());
 
         // then
         assertThat(chatRooms).hasSize(1);
@@ -139,7 +139,7 @@ class ChatRoomServiceTest {
         fixture.savedSimpleChat("last message", other, chatRoom);
 
         // when
-        List<SpaceSummaryResponse> chatRooms = chatRoomService.findChatRooms(me.getId());
+        List<SpaceSummaryResponse> chatRooms = spaceService.findSpaces(me.getId());
 
         // then
         assertThat(chatRooms).hasSize(1);
@@ -163,7 +163,7 @@ class ChatRoomServiceTest {
                 me.getId(), chatRoom.getId(), firstChat.getId());
 
         // when
-        List<SpaceSummaryResponse> chatRooms = chatRoomService.findChatRooms(me.getId());
+        List<SpaceSummaryResponse> chatRooms = spaceService.findSpaces(me.getId());
 
         // then
         assertThat(chatRooms).hasSize(1);
@@ -179,7 +179,7 @@ class ChatRoomServiceTest {
         Space chatRoom = fixture.savedChatRoomBy("title", List.of(me, other));
 
         // when
-        chatRoomService.leaveChatRoom(me.getId(), chatRoom.getId());
+        spaceService.leaveSpace(me.getId(), chatRoom.getId());
 
         // then
         ChatRoomParticipant participant = chatRoomParticipantRepository.findChatRoomBy(chatRoom.getId(), me.getId());
@@ -199,7 +199,7 @@ class ChatRoomServiceTest {
         Space chatRoom = fixture.savedChatRoomBy("title", List.of(me));
 
         // when & then
-        assertThatThrownBy(() -> chatRoomService.leaveChatRoom(stranger.getId(), chatRoom.getId()))
+        assertThatThrownBy(() -> spaceService.leaveSpace(stranger.getId(), chatRoom.getId()))
                 .isInstanceOf(CustomException.class);
     }
 
@@ -211,7 +211,7 @@ class ChatRoomServiceTest {
         Space chatRoom = fixture.savedChatRoomBy("original", List.of(me));
 
         // when
-        chatRoomService.renameChatRoom(me.getId(), chatRoom.getId(), "changed");
+        spaceService.renameSpace(me.getId(), chatRoom.getId(), "changed");
 
         // then
         Space found = spaceRepository.findById(chatRoom.getId()).get();
@@ -227,7 +227,7 @@ class ChatRoomServiceTest {
         Space chatRoom = fixture.savedChatRoomBy("title", List.of(me));
 
         // when & then
-        assertThatThrownBy(() -> chatRoomService.renameChatRoom(stranger.getId(), chatRoom.getId(), "new"))
+        assertThatThrownBy(() -> spaceService.renameSpace(stranger.getId(), chatRoom.getId(), "new"))
                 .isInstanceOf(CustomException.class);
     }
 
@@ -240,7 +240,7 @@ class ChatRoomServiceTest {
         Space chatRoom = fixture.savedChatRoomBy("title", List.of(me, other));
 
         // when
-        List<SpaceMemberResponse> members = chatRoomService.findChatRoomMembers(me.getId(), chatRoom.getId());
+        List<SpaceMemberResponse> members = spaceService.findSpaceMembers(me.getId(), chatRoom.getId());
 
         // then
         assertThat(members).hasSize(2);
@@ -257,7 +257,7 @@ class ChatRoomServiceTest {
         Space chatRoom = fixture.savedChatRoomBy("title", List.of(me));
 
         // when
-        chatRoomService.inviteMembers(me.getId(), chatRoom.getId(), Set.of(invitee.getId()));
+        spaceService.inviteMembers(me.getId(), chatRoom.getId(), Set.of(invitee.getId()));
 
         // then
         ChatRoomParticipant participant = chatRoomParticipantRepository.findChatRoomBy(chatRoom.getId(), invitee.getId());
@@ -273,7 +273,7 @@ class ChatRoomServiceTest {
         Space chatRoom = fixture.savedChatRoomBy("title", List.of(me, existing));
 
         // when
-        chatRoomService.inviteMembers(me.getId(), chatRoom.getId(), Set.of(existing.getId()));
+        spaceService.inviteMembers(me.getId(), chatRoom.getId(), Set.of(existing.getId()));
 
         // then
         List<ChatRoomParticipant> participants = chatRoomParticipantRepository.findAllFetchMemberBy(chatRoom.getId());
@@ -293,7 +293,7 @@ class ChatRoomServiceTest {
         // me cursor: null — 한 번도 읽지 않음
 
         // when
-        List<SpaceSummaryResponse> chatRooms = chatRoomService.findChatRooms(me.getId());
+        List<SpaceSummaryResponse> chatRooms = spaceService.findSpaces(me.getId());
 
         // then
         assertThat(chatRooms.get(0).getUnreadMessageCount()).isEqualTo(2L);
@@ -315,7 +315,7 @@ class ChatRoomServiceTest {
                 me.getId(), chatRoom.getId(), lastChat.getId());
 
         // when
-        List<SpaceSummaryResponse> chatRooms = chatRoomService.findChatRooms(me.getId());
+        List<SpaceSummaryResponse> chatRooms = spaceService.findSpaces(me.getId());
 
         // then
         assertThat(chatRooms.get(0).getUnreadMessageCount()).isEqualTo(0L);

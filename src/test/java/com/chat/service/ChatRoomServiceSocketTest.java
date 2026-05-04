@@ -39,7 +39,7 @@ import static org.assertj.core.api.Assertions.*;
 public class ChatRoomServiceSocketTest {
 
     @Autowired
-    private SpaceService chatRoomService;
+    private SpaceService spaceService;
     @Autowired
     private ChatService chatService;
 
@@ -86,6 +86,7 @@ public class ChatRoomServiceSocketTest {
         CountDownLatch latch = new CountDownLatch(1);
         List<String> receivedMessages = new ArrayList<>();
         socketFixture.connectSocket(JSESSIONID, memberId, port, receivedMessages, latch);
+        Thread.sleep(300);
 
         // when
         WebSocketSession serverSession = websocketSessionManager.getSessionBy(memberId).iterator().next();
@@ -124,6 +125,7 @@ public class ChatRoomServiceSocketTest {
         CountDownLatch latch = new CountDownLatch(1);
         List<String> receivedMessages = new ArrayList<>();
         socketFixture.connectSocket(JSESSIONID, firstId, port, receivedMessages, latch);
+        Thread.sleep(300);
 
         // when
         WebSocketSession serverSession = websocketSessionManager.getSessionBy(firstId).iterator().next();
@@ -167,6 +169,7 @@ public class ChatRoomServiceSocketTest {
         List<String> secondMessages = new ArrayList<>();
         String secondJSessionId = memberFixture.loginRequestBy("second", port);
         socketFixture.connectSocket(secondJSessionId, secondId, port, secondMessages, latch);
+        Thread.sleep(300);
 
         WebSocketSession firstServerSession = websocketSessionManager.getSessionBy(firstId).iterator().next();
         chatRoomManager.addSessionToRoom(firstServerSession, chatRoomId);
@@ -182,7 +185,7 @@ public class ChatRoomServiceSocketTest {
                 .build();
 
         // when
-        chatRoomService.broadCastMessage(firstId, sendChat);
+        spaceService.broadCastMessage(firstId, sendChat);
 
         // then: CHAT_MESSAGE가 second에 도착할 때까지 대기
         long deadline = System.currentTimeMillis() + 3000;
@@ -230,6 +233,7 @@ public class ChatRoomServiceSocketTest {
         List<String> secondMessages = new ArrayList<>();
         String secondJSessionId = memberFixture.loginRequestBy(secondUsername, port);
         socketFixture.connectSocket(secondJSessionId, secondId, port, secondMessages, latch);
+        Thread.sleep(300);
 
         WebSocketSession firstServerSession = websocketSessionManager.getSessionBy(firstId).iterator().next();
         chatRoomManager.addSessionToRoom(firstServerSession, chatRoomId);
@@ -245,7 +249,7 @@ public class ChatRoomServiceSocketTest {
                 .build();
 
         // when: loginMemberId = firstId (세션 기준값)
-        chatRoomService.broadCastMessage(firstId, sendChat);
+        spaceService.broadCastMessage(firstId, sendChat);
 
         // then
         long deadline = System.currentTimeMillis() + 3000;
@@ -292,6 +296,7 @@ public class ChatRoomServiceSocketTest {
         CountDownLatch latch = new CountDownLatch(2); // UPDATE_CHAT_ROOM + READ_EVENT
         List<String> secondMessages = new ArrayList<>();
         socketFixture.connectSocket(secondJSessionId, secondId, port, secondMessages, latch);
+        Thread.sleep(300);
 
         WebSocketSession secondServerSession = websocketSessionManager.getSessionBy(secondId).iterator().next();
         chatRoomManager.addSessionToRoom(secondServerSession, chatRoomId);
@@ -357,6 +362,7 @@ public class ChatRoomServiceSocketTest {
         CountDownLatch latch = new CountDownLatch(2);
         List<String> secondMessages = new ArrayList<>();
         socketFixture.connectSocket(secondJSessionId, secondId, port, secondMessages, latch);
+        Thread.sleep(300);
 
         WebSocketSession secondServerSession = websocketSessionManager.getSessionBy(secondId).iterator().next();
         chatRoomManager.addSessionToRoom(secondServerSession, chatRoomId);
@@ -398,12 +404,13 @@ public class ChatRoomServiceSocketTest {
         CountDownLatch latch = new CountDownLatch(1);
         List<String> firstMessages = new ArrayList<>();
         socketFixture.connectSocket(firstJSessionId, firstId, port, firstMessages, latch);
+        Thread.sleep(300);
 
         WebSocketSession firstServerSession = websocketSessionManager.getSessionBy(firstId).iterator().next();
         chatRoomManager.addSessionToRoom(firstServerSession, chatRoomId);
 
         // when: second가 채팅방 퇴장
-        chatRoomService.leaveChatRoom(secondId, chatRoomId);
+        spaceService.leaveSpace(secondId, chatRoomId);
 
         // then: 남은 first에게 UPDATE_CHAT_ROOM 전송
         boolean received = latch.await(3, TimeUnit.SECONDS);
@@ -431,12 +438,13 @@ public class ChatRoomServiceSocketTest {
         CountDownLatch latch = new CountDownLatch(1);
         List<String> firstMessages = new ArrayList<>();
         socketFixture.connectSocket(firstJSessionId, firstId, port, firstMessages, latch);
+        Thread.sleep(300);
 
         WebSocketSession firstServerSession = websocketSessionManager.getSessionBy(firstId).iterator().next();
         chatRoomManager.addSessionToRoom(firstServerSession, chatRoomId);
 
         // when: 채팅방 이름 변경
-        chatRoomService.renameChatRoom(firstId, chatRoomId, "newTitle");
+        spaceService.renameSpace(firstId, chatRoomId, "newTitle");
 
         // then: UPDATE_CHAT_ROOM에 변경된 title 포함
         boolean received = latch.await(3, TimeUnit.SECONDS);
@@ -470,12 +478,13 @@ public class ChatRoomServiceSocketTest {
         CountDownLatch latch = new CountDownLatch(1);
         List<String> firstMessages = new ArrayList<>();
         socketFixture.connectSocket(firstJSessionId, firstId, port, firstMessages, latch);
+        Thread.sleep(300);
 
         WebSocketSession firstServerSession = websocketSessionManager.getSessionBy(firstId).iterator().next();
         chatRoomManager.addSessionToRoom(firstServerSession, chatRoomId);
 
         // when: second를 초대
-        chatRoomService.inviteMembers(firstId, chatRoomId, Set.of(secondId));
+        spaceService.inviteMembers(firstId, chatRoomId, Set.of(secondId));
 
         // then: 기존 참여자 first에게 UPDATE_CHAT_ROOM 전송
         boolean received = latch.await(3, TimeUnit.SECONDS);

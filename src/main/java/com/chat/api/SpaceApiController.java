@@ -21,7 +21,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SpaceApiController {
 
-    private final SpaceService chatRoomService;
+    private final SpaceService spaceService;
 
     @PostMapping("/api/chat/room")
     public Result<SpaceResponse> chatRoom(@RequestBody SaveSpaceRequest request,
@@ -33,7 +33,7 @@ public class SpaceApiController {
                 .receiverIds(request.getReceiverIds())
                 .title(request.getTitle())
                 .build();
-        Long chatRoomId = chatRoomService.saveChatRoom(saveChatRooomDto);
+        Long chatRoomId = spaceService.saveSpace(saveChatRooomDto);
 
         return Result
                 .<SpaceResponse>builder()
@@ -46,11 +46,11 @@ public class SpaceApiController {
     @GetMapping("/api/chat/rooms")
     public Result<List<SpaceSummaryResponse>> chatRooms(@SessionAttribute(name = SessionConst.SESSION_ID) Long loginMemberId) {
 
-        List<SpaceSummaryResponse> chatRooms = chatRoomService.findChatRooms(loginMemberId);
+        List<SpaceSummaryResponse> spaces = spaceService.findSpaces(loginMemberId);
 
         return Result
                 .<List<SpaceSummaryResponse>>builder()
-                .data(chatRooms)
+                .data(spaces)
                 .status(HttpStatus.OK)
                 .message("채팅방 목록 조회가 완료됐습니다.")
                 .build();
@@ -60,7 +60,7 @@ public class SpaceApiController {
     public Result<Void> leaveChatRoom(@PathVariable Long chatRoomId,
                                       @SessionAttribute(name = SessionConst.SESSION_ID) Long loginMemberId) {
 
-        chatRoomService.leaveChatRoom(loginMemberId, chatRoomId);
+        spaceService.leaveSpace(loginMemberId, chatRoomId);
 
         return Result.<Void>builder()
                 .status(HttpStatus.OK)
@@ -73,7 +73,7 @@ public class SpaceApiController {
                                        @RequestBody RenameSpaceRequest request,
                                        @SessionAttribute(name = SessionConst.SESSION_ID) Long loginMemberId) {
 
-        chatRoomService.renameChatRoom(loginMemberId, chatRoomId, request.getTitle());
+        spaceService.renameSpace(loginMemberId, chatRoomId, request.getTitle());
 
         return Result.<Void>builder()
                 .status(HttpStatus.OK)
@@ -84,7 +84,7 @@ public class SpaceApiController {
     @GetMapping("/api/chat/room/{chatRoomId}/members")
     public Result<List<SpaceMemberResponse>> chatRoomMembers(@PathVariable Long chatRoomId,
                                                              @SessionAttribute(name = SessionConst.SESSION_ID) Long loginMemberId) {
-        List<SpaceMemberResponse> members = chatRoomService.findChatRoomMembers(loginMemberId, chatRoomId);
+        List<SpaceMemberResponse> members = spaceService.findSpaceMembers(loginMemberId, chatRoomId);
 
         return Result.<List<SpaceMemberResponse>>builder()
                 .data(members)
@@ -98,7 +98,7 @@ public class SpaceApiController {
                                       @RequestBody InviteMembersRequest request,
                                       @SessionAttribute(name = SessionConst.SESSION_ID) Long loginMemberId) {
 
-        chatRoomService.inviteMembers(loginMemberId, chatRoomId, request.getMemberIds());
+        spaceService.inviteMembers(loginMemberId, chatRoomId, request.getMemberIds());
 
         return Result.<Void>builder()
                 .status(HttpStatus.OK)

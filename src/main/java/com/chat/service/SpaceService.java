@@ -72,28 +72,28 @@ public class SpaceService {
     }
 
     @Transactional
-    public Long saveChatRoom(SaveSpaceDTO saveChatRoomDTO) {
+    public Long saveSpace(SaveSpaceDTO saveSpaceDTO) {
 
-        Long senderId = saveChatRoomDTO.getSenderId();
-        Set<Long> receiverIds = saveChatRoomDTO.getReceiverIds();
+        Long senderId = saveSpaceDTO.getSenderId();
+        Set<Long> receiverIds = saveSpaceDTO.getReceiverIds();
         isSenderIncludeInReceivers(senderId, receiverIds);
 
         Member findSender = memberRepository.findById(senderId).orElseThrow(
                 () -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
-        List<Member> findReceivers = findReceiverMembers(saveChatRoomDTO.getReceiverIds());
+        List<Member> findReceivers = findReceiverMembers(saveSpaceDTO.getReceiverIds());
 
-        isExistChatRoom(senderId, receiverIds);
+        isExistSpace(senderId, receiverIds);
 
         List<String> participants = createParticipants(findSender, findReceivers);
 
-        String title = ensureTitle(saveChatRoomDTO.getTitle(), participants);
+        String title = ensureTitle(saveSpaceDTO.getTitle(), participants);
 
-        Space chatRoom = Space.of(title);
-        Space savedChatRoom = spaceRepository.save(chatRoom);
+        Space space = Space.of(title);
+        Space savedSpace = spaceRepository.save(space);
 
-        saveChatRoomParticipants(savedChatRoom, findSender, findReceivers);
+        saveSpaceParticipants(savedSpace, findSender, findReceivers);
 
-        return savedChatRoom.getId();
+        return savedSpace.getId();
     }
 
     private void isSenderIncludeInReceivers(Long senderId, Set<Long> receiverIds) {
@@ -110,7 +110,7 @@ public class SpaceService {
         return receivers;
     }
 
-    private void isExistChatRoom(Long senderId, Set<Long> receiverIds) {
+    private void isExistSpace(Long senderId, Set<Long> receiverIds) {
         List<Long> memberIds = Stream.concat(Stream.of(senderId), receiverIds.stream())
                 .collect(Collectors.toList());
 
@@ -143,19 +143,19 @@ public class SpaceService {
         return receiverUsernames;
     }
 
-    private void saveChatRoomParticipants(Space chatRoom, Member sender, List<Member> receivers) {
+    private void saveSpaceParticipants(Space space, Member sender, List<Member> receivers) {
         ChatRoomParticipant senderChatRoomParticipant
-                = ChatRoomParticipant.builder().space(chatRoom).member(sender).build();
+                = ChatRoomParticipant.builder().space(space).member(sender).build();
         chatRoomParticipantRepository.save(senderChatRoomParticipant);
 
         for (Member findReceiver : receivers) {
             ChatRoomParticipant receiverChatRoomParticipant
-                    = ChatRoomParticipant.builder().space(chatRoom).member(findReceiver).build();
+                    = ChatRoomParticipant.builder().space(space).member(findReceiver).build();
             chatRoomParticipantRepository.save(receiverChatRoomParticipant);
         }
     }
 
-    public List<SpaceSummaryResponse> findChatRooms(Long memberId) {
+    public List<SpaceSummaryResponse> findSpaces(Long memberId) {
 
         Member findMember = memberRepository.findById(memberId).orElseThrow(
                 () -> new CustomException(ErrorCode.MEMBER_NOT_FOUND)
@@ -223,7 +223,7 @@ public class SpaceService {
     }
 
     @Transactional
-    public void leaveChatRoom(Long memberId, Long chatRoomId) {
+    public void leaveSpace(Long memberId, Long chatRoomId) {
         ChatRoomParticipant participant
                 = chatRoomParticipantRepository.findChatRoomBy(chatRoomId, memberId);
         if (participant == null) {
@@ -245,22 +245,22 @@ public class SpaceService {
     }
 
     @Transactional
-    public void renameChatRoom(Long memberId, Long chatRoomId, String title) {
+    public void renameSpace(Long memberId, Long chatRoomId, String title) {
 
         ChatRoomParticipant participant = chatRoomParticipantRepository.findChatRoomBy(chatRoomId, memberId);
         if (participant == null) {
             throw new CustomException(ErrorCode.CHAT_ROOM_NOT_EXIST);
         }
 
-        Space chatRoom = spaceRepository.findById(chatRoomId)
+        Space space = spaceRepository.findById(chatRoomId)
                 .orElseThrow(() -> new CustomException(ErrorCode.CHAT_ROOM_NOT_EXIST));
-        chatRoom.rename(title);
+        space.rename(title);
 
         Map<Long, UpdateChatRoom> updatesByMemberId = broadcastDataBuilder.build(chatRoomId);
         publisher.publishEvent(new PublishUpdateEvent(chatRoomId, updatesByMemberId));
     }
 
-    public List<SpaceMemberResponse> findChatRoomMembers(Long memberId, Long chatRoomId) {
+    public List<SpaceMemberResponse> findSpaceMembers(Long memberId, Long chatRoomId) {
 
         ChatRoomParticipant participant = chatRoomParticipantRepository.findChatRoomBy(chatRoomId, memberId);
         if (participant == null) {
@@ -290,7 +290,7 @@ public class SpaceService {
                 .map(crp -> crp.getMember().getId())
                 .collect(Collectors.toSet());
 
-        Space chatRoom = spaceRepository.findById(chatRoomId).orElseThrow(
+        Space space = spaceRepository.findById(chatRoomId).orElseThrow(
                 () -> new CustomException(ErrorCode.CHAT_ROOM_NOT_EXIST)
         );
 
@@ -300,7 +300,7 @@ public class SpaceService {
                 chatRoomParticipantRepository.save(
                         ChatRoomParticipant
                                 .builder()
-                                .space(chatRoom)
+                                .space(space)
                                 .member(invitee)
                                 .build()
                 );
