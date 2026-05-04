@@ -145,12 +145,12 @@ public class ChatRoomService {
 
     private void saveChatRoomParticipants(Space chatRoom, Member sender, List<Member> receivers) {
         ChatRoomParticipant senderChatRoomParticipant
-                = ChatRoomParticipant.builder().chatRoom(chatRoom).member(sender).build();
+                = ChatRoomParticipant.builder().space(chatRoom).member(sender).build();
         chatRoomParticipantRepository.save(senderChatRoomParticipant);
 
         for (Member findReceiver : receivers) {
             ChatRoomParticipant receiverChatRoomParticipant
-                    = ChatRoomParticipant.builder().chatRoom(chatRoom).member(findReceiver).build();
+                    = ChatRoomParticipant.builder().space(chatRoom).member(findReceiver).build();
             chatRoomParticipantRepository.save(receiverChatRoomParticipant);
         }
     }
@@ -183,7 +183,7 @@ public class ChatRoomService {
 
         List<Long> chatRoomIds = participants
                 .stream()
-                .map(crp -> crp.getChatRoom().getId())
+                .map(crp -> crp.getSpace().getId())
                 .toList();
 
         // 채팅방별 마지막 메시지 일괄 조회
@@ -191,7 +191,7 @@ public class ChatRoomService {
                 .findLastChatsBy(chatRoomIds)
                 .stream()
                 .collect(Collectors.toMap(
-                        c -> c.getChatRoom().getId(),
+                        c -> c.getSpace().getId(),
                         c -> c
                 ));
 
@@ -207,12 +207,12 @@ public class ChatRoomService {
         return participants
                 .stream()
                 .map(crp -> {
-                    Long chatRoomId = crp.getChatRoom().getId();
+                    Long chatRoomId = crp.getSpace().getId();
                     Chat lastChat = lastChatMap.get(chatRoomId);
 
                     return ChatRoomsResponse.builder()
                             .chatRoomId(chatRoomId)
-                            .title(crp.getChatRoom().getTitle())
+                            .title(crp.getSpace().getTitle())
                             .lastMessage(lastChat != null ? lastChat.getMessage() : null)
                             .lastChatId(lastChat != null ? lastChat.getId() : null)
                             .createdDate(lastChat != null ? lastChat.getCreatedDate() : null)
@@ -300,7 +300,7 @@ public class ChatRoomService {
                 chatRoomParticipantRepository.save(
                         ChatRoomParticipant
                                 .builder()
-                                .chatRoom(chatRoom)
+                                .space(chatRoom)
                                 .member(invitee)
                                 .build()
                 );

@@ -31,12 +31,12 @@ public class ChatRoomParticipant extends BaseEntity {
 
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "chat_room_id")
-    private Space chatRoom;
+    private Space space;
 
     @Builder
-    public ChatRoomParticipant(Member member, Space chatRoom) {
+    public ChatRoomParticipant(Member member, Space space) {
         this.member = member;
-        this.chatRoom = chatRoom;
+        this.space = space;
     }
 
     public void updateLastReadChatId(Long chatId) {

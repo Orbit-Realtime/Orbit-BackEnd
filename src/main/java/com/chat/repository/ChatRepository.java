@@ -13,19 +13,19 @@ public interface ChatRepository extends JpaRepository<Chat, Long> {
 
     @Query("SELECT c" +
             " FROM Chat c" +
-            " WHERE c.chatRoom.id = :chatRoomId ORDER BY c.id DESC")
+            " WHERE c.space.id = :chatRoomId ORDER BY c.id DESC")
     List<Chat> findLastChatBy(@Param("chatRoomId") Long chatRoomId, Pageable pageable);
 
     @Query("SELECT MAX(c.id)" +
             " FROM Chat c" +
-            " WHERE c.chatRoom.id = :chatRoomId")
+            " WHERE c.space.id = :chatRoomId")
     Optional<Long> findLastChatIdBy(@Param("chatRoomId") Long chatRoomId);
 
     // todo delete (no usage)
     @Query("SELECT c" +
             " FROM Chat c" +
             " JOIN FETCH c.member" +
-            " WHERE c.chatRoom.id = :chatRoomId ORDER BY c.createdDate ASC")
+            " WHERE c.space.id = :chatRoomId ORDER BY c.createdDate ASC")
     List<Chat> findChatHistory(@Param("chatRoomId") Long chatRoomId);
 
     @Query("SELECT c" +
@@ -33,22 +33,22 @@ public interface ChatRepository extends JpaRepository<Chat, Long> {
             " WHERE c.id IN (" +
             "   SELECT MAX(c2.id)" +
             "   FROM Chat c2" +
-            "   WHERE c2.chatRoom.id IN :chatRoomIds" +
-            "   GROUP BY c2.chatRoom.id" +
+            "   WHERE c2.space.id IN :chatRoomIds" +
+            "   GROUP BY c2.space.id" +
             " )")
     List<Chat> findLastChatsBy(@Param("chatRoomIds") List<Long> chatRoomIds);
 
     @Query("SELECT c" +
             " FROM Chat c" +
             " JOIN FETCH c.member" +
-            " WHERE c.chatRoom.id = :chatRoomId" +
+            " WHERE c.space.id = :chatRoomId" +
             " ORDER BY c.id DESC")
     List<Chat> findLatestChats(@Param("chatRoomId") Long chatRoomId, Pageable pageable);
 
     @Query("SELECT c" +
             " FROM Chat c" +
             " JOIN FETCH c.member" +
-            " WHERE c.chatRoom.id = :chatRoomId" +
+            " WHERE c.space.id = :chatRoomId" +
             " AND c.id < :beforeChatId" +
             " ORDER BY c.id DESC")
     List<Chat> findChatsBeforeId(@Param("chatRoomId") Long chatRoomId,

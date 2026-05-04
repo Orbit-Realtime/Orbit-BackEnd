@@ -49,7 +49,7 @@ public class TestDataFixture {
 
         for (Member participant : participants) {
             ChatRoomParticipant chatRoomParticipant = ChatRoomParticipant.builder()
-                    .chatRoom(savedChatRoom)
+                    .space(savedChatRoom)
                     .member(participant)
                     .build();
             chatRoomParticipantRepository.save(chatRoomParticipant);

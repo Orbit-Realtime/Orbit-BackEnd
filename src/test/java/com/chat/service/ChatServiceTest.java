@@ -75,7 +75,7 @@ class ChatServiceTest {
         // then
         Chat chat = chatRepository.findById(savedChatId).get();
         assertThat(chat.getMessage()).isEqualTo(message);
-        assertThat(chat.getChatRoom()).isEqualTo(chatRoom);
+        assertThat(chat.getSpace()).isEqualTo(chatRoom);
         assertThat(chat.getMember()).isEqualTo(sender);
     }
 

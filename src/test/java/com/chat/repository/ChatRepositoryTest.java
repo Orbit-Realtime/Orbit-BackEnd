@@ -48,7 +48,7 @@ class ChatRepositoryTest {
         assertThat(savedChat.getId()).isNotNull();
         assertThat(savedChat.getMessage()).isEqualTo(message);
         assertThat(savedChat.getMember()).isEqualTo(savedMember);
-        assertThat(savedChat.getChatRoom()).isEqualTo(savedChatRoom);
+        assertThat(savedChat.getSpace()).isEqualTo(savedChatRoom);
     }
 
     @Test
