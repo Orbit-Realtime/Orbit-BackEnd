@@ -2,7 +2,7 @@ package com.chat.repository;
 
 import com.chat.entity.Chat;
 import com.chat.entity.Space;
-import com.chat.entity.ChatRoomParticipant;
+import com.chat.entity.SpaceMember;
 import com.chat.entity.Member;
 import com.chat.repository.dtos.MessageUnreadMemberCount;
 import com.chat.repository.dtos.MemberUnreadCount;
@@ -24,10 +24,10 @@ import static org.assertj.core.api.Assertions.*;
 
 @Transactional
 @SpringBootTest
-class ChatRoomParticipantRepositoryTest {
+class SpaceMemberRepositoryTest {
 
     @Autowired
-    private ChatRoomParticipantRepository chatRoomParticipantRepository;
+    private SpaceMemberRepository spaceMemberRepository;
     @Autowired
     private SpaceRepository spaceRepository;
     @Autowired
@@ -47,15 +47,15 @@ class ChatRoomParticipantRepositoryTest {
         String title = "title";
         Space chatRoom = Space.of(title);
         Space savedChatRoom = spaceRepository.save(chatRoom);
-        ChatRoomParticipant chatRoomParticipant = ChatRoomParticipant.builder().member(savedMember).space(savedChatRoom).build();
+        SpaceMember spaceMember = SpaceMember.builder().member(savedMember).space(savedChatRoom).build();
 
         // when
-        ChatRoomParticipant savedChatRoomParticipant = chatRoomParticipantRepository.save(chatRoomParticipant);
+        SpaceMember savedSpaceMember = spaceMemberRepository.save(spaceMember);
 
         // then
-        assertThat(savedChatRoomParticipant.getId()).isNotNull();
-        assertThat(savedChatRoomParticipant.getMember()).isEqualTo(savedMember);
-        assertThat(savedChatRoomParticipant.getSpace()).isEqualTo(savedChatRoom);
+        assertThat(savedSpaceMember.getId()).isNotNull();
+        assertThat(savedSpaceMember.getMember()).isEqualTo(savedMember);
+        assertThat(savedSpaceMember.getSpace()).isEqualTo(savedChatRoom);
     }
 
     @Test
@@ -78,12 +78,12 @@ class ChatRoomParticipantRepositoryTest {
         String title = "title";
         Space chatRoom = createChatRoomBy(title);
 
-        chatRoomParticipantRepository.save(ChatRoomParticipant.builder().member(firstMember).space(chatRoom).build());
-        chatRoomParticipantRepository.save(ChatRoomParticipant.builder().member(secondMember).space(chatRoom).build());
-        chatRoomParticipantRepository.save(ChatRoomParticipant.builder().member(thirdMember).space(chatRoom).build());
+        spaceMemberRepository.save(SpaceMember.builder().member(firstMember).space(chatRoom).build());
+        spaceMemberRepository.save(SpaceMember.builder().member(secondMember).space(chatRoom).build());
+        spaceMemberRepository.save(SpaceMember.builder().member(thirdMember).space(chatRoom).build());
 
         // when
-        List<Long> chatRoomIds = chatRoomParticipantRepository.findChatRoomIdsByExactMembers(memberIds, memberIds.size());
+        List<Long> chatRoomIds = spaceMemberRepository.findChatRoomIdsByExactMembers(memberIds, memberIds.size());
 
         // then
         assertThat(chatRoomIds).hasSize(1);
@@ -108,12 +108,12 @@ class ChatRoomParticipantRepositoryTest {
         String title = "title";
         Space chatRoom = createChatRoomBy(title);
 
-        chatRoomParticipantRepository.save(ChatRoomParticipant.builder().member(firstMember).space(chatRoom).build());
-        chatRoomParticipantRepository.save(ChatRoomParticipant.builder().member(secondMember).space(chatRoom).build());
-        chatRoomParticipantRepository.save(ChatRoomParticipant.builder().member(thirdMember).space(chatRoom).build());
+        spaceMemberRepository.save(SpaceMember.builder().member(firstMember).space(chatRoom).build());
+        spaceMemberRepository.save(SpaceMember.builder().member(secondMember).space(chatRoom).build());
+        spaceMemberRepository.save(SpaceMember.builder().member(thirdMember).space(chatRoom).build());
 
         // when
-        List<Long> chatRoomIds = chatRoomParticipantRepository.findChatRoomIdsByExactMembers(memberIds, memberIds.size());
+        List<Long> chatRoomIds = spaceMemberRepository.findChatRoomIdsByExactMembers(memberIds, memberIds.size());
 
         // then
         assertThat(chatRoomIds).hasSize(0);
@@ -139,11 +139,11 @@ class ChatRoomParticipantRepositoryTest {
         String title = "title";
         Space chatRoom = createChatRoomBy(title);
 
-        chatRoomParticipantRepository.save(ChatRoomParticipant.builder().member(firstMember).space(chatRoom).build());
-        chatRoomParticipantRepository.save(ChatRoomParticipant.builder().member(secondMember).space(chatRoom).build());
+        spaceMemberRepository.save(SpaceMember.builder().member(firstMember).space(chatRoom).build());
+        spaceMemberRepository.save(SpaceMember.builder().member(secondMember).space(chatRoom).build());
 
         // when
-        List<Long> chatRoomIds = chatRoomParticipantRepository.findChatRoomIdsByExactMembers(memberIds, memberIds.size());
+        List<Long> chatRoomIds = spaceMemberRepository.findChatRoomIdsByExactMembers(memberIds, memberIds.size());
 
         // then
         assertThat(chatRoomIds).hasSize(0);
@@ -161,15 +161,15 @@ class ChatRoomParticipantRepositoryTest {
         String secondTitle = "secondTitle";
         Space second = createChatRoomBy(secondTitle);
 
-        ChatRoomParticipant firstParticipant = chatRoomParticipantRepository.save(ChatRoomParticipant.builder().member(member).space(first).build());
-        ChatRoomParticipant secondParticipant = chatRoomParticipantRepository.save(ChatRoomParticipant.builder().member(member).space(second).build());
+        SpaceMember firstParticipant = spaceMemberRepository.save(SpaceMember.builder().member(member).space(first).build());
+        SpaceMember secondParticipant = spaceMemberRepository.save(SpaceMember.builder().member(member).space(second).build());
 
         // when
-        List<ChatRoomParticipant> findChatRoomParticipants = chatRoomParticipantRepository.findAllFetchChatRoomBy(member.getId());
+        List<SpaceMember> findSpaceMembers = spaceMemberRepository.findAllFetchChatRoomBy(member.getId());
 
         // then
-        assertThat(findChatRoomParticipants).hasSize(2);
-        assertThat(findChatRoomParticipants).containsExactly(firstParticipant, secondParticipant);
+        assertThat(findSpaceMembers).hasSize(2);
+        assertThat(findSpaceMembers).containsExactly(firstParticipant, secondParticipant);
     }
 
     @Test
@@ -180,14 +180,14 @@ class ChatRoomParticipantRepositoryTest {
         Member member = createMemberBy(username);
         String title = "chatRoom";
         Space chatRoom = createChatRoomBy(title);
-        chatRoomParticipantRepository.save(ChatRoomParticipant.builder().member(member).space(chatRoom).build());
+        spaceMemberRepository.save(SpaceMember.builder().member(member).space(chatRoom).build());
 
         // when
-        List<ChatRoomParticipant> chatRoomParticipants
-                = chatRoomParticipantRepository.findAllFetchMemberBy(chatRoom.getId());
+        List<SpaceMember> spaceMembers
+                = spaceMemberRepository.findAllFetchMemberBy(chatRoom.getId());
 
         // then
-        assertThat(chatRoomParticipants).hasSize(1);
+        assertThat(spaceMembers).hasSize(1);
     }
 
     @Test
@@ -198,7 +198,7 @@ class ChatRoomParticipantRepositoryTest {
         Member member = createMemberBy(username);
         String title = "chatRoom";
         Space chatRoom = createChatRoomBy(title);
-        chatRoomParticipantRepository.save(ChatRoomParticipant.builder().member(member).space(chatRoom).build());
+        spaceMemberRepository.save(SpaceMember.builder().member(member).space(chatRoom).build());
 
         em.flush();
         em.clear();
@@ -208,10 +208,10 @@ class ChatRoomParticipantRepositoryTest {
         session.getSessionFactory().getStatistics().clear();
 
         // when
-        List<ChatRoomParticipant> chatRoomParticipants
-                = chatRoomParticipantRepository.findAllFetchMemberBy(chatRoom.getId());
-        for (ChatRoomParticipant chatRoomParticipant : chatRoomParticipants) {
-            chatRoomParticipant.getMember().getUsername();
+        List<SpaceMember> spaceMembers
+                = spaceMemberRepository.findAllFetchMemberBy(chatRoom.getId());
+        for (SpaceMember spaceMember : spaceMembers) {
+            spaceMember.getMember().getUsername();
         }
         long queryCount = session.getSessionFactory().getStatistics().getPrepareStatementCount();
 
@@ -227,14 +227,14 @@ class ChatRoomParticipantRepositoryTest {
         Member member = createMemberBy(username);
         String title = "chatRoom";
         Space chatRoom = createChatRoomBy(title);
-        chatRoomParticipantRepository.save(ChatRoomParticipant.builder().member(member).space(chatRoom).build());
+        spaceMemberRepository.save(SpaceMember.builder().member(member).space(chatRoom).build());
 
         // when
-        ChatRoomParticipant chatRoomParticipant = chatRoomParticipantRepository.findChatRoomBy(chatRoom.getId(), member.getId());
+        SpaceMember spaceMember = spaceMemberRepository.findChatRoomBy(chatRoom.getId(), member.getId());
 
         // then
-        assertThat(chatRoomParticipant.getSpace()).isEqualTo(chatRoom);
-        assertThat(chatRoomParticipant.getMember()).isEqualTo(member);
+        assertThat(spaceMember.getSpace()).isEqualTo(chatRoom);
+        assertThat(spaceMember.getMember()).isEqualTo(member);
     }
 
     @Test
@@ -248,15 +248,15 @@ class ChatRoomParticipantRepositoryTest {
         Space firstRoom = createChatRoomBy("firstRoom");
         Space secondRoom = createChatRoomBy("secondRoom");
 
-        chatRoomParticipantRepository.save(ChatRoomParticipant.builder().member(firstMember).space(firstRoom).build());
-        chatRoomParticipantRepository.save(ChatRoomParticipant.builder().member(secondMember).space(firstRoom).build());
-        chatRoomParticipantRepository.save(ChatRoomParticipant.builder().member(thirdMember).space(secondRoom).build());
+        spaceMemberRepository.save(SpaceMember.builder().member(firstMember).space(firstRoom).build());
+        spaceMemberRepository.save(SpaceMember.builder().member(secondMember).space(firstRoom).build());
+        spaceMemberRepository.save(SpaceMember.builder().member(thirdMember).space(secondRoom).build());
 
         em.flush();
         em.clear();
 
         // when
-        List<ChatRoomParticipant> participants = chatRoomParticipantRepository
+        List<SpaceMember> participants = spaceMemberRepository
                 .findAllFetchMemberBy(List.of(firstRoom.getId(), secondRoom.getId()));
 
         // then
@@ -272,15 +272,15 @@ class ChatRoomParticipantRepositoryTest {
         // given
         Member member = createMemberBy("username");
         Space chatRoom = createChatRoomBy("chatRoom");
-        chatRoomParticipantRepository.save(ChatRoomParticipant.builder().member(member).space(chatRoom).build());
+        spaceMemberRepository.save(SpaceMember.builder().member(member).space(chatRoom).build());
 
         // when
-        chatRoomParticipantRepository.deleteBy(chatRoom.getId(), member.getId());
+        spaceMemberRepository.deleteBy(chatRoom.getId(), member.getId());
         em.flush();
         em.clear();
 
         // then
-        ChatRoomParticipant result = chatRoomParticipantRepository.findChatRoomBy(chatRoom.getId(), member.getId());
+        SpaceMember result = spaceMemberRepository.findChatRoomBy(chatRoom.getId(), member.getId());
         assertThat(result).isNull();
     }
 
@@ -292,8 +292,8 @@ class ChatRoomParticipantRepositoryTest {
         Space chatRoom = createChatRoomBy("room");
 
         // when
-        ChatRoomParticipant saved = chatRoomParticipantRepository.save(
-                ChatRoomParticipant.builder().member(member).space(chatRoom).build()
+        SpaceMember saved = spaceMemberRepository.save(
+                SpaceMember.builder().member(member).space(chatRoom).build()
         );
 
         // then
@@ -306,19 +306,19 @@ class ChatRoomParticipantRepositoryTest {
         // given
         Member member = createMemberBy("member");
         Space chatRoom = createChatRoomBy("room");
-        chatRoomParticipantRepository.save(
-                ChatRoomParticipant.builder().member(member).space(chatRoom).build()
+        spaceMemberRepository.save(
+                SpaceMember.builder().member(member).space(chatRoom).build()
         );
         em.flush();
         em.clear();
 
-        int updated = chatRoomParticipantRepository.updateLastReadChatId(member.getId(), chatRoom.getId(), 100L);
+        int updated = spaceMemberRepository.updateLastReadChatId(member.getId(), chatRoom.getId(), 100L);
         em.flush();
         em.clear();
 
         assertThat(updated).isEqualTo(1);
-        ChatRoomParticipant found =
-                chatRoomParticipantRepository.findChatRoomBy(chatRoom.getId(), member.getId());
+        SpaceMember found =
+                spaceMemberRepository.findChatRoomBy(chatRoom.getId(), member.getId());
         assertThat(found.getLastReadChatId()).isEqualTo(100L);
     }
 
@@ -328,15 +328,15 @@ class ChatRoomParticipantRepositoryTest {
         // given
         Member member = createMemberBy("member");
         Space chatRoom = createChatRoomBy("room");
-        chatRoomParticipantRepository.save(
-                ChatRoomParticipant.builder().member(member).space(chatRoom).build());
-        chatRoomParticipantRepository.updateLastReadChatId(member.getId(), chatRoom.getId(),
+        spaceMemberRepository.save(
+                SpaceMember.builder().member(member).space(chatRoom).build());
+        spaceMemberRepository.updateLastReadChatId(member.getId(), chatRoom.getId(),
                 200L);
         em.flush();
         em.clear();
 
         // when
-        int updated = chatRoomParticipantRepository.updateLastReadChatId(
+        int updated = spaceMemberRepository.updateLastReadChatId(
                 member.getId(), chatRoom.getId(), 100L
         );
         em.flush();
@@ -344,8 +344,8 @@ class ChatRoomParticipantRepositoryTest {
 
         // then
         assertThat(updated).isEqualTo(0);
-        ChatRoomParticipant found =
-                chatRoomParticipantRepository.findChatRoomBy(chatRoom.getId(), member.getId());
+        SpaceMember found =
+                spaceMemberRepository.findChatRoomBy(chatRoom.getId(), member.getId());
         assertThat(found.getLastReadChatId()).isEqualTo(200L);
     }
 
@@ -356,22 +356,22 @@ class ChatRoomParticipantRepositoryTest {
         Member me = createMemberBy("me");
         Member other = createMemberBy("other");
         Space chatRoom = createChatRoomBy("room");
-        chatRoomParticipantRepository.save(
-                ChatRoomParticipant.builder().member(me).space(chatRoom).build());
-        chatRoomParticipantRepository.save(
-                ChatRoomParticipant.builder().member(other).space(chatRoom).build());
+        spaceMemberRepository.save(
+                SpaceMember.builder().member(me).space(chatRoom).build());
+        spaceMemberRepository.save(
+                SpaceMember.builder().member(other).space(chatRoom).build());
 
         Chat first  = chatRepository.save(new Chat("msg1", other, chatRoom));
         Chat second = chatRepository.save(new Chat("msg2", other, chatRoom));
         Chat third  = chatRepository.save(new Chat("msg3", other, chatRoom));
 
-        chatRoomParticipantRepository.updateLastReadChatId(me.getId(), chatRoom.getId(),
+        spaceMemberRepository.updateLastReadChatId(me.getId(), chatRoom.getId(),
                 first.getId());
         em.flush();
         em.clear();
 
         // when
-        List<RoomUnreadMessageCount> result = chatRoomParticipantRepository
+        List<RoomUnreadMessageCount> result = spaceMemberRepository
                 .findRoomUnreadMessageCountsBy(List.of(chatRoom.getId()), me.getId());
 
         // then
@@ -388,24 +388,24 @@ class ChatRoomParticipantRepositoryTest {
         Member sender = createMemberBy("sender");
         Space chatRoom = createChatRoomBy("room");
 
-        chatRoomParticipantRepository.save(
-                ChatRoomParticipant.builder().member(me).space(chatRoom).build());
-        chatRoomParticipantRepository.save(
-                ChatRoomParticipant.builder().member(other).space(chatRoom).build());
-        chatRoomParticipantRepository.save(
-                ChatRoomParticipant.builder().member(sender).space(chatRoom).build());
+        spaceMemberRepository.save(
+                SpaceMember.builder().member(me).space(chatRoom).build());
+        spaceMemberRepository.save(
+                SpaceMember.builder().member(other).space(chatRoom).build());
+        spaceMemberRepository.save(
+                SpaceMember.builder().member(sender).space(chatRoom).build());
 
         Chat first = chatRepository.save(new Chat("msg1", sender, chatRoom));
         chatRepository.save(new Chat("msg2", sender, chatRoom));
 
         // me: cursor null → 전체 2개 unread
         // other: cursor = first → second만 1개 unread
-        chatRoomParticipantRepository.updateLastReadChatId(
+        spaceMemberRepository.updateLastReadChatId(
                 other.getId(), chatRoom.getId(), first.getId());
         em.flush(); em.clear();
 
         // when
-        List<MemberUnreadCount> result = chatRoomParticipantRepository
+        List<MemberUnreadCount> result = spaceMemberRepository
                 .findMemberUnreadMessageCountsBy(
                         chatRoom.getId(),
                         List.of(me.getId(), other.getId()));
@@ -426,13 +426,13 @@ class ChatRoomParticipantRepositoryTest {
         // given
         Member member = createMemberBy("member");
         Space chatRoom = createChatRoomBy("room");
-        chatRoomParticipantRepository.save(
-                ChatRoomParticipant.builder().member(member).space(chatRoom).build());
+        spaceMemberRepository.save(
+                SpaceMember.builder().member(member).space(chatRoom).build());
         em.flush();
         em.clear();
 
         // when
-        Long result = chatRoomParticipantRepository
+        Long result = spaceMemberRepository
                 .findLastReadChatIdBy(member.getId(), chatRoom.getId());
 
         // then
@@ -445,15 +445,15 @@ class ChatRoomParticipantRepositoryTest {
         // given
         Member member = createMemberBy("member");
         Space chatRoom = createChatRoomBy("room");
-        chatRoomParticipantRepository.save(
-                ChatRoomParticipant.builder().member(member).space(chatRoom).build());
-        chatRoomParticipantRepository.updateLastReadChatId(member.getId(), chatRoom.getId(),
+        spaceMemberRepository.save(
+                SpaceMember.builder().member(member).space(chatRoom).build());
+        spaceMemberRepository.updateLastReadChatId(member.getId(), chatRoom.getId(),
                 100L);
         em.flush();
         em.clear();
 
         // when
-        Long result = chatRoomParticipantRepository
+        Long result = spaceMemberRepository
                 .findLastReadChatIdBy(member.getId(), chatRoom.getId());
 
         // then
@@ -466,17 +466,17 @@ class ChatRoomParticipantRepositoryTest {
         // given
         Member sender = createMemberBy("sender");
         Space chatRoom = createChatRoomBy("room");
-        chatRoomParticipantRepository.save(
-                ChatRoomParticipant.builder().member(sender).space(chatRoom).build());
+        spaceMemberRepository.save(
+                SpaceMember.builder().member(sender).space(chatRoom).build());
 
         Chat chat = chatRepository.save(new Chat("hello", sender, chatRoom));
         // 발신자 cursor = chatId (saveChat 흐름 재현)
-        chatRoomParticipantRepository.updateLastReadChatId(
+        spaceMemberRepository.updateLastReadChatId(
                 sender.getId(), chatRoom.getId(), chat.getId());
         em.flush(); em.clear();
 
         // when
-        Long count = chatRoomParticipantRepository
+        Long count = spaceMemberRepository
                 .countMessageUnreadMembers(chat.getId());
 
         // then: cursor = chatId → lastReadChatId < chatId 불충족 → 제외
@@ -492,20 +492,20 @@ class ChatRoomParticipantRepositoryTest {
         Member receiver2 = createMemberBy("receiver2");
         Space chatRoom = createChatRoomBy("room");
 
-        chatRoomParticipantRepository.save(
-                ChatRoomParticipant.builder().member(sender).space(chatRoom).build());
-        chatRoomParticipantRepository.save(
-                ChatRoomParticipant.builder().member(receiver1).space(chatRoom).build());
-        chatRoomParticipantRepository.save(
-                ChatRoomParticipant.builder().member(receiver2).space(chatRoom).build());
+        spaceMemberRepository.save(
+                SpaceMember.builder().member(sender).space(chatRoom).build());
+        spaceMemberRepository.save(
+                SpaceMember.builder().member(receiver1).space(chatRoom).build());
+        spaceMemberRepository.save(
+                SpaceMember.builder().member(receiver2).space(chatRoom).build());
 
         Chat chat = chatRepository.save(new Chat("hello", sender, chatRoom));
-        chatRoomParticipantRepository.updateLastReadChatId(
+        spaceMemberRepository.updateLastReadChatId(
                 sender.getId(), chatRoom.getId(), chat.getId());
         em.flush(); em.clear();
 
         // when
-        Long count = chatRoomParticipantRepository
+        Long count = spaceMemberRepository
                 .countMessageUnreadMembers(chat.getId());
 
         // then: receiver1, receiver2 cursor=null → 2
@@ -520,27 +520,27 @@ class ChatRoomParticipantRepositoryTest {
         Member receiver = createMemberBy("receiver");
         Space chatRoom = createChatRoomBy("room");
 
-        chatRoomParticipantRepository.save(
-                ChatRoomParticipant.builder().member(sender).space(chatRoom).build());
-        chatRoomParticipantRepository.save(
-                ChatRoomParticipant.builder().member(receiver).space(chatRoom).build());
+        spaceMemberRepository.save(
+                SpaceMember.builder().member(sender).space(chatRoom).build());
+        spaceMemberRepository.save(
+                SpaceMember.builder().member(receiver).space(chatRoom).build());
 
         Chat chat = chatRepository.save(new Chat("hello", sender, chatRoom));
-        chatRoomParticipantRepository.updateLastReadChatId(
+        spaceMemberRepository.updateLastReadChatId(
                 sender.getId(), chatRoom.getId(), chat.getId());
         em.flush(); em.clear();
 
-        Long beforeRead = chatRoomParticipantRepository
+        Long beforeRead = spaceMemberRepository
                 .countMessageUnreadMembers(chat.getId());
         assertThat(beforeRead).isEqualTo(1L);
 
         // receiver 입장 → cursor 갱신
-        chatRoomParticipantRepository.updateLastReadChatId(
+        spaceMemberRepository.updateLastReadChatId(
                 receiver.getId(), chatRoom.getId(), chat.getId());
         em.flush(); em.clear();
 
         // when
-        Long afterRead = chatRoomParticipantRepository
+        Long afterRead = spaceMemberRepository
                 .countMessageUnreadMembers(chat.getId());
 
         // then
@@ -555,21 +555,21 @@ class ChatRoomParticipantRepositoryTest {
         Member receiver = createMemberBy("receiver");
         Space chatRoom = createChatRoomBy("room");
 
-        chatRoomParticipantRepository.save(
-                ChatRoomParticipant.builder().member(sender).space(chatRoom).build());
-        chatRoomParticipantRepository.save(
-                ChatRoomParticipant.builder().member(receiver).space(chatRoom).build());
+        spaceMemberRepository.save(
+                SpaceMember.builder().member(sender).space(chatRoom).build());
+        spaceMemberRepository.save(
+                SpaceMember.builder().member(receiver).space(chatRoom).build());
 
         Chat first = chatRepository.save(new Chat("first", sender, chatRoom));
         Chat second = chatRepository.save(new Chat("second", sender, chatRoom));
 
         // sender: second까지 읽음, receiver: cursor=null
-        chatRoomParticipantRepository.updateLastReadChatId(
+        spaceMemberRepository.updateLastReadChatId(
                 sender.getId(), chatRoom.getId(), second.getId());
         em.flush(); em.clear();
 
         // when
-        List<MessageUnreadMemberCount> result = chatRoomParticipantRepository
+        List<MessageUnreadMemberCount> result = spaceMemberRepository
                 .countMessageUnreadMembers(List.of(first.getId(), second.getId()));
         Map<Long, Long> countMap = result.stream()
                 .collect(Collectors.toMap(MessageUnreadMemberCount::getChatId,
@@ -589,25 +589,25 @@ class ChatRoomParticipantRepositoryTest {
         Member noReader = createMemberBy("noReader");
         Space chatRoom = createChatRoomBy("room");
 
-        chatRoomParticipantRepository.save(
-                ChatRoomParticipant.builder().member(sender).space(chatRoom).build());
-        chatRoomParticipantRepository.save(
-                ChatRoomParticipant.builder().member(readerOfFirst).space(chatRoom).build());
-        chatRoomParticipantRepository.save(
-                ChatRoomParticipant.builder().member(noReader).space(chatRoom).build());
+        spaceMemberRepository.save(
+                SpaceMember.builder().member(sender).space(chatRoom).build());
+        spaceMemberRepository.save(
+                SpaceMember.builder().member(readerOfFirst).space(chatRoom).build());
+        spaceMemberRepository.save(
+                SpaceMember.builder().member(noReader).space(chatRoom).build());
 
         Chat first = chatRepository.save(new Chat("first", sender, chatRoom));
         Chat second = chatRepository.save(new Chat("second", sender, chatRoom));
 
         // sender: second까지, readerOfFirst: first까지, noReader: cursor=null
-        chatRoomParticipantRepository.updateLastReadChatId(
+        spaceMemberRepository.updateLastReadChatId(
                 sender.getId(), chatRoom.getId(), second.getId());
-        chatRoomParticipantRepository.updateLastReadChatId(
+        spaceMemberRepository.updateLastReadChatId(
                 readerOfFirst.getId(), chatRoom.getId(), first.getId());
         em.flush(); em.clear();
 
         // when
-        List<MessageUnreadMemberCount> result = chatRoomParticipantRepository
+        List<MessageUnreadMemberCount> result = spaceMemberRepository
                 .countMessageUnreadMembers(List.of(first.getId(), second.getId()));
         Map<Long, Long> countMap = result.stream()
                 .collect(Collectors.toMap(MessageUnreadMemberCount::getChatId,

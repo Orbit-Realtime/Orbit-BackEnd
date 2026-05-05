@@ -24,7 +24,7 @@ public class BroadcastDataBuilder {
     private final MemberRepository memberRepository;
     private final SpaceRepository spaceRepository;
     private final ChatRepository chatRepository;
-    private final ChatRoomParticipantRepository chatRoomParticipantRepository;
+    private final SpaceMemberRepository spaceMemberRepository;
 
     public Map<Long, UpdateChatRoom> build(Long chatRoomId) {
         if (chatRoomId == null) return Map.of();
@@ -48,7 +48,7 @@ public class BroadcastDataBuilder {
                 .findLastChatBy(chatRoomId, PageRequest.of(0, 1))
                 .stream().findFirst().orElse(null);
 
-        Map<Long, Long> unreadCountMap = chatRoomParticipantRepository
+        Map<Long, Long> unreadCountMap = spaceMemberRepository
                 .findMemberUnreadMessageCountsBy(chatRoomId, new ArrayList<>(targetMemberIds))
                 .stream()
                 .collect(Collectors.toMap(

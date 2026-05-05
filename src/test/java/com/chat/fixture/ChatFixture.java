@@ -1,8 +1,8 @@
 package com.chat.fixture;
 
 import com.chat.api.Result;
-import com.chat.entity.ChatRoomParticipant;
-import com.chat.repository.ChatRoomParticipantRepository;
+import com.chat.entity.SpaceMember;
+import com.chat.repository.SpaceMemberRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
@@ -16,7 +16,7 @@ import java.net.URI;
 public class ChatFixture {
 
     @Autowired
-    private ChatRoomParticipantRepository chatRoomParticipantRepository;
+    private SpaceMemberRepository spaceMemberRepository;
 
     public ResponseEntity<Result> requestChatHistory(Long chatRoomId, String sessionId, int port) {
 
@@ -42,7 +42,7 @@ public class ChatFixture {
     }
 
     @Transactional(readOnly = true)
-    public ChatRoomParticipant reload(Long roomId, Long memberId) {
-        return chatRoomParticipantRepository.findChatRoomBy(roomId, memberId);
+    public SpaceMember reload(Long roomId, Long memberId) {
+        return spaceMemberRepository.findChatRoomBy(roomId, memberId);
     }
 }

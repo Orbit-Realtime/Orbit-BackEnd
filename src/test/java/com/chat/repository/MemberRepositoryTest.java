@@ -1,7 +1,7 @@
 package com.chat.repository;
 
 import com.chat.entity.Space;
-import com.chat.entity.ChatRoomParticipant;
+import com.chat.entity.SpaceMember;
 import com.chat.entity.Member;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,7 +23,7 @@ class MemberRepositoryTest {
     @Autowired
     private SpaceRepository spaceRepository;
     @Autowired
-    private ChatRoomParticipantRepository chatRoomParticipantRepository;
+    private SpaceMemberRepository spaceMemberRepository;
     
     @Test
     @DisplayName("회원 정보를 저장한다.")
@@ -92,9 +92,9 @@ class MemberRepositoryTest {
         Space chatRoom = Space.of(title);
         Space savedChatRoom = spaceRepository.save(chatRoom);
 
-        chatRoomParticipantRepository.save(ChatRoomParticipant.builder().member(firstMember).space(savedChatRoom).build());
-        chatRoomParticipantRepository.save(ChatRoomParticipant.builder().member(secondMember).space(savedChatRoom).build());
-        chatRoomParticipantRepository.save(ChatRoomParticipant.builder().member(thirdMember).space(savedChatRoom).build());
+        spaceMemberRepository.save(SpaceMember.builder().member(firstMember).space(savedChatRoom).build());
+        spaceMemberRepository.save(SpaceMember.builder().member(secondMember).space(savedChatRoom).build());
+        spaceMemberRepository.save(SpaceMember.builder().member(thirdMember).space(savedChatRoom).build());
 
         // when
         List<Long> memberIds = memberRepository.findMemberIdsIn(chatRoom.getId());

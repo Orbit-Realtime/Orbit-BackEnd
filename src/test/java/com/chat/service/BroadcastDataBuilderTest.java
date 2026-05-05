@@ -4,7 +4,7 @@ import com.chat.entity.Chat;
 import com.chat.entity.Space;
 import com.chat.entity.Member;
 import com.chat.fixture.TestDataFixture;
-import com.chat.repository.ChatRoomParticipantRepository;
+import com.chat.repository.SpaceMemberRepository;
 import com.chat.service.dtos.chat.UpdateChatRoom;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -27,7 +27,7 @@ class BroadcastDataBuilderTest {
     @Autowired
     private BroadcastDataBuilder broadcastDataBuilder;
     @Autowired
-    private ChatRoomParticipantRepository chatRoomParticipantRepository;
+    private SpaceMemberRepository spaceMemberRepository;
     @Autowired
     private TestDataFixture fixture;
     @PersistenceContext
@@ -77,7 +77,7 @@ class BroadcastDataBuilderTest {
 
         // me: cursor null → 2개 unread
         // other: cursor = first → second만 1개 unread
-        chatRoomParticipantRepository.updateLastReadChatId(
+        spaceMemberRepository.updateLastReadChatId(
                 other.getId(), chatRoom.getId(), first.getId());
         em.flush(); em.clear();
 

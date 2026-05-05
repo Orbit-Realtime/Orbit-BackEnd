@@ -4,11 +4,11 @@ import com.chat.api.response.chatroom.SpaceMemberResponse;
 import com.chat.api.response.chatroom.SpaceSummaryResponse;
 import com.chat.entity.Chat;
 import com.chat.entity.Space;
-import com.chat.entity.ChatRoomParticipant;
+import com.chat.entity.SpaceMember;
 import com.chat.entity.Member;
 import com.chat.exception.CustomException;
 import com.chat.fixture.TestDataFixture;
-import com.chat.repository.ChatRoomParticipantRepository;
+import com.chat.repository.SpaceMemberRepository;
 import com.chat.repository.SpaceRepository;
 import com.chat.service.dtos.SaveSpaceDTO;
 import org.junit.jupiter.api.DisplayName;
@@ -34,7 +34,7 @@ class ChatRoomServiceTest {
     @Autowired
     private SpaceRepository spaceRepository;
     @Autowired
-    private ChatRoomParticipantRepository chatRoomParticipantRepository;
+    private SpaceMemberRepository spaceMemberRepository;
     @Autowired
     private TestDataFixture fixture;
 
@@ -65,8 +65,8 @@ class ChatRoomServiceTest {
         // then
         Space chatRoom = spaceRepository.findById(savedChatRoomId).get();
 
-        List<ChatRoomParticipant> chatRoomParticipants
-                = chatRoomParticipantRepository.findAllFetchMemberBy(savedChatRoomId);
+        List<SpaceMember> chatRoomParticipants
+                = spaceMemberRepository.findAllFetchMemberBy(savedChatRoomId);
 
         Set<Long> participantMemberIds = chatRoomParticipants.stream()
                 .map(p -> p.getMember().getId())
@@ -159,7 +159,7 @@ class ChatRoomServiceTest {
         fixture.savedSimpleChat("msg2", other, chatRoom);
 
         // me cursor를 첫 번째 메시지까지만 읽음 → 두 번째 메시지만 unread
-        chatRoomParticipantRepository.updateLastReadChatId(
+        spaceMemberRepository.updateLastReadChatId(
                 me.getId(), chatRoom.getId(), firstChat.getId());
 
         // when
@@ -182,11 +182,11 @@ class ChatRoomServiceTest {
         spaceService.leaveSpace(me.getId(), chatRoom.getId());
 
         // then
-        ChatRoomParticipant participant = chatRoomParticipantRepository.findChatRoomBy(chatRoom.getId(), me.getId());
+        SpaceMember participant = spaceMemberRepository.findChatRoomBy(chatRoom.getId(), me.getId());
         assertThat(participant).isNull();
 
         // 상대방 행은 유지
-        ChatRoomParticipant otherParticipant = chatRoomParticipantRepository.findChatRoomBy(chatRoom.getId(), other.getId());
+        SpaceMember otherParticipant = spaceMemberRepository.findChatRoomBy(chatRoom.getId(), other.getId());
         assertThat(otherParticipant).isNotNull();
     }
 
@@ -260,7 +260,7 @@ class ChatRoomServiceTest {
         spaceService.inviteMembers(me.getId(), chatRoom.getId(), Set.of(invitee.getId()));
 
         // then
-        ChatRoomParticipant participant = chatRoomParticipantRepository.findChatRoomBy(chatRoom.getId(), invitee.getId());
+        SpaceMember participant = spaceMemberRepository.findChatRoomBy(chatRoom.getId(), invitee.getId());
         assertThat(participant).isNotNull();
     }
 
@@ -276,7 +276,7 @@ class ChatRoomServiceTest {
         spaceService.inviteMembers(me.getId(), chatRoom.getId(), Set.of(existing.getId()));
 
         // then
-        List<ChatRoomParticipant> participants = chatRoomParticipantRepository.findAllFetchMemberBy(chatRoom.getId());
+        List<SpaceMember> participants = spaceMemberRepository.findAllFetchMemberBy(chatRoom.getId());
         assertThat(participants).hasSize(2);
     }
 
@@ -311,7 +311,7 @@ class ChatRoomServiceTest {
         Chat lastChat = fixture.savedSimpleChat("msg2", other, chatRoom);
 
         // me cursor를 최신 메시지로 설정
-        chatRoomParticipantRepository.updateLastReadChatId(
+        spaceMemberRepository.updateLastReadChatId(
                 me.getId(), chatRoom.getId(), lastChat.getId());
 
         // when

@@ -15,7 +15,7 @@ import static jakarta.persistence.FetchType.LAZY;
         @Index(name = "idx_chat_room_participant_chat_room_id", columnList = "chat_room_id"),
         @Index(name = "idx_chat_room_participant_member_id",   columnList = "member_id")
 })
-public class ChatRoomParticipant extends BaseEntity {
+public class SpaceMember extends BaseEntity {
 
     @Id
     @GeneratedValue
@@ -34,7 +34,7 @@ public class ChatRoomParticipant extends BaseEntity {
     private Space space;
 
     @Builder
-    public ChatRoomParticipant(Member member, Space space) {
+    public SpaceMember(Member member, Space space) {
         this.member = member;
         this.space = space;
     }

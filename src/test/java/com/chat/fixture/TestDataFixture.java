@@ -2,7 +2,7 @@ package com.chat.fixture;
 
 import com.chat.entity.Chat;
 import com.chat.entity.Space;
-import com.chat.entity.ChatRoomParticipant;
+import com.chat.entity.SpaceMember;
 import com.chat.entity.Member;
 import com.chat.repository.*;
 import jakarta.persistence.EntityManager;
@@ -26,7 +26,7 @@ public class TestDataFixture {
     @Autowired
     private SpaceRepository spaceRepository;
     @Autowired
-    private ChatRoomParticipantRepository chatRoomParticipantRepository;
+    private SpaceMemberRepository spaceMemberRepository;
     @Autowired
     private ChatRepository chatRepository;
     @PersistenceContext
@@ -48,11 +48,11 @@ public class TestDataFixture {
         Space savedChatRoom = spaceRepository.save(chatRoom);
 
         for (Member participant : participants) {
-            ChatRoomParticipant chatRoomParticipant = ChatRoomParticipant.builder()
+            SpaceMember spaceMember = SpaceMember.builder()
                     .space(savedChatRoom)
                     .member(participant)
                     .build();
-            chatRoomParticipantRepository.save(chatRoomParticipant);
+            spaceMemberRepository.save(spaceMember);
         }
 
         return savedChatRoom;
@@ -71,7 +71,7 @@ public class TestDataFixture {
     @Transactional
     public void deleteAllData() {
         em.createQuery("DELETE FROM Chat").executeUpdate();
-        em.createQuery("DELETE FROM ChatRoomParticipant").executeUpdate();
+        em.createQuery("DELETE FROM SpaceMember").executeUpdate();
         em.createQuery("DELETE FROM Space").executeUpdate();
         em.createQuery("DELETE FROM Member").executeUpdate();
         em.flush();

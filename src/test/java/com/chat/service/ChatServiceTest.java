@@ -39,7 +39,7 @@ class ChatServiceTest {
     @Autowired
     private ChatRepository chatRepository;
     @Autowired
-    private ChatRoomParticipantRepository chatRoomParticipantRepository;
+    private SpaceMemberRepository spaceMemberRepository;
     @Autowired
     private TestDataFixture fixture;
     @Autowired
@@ -189,7 +189,7 @@ class ChatServiceTest {
         chatService.findChatHistory(chatRoomId, secondMember.getId(), null);
 
         em.flush(); em.clear();
-        Long cursorAfterFirst = chatRoomParticipantRepository
+        Long cursorAfterFirst = spaceMemberRepository
                 .findLastReadChatIdBy(secondMember.getId(), chatRoomId);
         assertThat(cursorAfterFirst).isNotNull();
 
@@ -198,7 +198,7 @@ class ChatServiceTest {
 
         // then: 재입장 후에도 미읽음 없음
         em.flush(); em.clear();
-        Long cursorAfterSecond = chatRoomParticipantRepository
+        Long cursorAfterSecond = spaceMemberRepository
                 .findLastReadChatIdBy(secondMember.getId(), chatRoomId);
         assertThat(cursorAfterSecond).isEqualTo(cursorAfterFirst);
     }
@@ -335,7 +335,7 @@ class ChatServiceTest {
 
         // then: receiver의 미읽음 상태 그대로 (읽음 처리 안 됨)
         em.flush(); em.clear();
-        Long receiverCursor = chatRoomParticipantRepository
+        Long receiverCursor = spaceMemberRepository
                 .findLastReadChatIdBy(receiver.getId(), chatRoomId);
         assertThat(receiverCursor).isNull();
     }
@@ -434,7 +434,7 @@ class ChatServiceTest {
         em.clear();
 
         // then
-        ChatRoomParticipant senderParticipant = chatRoomParticipantRepository
+        SpaceMember senderParticipant = spaceMemberRepository
                 .findChatRoomBy(chatRoom.getId(), sender.getId());
         assertThat(senderParticipant.getLastReadChatId()).isEqualTo(savedChatId);
     }
@@ -452,7 +452,7 @@ class ChatServiceTest {
         em.clear();
 
         // then
-        ChatRoomParticipant receiverParticipant = chatRoomParticipantRepository
+        SpaceMember receiverParticipant = spaceMemberRepository
                 .findChatRoomBy(chatRoom.getId(), receiver.getId());
         assertThat(receiverParticipant.getLastReadChatId()).isNull();
     }
@@ -474,7 +474,7 @@ class ChatServiceTest {
         em.clear();
 
         // then
-        ChatRoomParticipant participant = chatRoomParticipantRepository
+        SpaceMember participant = spaceMemberRepository
                 .findChatRoomBy(chatRoomId, me.getId());
         assertThat(participant.getLastReadChatId()).isEqualTo(latestChatId);
     }
@@ -505,7 +505,7 @@ class ChatServiceTest {
         em.clear();
 
         // then: cursor는 secondChatId 그대로 (thirdChatId로 진행하지 않음)
-        ChatRoomParticipant participant = chatRoomParticipantRepository
+        SpaceMember participant = spaceMemberRepository
                 .findChatRoomBy(chatRoomId, me.getId());
         assertThat(participant.getLastReadChatId()).isEqualTo(secondChatId);
     }
@@ -522,7 +522,7 @@ class ChatServiceTest {
         em.clear();
 
         // then
-        ChatRoomParticipant participant = chatRoomParticipantRepository
+        SpaceMember participant = spaceMemberRepository
                 .findChatRoomBy(chatRoom.getId(), me.getId());
         assertThat(participant.getLastReadChatId()).isNull();
     }
@@ -550,12 +550,12 @@ class ChatServiceTest {
         em.clear();
 
         // then: activeReceiver → cursor 갱신됨
-        ChatRoomParticipant activeParticipant = chatRoomParticipantRepository
+        SpaceMember activeParticipant = spaceMemberRepository
                 .findChatRoomBy(chatRoom.getId(), activeReceiver.getId());
         assertThat(activeParticipant.getLastReadChatId()).isEqualTo(savedChatId);
 
         // inactiveReceiver → cursor 갱신 안 됨
-        ChatRoomParticipant inactiveParticipant = chatRoomParticipantRepository
+        SpaceMember inactiveParticipant = spaceMemberRepository
                 .findChatRoomBy(chatRoom.getId(), inactiveReceiver.getId());
         assertThat(inactiveParticipant.getLastReadChatId()).isNull();
     }
@@ -582,7 +582,7 @@ class ChatServiceTest {
         em.clear();
 
         // then: cursor 갱신 없음
-        ChatRoomParticipant participant = chatRoomParticipantRepository
+        SpaceMember participant = spaceMemberRepository
                 .findChatRoomBy(chatRoom.getId(), inRoomReceiver.getId());
         assertThat(participant.getLastReadChatId()).isNull();
     }
@@ -683,7 +683,7 @@ class ChatServiceTest {
         em.flush(); em.clear();
 
         // then: cursor가 최신 메시지까지 갱신되어야 한다
-        ChatRoomParticipant participant = chatRoomParticipantRepository
+        SpaceMember participant = spaceMemberRepository
                 .findChatRoomBy(chatRoomId, receiver.getId());
         assertThat(participant.getLastReadChatId()).isEqualTo(latestChatId);
     }
@@ -752,7 +752,7 @@ class ChatServiceTest {
         Long latestChatId = chatService.saveChat(sender.getId(), chatRoomId, "msg3");
 
         // receiver cursor 상태 확인 (inactive였으므로 null이어야 함)
-        Long cursorBefore = chatRoomParticipantRepository
+        Long cursorBefore = spaceMemberRepository
                 .findLastReadChatIdBy(receiver.getId(), chatRoomId);
         assertThat(cursorBefore).isNull(); // inactive 중 메시지는 cursor advance 없음
 

@@ -15,7 +15,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     @Query("SELECT m.id " +
             "FROM Member m " +
-            "JOIN ChatRoomParticipant crp ON m.id = crp.member.id " +
+            "JOIN SpaceMember crp ON m.id = crp.member.id " +
             "WHERE crp.space.id = :chatRoomId")
     List<Long> findMemberIdsIn(@Param("chatRoomId") Long chatRoomId);
 }

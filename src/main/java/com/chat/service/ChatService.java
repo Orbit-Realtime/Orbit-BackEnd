@@ -37,14 +37,14 @@ public class ChatService {
 
     private final ChatRepository chatRepository;
     private final SpaceRepository spaceRepository;
-    private final ChatRoomParticipantRepository chatRoomParticipantRepository;
+    private final SpaceMemberRepository spaceMemberRepository;
     private final MemberRepository memberRepository;
 
     public SaveChatData findChatData(Long chatId) {
         Chat findChat = chatRepository.findById(chatId).orElseThrow(
                 () -> new CustomException(ErrorCode.CHAT_NOT_EXIST)
         );
-        Long unreadMemberCount = chatRoomParticipantRepository.countMessageUnreadMembers(chatId);
+        Long unreadMemberCount = spaceMemberRepository.countMessageUnreadMembers(chatId);
 
         return SaveChatData
                 .builder()
@@ -72,12 +72,12 @@ public class ChatService {
 
     private void updateCursorsOnSend(Long senderId, Long chatRoomId, Chat chat) {
 
-        List<ChatRoomParticipant> findChatRoomParticipants
-                = chatRoomParticipantRepository.findAllFetchMemberBy(chatRoomId);
+        List<SpaceMember> findSpaceMembers
+                = spaceMemberRepository.findAllFetchMemberBy(chatRoomId);
 
         List<Long> readMemberIds = new ArrayList<>();
 
-        for (ChatRoomParticipant crp : findChatRoomParticipants) {
+        for (SpaceMember crp : findSpaceMembers) {
             Long memberId = crp.getMember().getId();
             boolean isRead = memberId.equals(senderId)
                     || spaceManager.isSpaceActive(memberId, chatRoomId);
@@ -87,7 +87,7 @@ public class ChatService {
         }
 
         for (Long memberId : readMemberIds) {
-            chatRoomParticipantRepository.updateLastReadChatId(memberId, chatRoomId, chat.getId());
+            spaceMemberRepository.updateLastReadChatId(memberId, chatRoomId, chat.getId());
         }
     }
 
@@ -131,11 +131,11 @@ public class ChatService {
         Long lastReadChatId = null;
 
         if (beforeChatId == null) {
-            lastReadChatId = chatRoomParticipantRepository
+            lastReadChatId = spaceMemberRepository
                     .findLastReadChatIdBy(memberId, chatRoomId);
 
             Long currentLastReadChatId = chats.get(chats.size() - 1).getId();
-            int updatedCount = chatRoomParticipantRepository.updateLastReadChatId(
+            int updatedCount = spaceMemberRepository.updateLastReadChatId(
                     memberId, chatRoomId, currentLastReadChatId
             );
 
@@ -151,7 +151,7 @@ public class ChatService {
             }
         }
 
-        Map<Long, Long> unreadMemberCountMap = chatRoomParticipantRepository
+        Map<Long, Long> unreadMemberCountMap = spaceMemberRepository
                 .countMessageUnreadMembers(chatIds).stream()
                 .collect(Collectors.toMap(
                         MessageUnreadMemberCount::getChatId,
@@ -185,10 +185,10 @@ public class ChatService {
         Long latestChatId = latestChatIdOpt.get();
 
         Long previousLastReadChatId =
-                chatRoomParticipantRepository.findLastReadChatIdBy(memberId, chatRoomId);
+                spaceMemberRepository.findLastReadChatIdBy(memberId, chatRoomId);
 
         int updateCount =
-                chatRoomParticipantRepository.updateLastReadChatId(memberId, chatRoomId, latestChatId);
+                spaceMemberRepository.updateLastReadChatId(memberId, chatRoomId, latestChatId);
 
         if (updateCount == 0) {
             return;
