@@ -159,7 +159,7 @@ class ChatRoomServiceTest {
         fixture.savedSimpleChat("msg2", other, chatRoom);
 
         // me cursor를 첫 번째 메시지까지만 읽음 → 두 번째 메시지만 unread
-        spaceMemberRepository.updateLastReadChatId(
+        spaceMemberRepository.updateLastReadMessageId(
                 me.getId(), chatRoom.getId(), firstChat.getId());
 
         // when
@@ -281,7 +281,7 @@ class ChatRoomServiceTest {
     }
 
     @Test
-    @DisplayName("lastReadChatId가 null이면 채팅방의 모든 메시지가 unread count에 포함된다.")
+    @DisplayName("lastReadMessageId가 null이면 채팅방의 모든 메시지가 unread count에 포함된다.")
     void findChatRooms_nullCursor_allMessagesUnreadTest() {
         // given
         Member me = fixture.savedMemberBy("me");
@@ -311,7 +311,7 @@ class ChatRoomServiceTest {
         Message lastChat = fixture.savedSimpleChat("msg2", other, chatRoom);
 
         // me cursor를 최신 메시지로 설정
-        spaceMemberRepository.updateLastReadChatId(
+        spaceMemberRepository.updateLastReadMessageId(
                 me.getId(), chatRoom.getId(), lastChat.getId());
 
         // when

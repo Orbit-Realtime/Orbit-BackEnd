@@ -77,7 +77,7 @@ class BroadcastDataBuilderTest {
 
         // me: cursor null → 2개 unread
         // other: cursor = first → second만 1개 unread
-        spaceMemberRepository.updateLastReadChatId(
+        spaceMemberRepository.updateLastReadMessageId(
                 other.getId(), chatRoom.getId(), first.getId());
         em.flush(); em.clear();
 

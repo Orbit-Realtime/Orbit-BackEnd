@@ -98,7 +98,7 @@ class ChatApiControllerTest {
                         .session(session))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.messages.length()").value(2))
-                .andExpect(jsonPath("$.data.lastReadChatId", nullValue()));
+                .andExpect(jsonPath("$.data.lastReadMessageId", nullValue()));
     }
 
     @Test

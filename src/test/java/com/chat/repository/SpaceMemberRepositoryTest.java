@@ -285,8 +285,8 @@ class SpaceMemberRepositoryTest {
     }
 
     @Test
-    @DisplayName("채팅방 참여 생성 시 lastReadChatId 기본값은 null 이다.")
-    void lastReadChatIdDefaultNullTest() {
+    @DisplayName("채팅방 참여 생성 시 lastReadMessageId 기본값은 null 이다.")
+    void lastReadMessageIdDefaultNullTest() {
         // given
         Member member = createMemberBy("member");
         Space chatRoom = createChatRoomBy("room");
@@ -297,12 +297,12 @@ class SpaceMemberRepositoryTest {
         );
 
         // then
-        assertThat(saved.getLastReadChatId()).isNull();
+        assertThat(saved.getLastReadMessageId()).isNull();
     }
 
     @Test
-    @DisplayName("lastReadChatId 가 null 인 경우 특정 chatId 로 갱신된다.")
-    void updateLastReadChatIdFromNullTest() {
+    @DisplayName("lastReadMessageId 가 null 인 경우 특정 chatId 로 갱신된다.")
+    void updateLastReadMessageIdFromNullTest() {
         // given
         Member member = createMemberBy("member");
         Space chatRoom = createChatRoomBy("room");
@@ -312,31 +312,31 @@ class SpaceMemberRepositoryTest {
         em.flush();
         em.clear();
 
-        int updated = spaceMemberRepository.updateLastReadChatId(member.getId(), chatRoom.getId(), 100L);
+        int updated = spaceMemberRepository.updateLastReadMessageId(member.getId(), chatRoom.getId(), 100L);
         em.flush();
         em.clear();
 
         assertThat(updated).isEqualTo(1);
         SpaceMember found =
                 spaceMemberRepository.findChatRoomBy(chatRoom.getId(), member.getId());
-        assertThat(found.getLastReadChatId()).isEqualTo(100L);
+        assertThat(found.getLastReadMessageId()).isEqualTo(100L);
     }
 
     @Test
     @DisplayName("현재 cursor 보다 작은 chatId 로는 갱신되지 않는다.")
-    void updateLastReadChatIdDoesNotDecreaseTest() {
+    void updateLastReadMessageIdDoesNotDecreaseTest() {
         // given
         Member member = createMemberBy("member");
         Space chatRoom = createChatRoomBy("room");
         spaceMemberRepository.save(
                 SpaceMember.builder().member(member).space(chatRoom).build());
-        spaceMemberRepository.updateLastReadChatId(member.getId(), chatRoom.getId(),
+        spaceMemberRepository.updateLastReadMessageId(member.getId(), chatRoom.getId(),
                 200L);
         em.flush();
         em.clear();
 
         // when
-        int updated = spaceMemberRepository.updateLastReadChatId(
+        int updated = spaceMemberRepository.updateLastReadMessageId(
                 member.getId(), chatRoom.getId(), 100L
         );
         em.flush();
@@ -346,7 +346,7 @@ class SpaceMemberRepositoryTest {
         assertThat(updated).isEqualTo(0);
         SpaceMember found =
                 spaceMemberRepository.findChatRoomBy(chatRoom.getId(), member.getId());
-        assertThat(found.getLastReadChatId()).isEqualTo(200L);
+        assertThat(found.getLastReadMessageId()).isEqualTo(200L);
     }
 
     @Test
@@ -365,7 +365,7 @@ class SpaceMemberRepositoryTest {
         Message second = messageRepository.save(new Message("msg2", other, chatRoom));
         Message third  = messageRepository.save(new Message("msg3", other, chatRoom));
 
-        spaceMemberRepository.updateLastReadChatId(me.getId(), chatRoom.getId(),
+        spaceMemberRepository.updateLastReadMessageId(me.getId(), chatRoom.getId(),
                 first.getId());
         em.flush();
         em.clear();
@@ -400,7 +400,7 @@ class SpaceMemberRepositoryTest {
 
         // me: cursor null → 전체 2개 unread
         // other: cursor = first → second만 1개 unread
-        spaceMemberRepository.updateLastReadChatId(
+        spaceMemberRepository.updateLastReadMessageId(
                 other.getId(), chatRoom.getId(), first.getId());
         em.flush(); em.clear();
 
@@ -421,8 +421,8 @@ class SpaceMemberRepositoryTest {
     }
 
     @Test
-    @DisplayName("lastReadChatId가 null이면 findLastReadChatIdBy는 null을 반환한다.")
-    void findLastReadChatIdBy_returnsNullWhenNotRead() {
+    @DisplayName("lastReadMessageId가 null이면 findLastReadMessageIdBy는 null을 반환한다.")
+    void findLastReadMessageIdBy_returnsNullWhenNotRead() {
         // given
         Member member = createMemberBy("member");
         Space chatRoom = createChatRoomBy("room");
@@ -433,28 +433,28 @@ class SpaceMemberRepositoryTest {
 
         // when
         Long result = spaceMemberRepository
-                .findLastReadChatIdBy(member.getId(), chatRoom.getId());
+                .findLastReadMessageIdBy(member.getId(), chatRoom.getId());
 
         // then
         assertThat(result).isNull();
     }
 
     @Test
-    @DisplayName("lastReadChatId 갱신 후 findLastReadChatIdBy는 갱신된 값을 반환한다.")
-    void findLastReadChatIdBy_returnsValueAfterUpdate() {
+    @DisplayName("lastReadMessageId 갱신 후 findLastReadMessageIdBy는 갱신된 값을 반환한다.")
+    void findLastReadMessageIdBy_returnsValueAfterUpdate() {
         // given
         Member member = createMemberBy("member");
         Space chatRoom = createChatRoomBy("room");
         spaceMemberRepository.save(
                 SpaceMember.builder().member(member).space(chatRoom).build());
-        spaceMemberRepository.updateLastReadChatId(member.getId(), chatRoom.getId(),
+        spaceMemberRepository.updateLastReadMessageId(member.getId(), chatRoom.getId(),
                 100L);
         em.flush();
         em.clear();
 
         // when
         Long result = spaceMemberRepository
-                .findLastReadChatIdBy(member.getId(), chatRoom.getId());
+                .findLastReadMessageIdBy(member.getId(), chatRoom.getId());
 
         // then
         assertThat(result).isEqualTo(100L);
@@ -471,7 +471,7 @@ class SpaceMemberRepositoryTest {
 
         Message chat = messageRepository.save(new Message("hello", sender, chatRoom));
         // 발신자 cursor = chatId (saveChat 흐름 재현)
-        spaceMemberRepository.updateLastReadChatId(
+        spaceMemberRepository.updateLastReadMessageId(
                 sender.getId(), chatRoom.getId(), chat.getId());
         em.flush(); em.clear();
 
@@ -479,7 +479,7 @@ class SpaceMemberRepositoryTest {
         Long count = spaceMemberRepository
                 .countMessageUnreadMembers(chat.getId());
 
-        // then: cursor = chatId → lastReadChatId < chatId 불충족 → 제외
+        // then: cursor = chatId → lastReadMessageId < chatId 불충족 → 제외
         assertThat(count).isEqualTo(0L);
     }
 
@@ -500,7 +500,7 @@ class SpaceMemberRepositoryTest {
                 SpaceMember.builder().member(receiver2).space(chatRoom).build());
 
         Message chat = messageRepository.save(new Message("hello", sender, chatRoom));
-        spaceMemberRepository.updateLastReadChatId(
+        spaceMemberRepository.updateLastReadMessageId(
                 sender.getId(), chatRoom.getId(), chat.getId());
         em.flush(); em.clear();
 
@@ -526,7 +526,7 @@ class SpaceMemberRepositoryTest {
                 SpaceMember.builder().member(receiver).space(chatRoom).build());
 
         Message chat = messageRepository.save(new Message("hello", sender, chatRoom));
-        spaceMemberRepository.updateLastReadChatId(
+        spaceMemberRepository.updateLastReadMessageId(
                 sender.getId(), chatRoom.getId(), chat.getId());
         em.flush(); em.clear();
 
@@ -535,7 +535,7 @@ class SpaceMemberRepositoryTest {
         assertThat(beforeRead).isEqualTo(1L);
 
         // receiver 입장 → cursor 갱신
-        spaceMemberRepository.updateLastReadChatId(
+        spaceMemberRepository.updateLastReadMessageId(
                 receiver.getId(), chatRoom.getId(), chat.getId());
         em.flush(); em.clear();
 
@@ -564,7 +564,7 @@ class SpaceMemberRepositoryTest {
         Message second = messageRepository.save(new Message("second", sender, chatRoom));
 
         // sender: second까지 읽음, receiver: cursor=null
-        spaceMemberRepository.updateLastReadChatId(
+        spaceMemberRepository.updateLastReadMessageId(
                 sender.getId(), chatRoom.getId(), second.getId());
         em.flush(); em.clear();
 
@@ -600,9 +600,9 @@ class SpaceMemberRepositoryTest {
         Message second = messageRepository.save(new Message("second", sender, chatRoom));
 
         // sender: second까지, readerOfFirst: first까지, noReader: cursor=null
-        spaceMemberRepository.updateLastReadChatId(
+        spaceMemberRepository.updateLastReadMessageId(
                 sender.getId(), chatRoom.getId(), second.getId());
-        spaceMemberRepository.updateLastReadChatId(
+        spaceMemberRepository.updateLastReadMessageId(
                 readerOfFirst.getId(), chatRoom.getId(), first.getId());
         em.flush(); em.clear();
 

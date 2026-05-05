@@ -335,7 +335,7 @@ public class ChatRoomServiceSocketTest {
 
     @Test
     @DisplayName("findChatHistory는 READ_EVENT에 이전 방문 시 마지막으로 읽은 chatId를 포함한다.")
-    void findChatHistory_READ_EVENT에_lastReadChatId를_포함한다() throws ExecutionException, InterruptedException, JsonProcessingException {
+    void findChatHistory_READ_EVENT에_lastReadMessageId를_포함한다() throws ExecutionException, InterruptedException, JsonProcessingException {
         // given
         String firstUsername = "first";
         Member first = memberFixture.saveEncryptPasswordBy(firstUsername);

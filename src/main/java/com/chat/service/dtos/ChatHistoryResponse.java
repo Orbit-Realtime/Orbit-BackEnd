@@ -7,12 +7,12 @@ import java.util.List;
 @Getter
 public class ChatHistoryResponse {
 
-    private Long lastReadChatId;
+    private Long lastReadMessageId;
     private List<ChatHistory> messages;
     private boolean hasMore;
 
-    public ChatHistoryResponse(Long lastReadChatId, List<ChatHistory> messages, boolean hasMore) {
-        this.lastReadChatId = lastReadChatId;
+    public ChatHistoryResponse(Long lastReadMessageId, List<ChatHistory> messages, boolean hasMore) {
+        this.lastReadMessageId = lastReadMessageId;
         this.messages = messages;
         this.hasMore = hasMore;
     }

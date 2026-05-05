@@ -134,8 +134,8 @@ class MessageServiceTest {
         List<ChatHistory> messages = response.getMessages();
         assertThat(messages).hasSize(3);
 
-        // lastReadChatId: 조회 전 firstMember가 마지막으로 읽은 메시지 = 자신이 보낸 firstChat
-        assertThat(response.getLastReadChatId()).isEqualTo(firstChatId);
+        // lastReadMessageId: 조회 전 firstMember가 마지막으로 읽은 메시지 = 자신이 보낸 firstChat
+        assertThat(response.getLastReadMessageId()).isEqualTo(firstChatId);
 
         ChatHistory firstChat = messages.get(0);
         assertThat(firstChat.getChatId()).isEqualTo(firstChatId);
@@ -170,7 +170,7 @@ class MessageServiceTest {
 
         // then
         assertThat(response.getMessages()).isEmpty();
-        assertThat(response.getLastReadChatId()).isNull();
+        assertThat(response.getLastReadMessageId()).isNull();
     }
 
     @Test
@@ -190,7 +190,7 @@ class MessageServiceTest {
 
         em.flush(); em.clear();
         Long cursorAfterFirst = spaceMemberRepository
-                .findLastReadChatIdBy(secondMember.getId(), chatRoomId);
+                .findLastReadMessageIdBy(secondMember.getId(), chatRoomId);
         assertThat(cursorAfterFirst).isNotNull();
 
         // when: 재입장 — 이미 모두 읽음 처리된 상태
@@ -199,7 +199,7 @@ class MessageServiceTest {
         // then: 재입장 후에도 미읽음 없음
         em.flush(); em.clear();
         Long cursorAfterSecond = spaceMemberRepository
-                .findLastReadChatIdBy(secondMember.getId(), chatRoomId);
+                .findLastReadMessageIdBy(secondMember.getId(), chatRoomId);
         assertThat(cursorAfterSecond).isEqualTo(cursorAfterFirst);
     }
 
@@ -336,13 +336,13 @@ class MessageServiceTest {
         // then: receiver의 미읽음 상태 그대로 (읽음 처리 안 됨)
         em.flush(); em.clear();
         Long receiverCursor = spaceMemberRepository
-                .findLastReadChatIdBy(receiver.getId(), chatRoomId);
+                .findLastReadMessageIdBy(receiver.getId(), chatRoomId);
         assertThat(receiverCursor).isNull();
     }
 
     @Test
-    @DisplayName("커서 기반 조회 시 lastReadChatId는 null을 반환한다.")
-    void findChatHistory_cursorLoad_lastReadChatIdIsNullTest() {
+    @DisplayName("커서 기반 조회 시 lastReadMessageId는 null을 반환한다.")
+    void findChatHistory_cursorLoad_lastReadMessageIdIsNullTest() {
         // given
         Member member = fixture.savedMemberBy("member");
         Space chatRoom = fixture.savedChatRoomBy("room", List.of(member));
@@ -355,7 +355,7 @@ class MessageServiceTest {
         ChatHistoryResponse response = messageService.findChatHistory(chatRoomId, member.getId(), secondChatId);
 
         // then
-        assertThat(response.getLastReadChatId()).isNull();
+        assertThat(response.getLastReadMessageId()).isNull();
     }
 
     @Test
@@ -422,7 +422,7 @@ class MessageServiceTest {
     }
 
     @Test
-    @DisplayName("메시지 전송 시 sender의 lastReadChatId가 저장된 chatId로 갱신된다.")
+    @DisplayName("메시지 전송 시 sender의 lastReadMessageId가 저장된 chatId로 갱신된다.")
     void saveChat_senderCursorUpdatedTest() {
         // given
         Member sender = fixture.savedMemberBy("sender");
@@ -436,11 +436,11 @@ class MessageServiceTest {
         // then
         SpaceMember senderParticipant = spaceMemberRepository
                 .findChatRoomBy(chatRoom.getId(), sender.getId());
-        assertThat(senderParticipant.getLastReadChatId()).isEqualTo(savedChatId);
+        assertThat(senderParticipant.getLastReadMessageId()).isEqualTo(savedChatId);
     }
 
     @Test
-    @DisplayName("메시지 전송 시 receiver의 lastReadChatId는 갱신되지 않는다.")
+    @DisplayName("메시지 전송 시 receiver의 lastReadMessageId는 갱신되지 않는다.")
     void saveChat_receiverCursorNotUpdatedTest() {
         // given
         Member sender = fixture.savedMemberBy("sender");
@@ -454,11 +454,11 @@ class MessageServiceTest {
         // then
         SpaceMember receiverParticipant = spaceMemberRepository
                 .findChatRoomBy(chatRoom.getId(), receiver.getId());
-        assertThat(receiverParticipant.getLastReadChatId()).isNull();
+        assertThat(receiverParticipant.getLastReadMessageId()).isNull();
     }
 
     @Test
-    @DisplayName("초기 history 조회 시 조회자의 lastReadChatId가 최신 chatId로 갱신된다.")
+    @DisplayName("초기 history 조회 시 조회자의 lastReadMessageId가 최신 chatId로 갱신된다.")
     void findChatHistory_initialLoad_cursorUpdatedTest() {
         // given
         Member me = fixture.savedMemberBy("me");
@@ -476,11 +476,11 @@ class MessageServiceTest {
         // then
         SpaceMember participant = spaceMemberRepository
                 .findChatRoomBy(chatRoomId, me.getId());
-        assertThat(participant.getLastReadChatId()).isEqualTo(latestChatId);
+        assertThat(participant.getLastReadMessageId()).isEqualTo(latestChatId);
     }
 
     @Test
-    @DisplayName("페이지네이션 history 조회 시 lastReadChatId는 갱신되지 않는다.")
+    @DisplayName("페이지네이션 history 조회 시 lastReadMessageId는 갱신되지 않는다.")
     void findChatHistory_pagination_cursorNotUpdatedTest() {
         // given
         Member me = fixture.savedMemberBy("me");
@@ -507,11 +507,11 @@ class MessageServiceTest {
         // then: cursor는 secondChatId 그대로 (thirdChatId로 진행하지 않음)
         SpaceMember participant = spaceMemberRepository
                 .findChatRoomBy(chatRoomId, me.getId());
-        assertThat(participant.getLastReadChatId()).isEqualTo(secondChatId);
+        assertThat(participant.getLastReadMessageId()).isEqualTo(secondChatId);
     }
 
     @Test
-    @DisplayName("빈 채팅방 조회 시 lastReadChatId는 null 그대로다.")
+    @DisplayName("빈 채팅방 조회 시 lastReadMessageId는 null 그대로다.")
     void findChatHistory_emptyRoom_cursorNotUpdatedTest() {
         // given
         Member me = fixture.savedMemberBy("me");
@@ -524,7 +524,7 @@ class MessageServiceTest {
         // then
         SpaceMember participant = spaceMemberRepository
                 .findChatRoomBy(chatRoom.getId(), me.getId());
-        assertThat(participant.getLastReadChatId()).isNull();
+        assertThat(participant.getLastReadMessageId()).isNull();
     }
 
     @Test
@@ -552,12 +552,12 @@ class MessageServiceTest {
         // then: activeReceiver → cursor 갱신됨
         SpaceMember activeParticipant = spaceMemberRepository
                 .findChatRoomBy(chatRoom.getId(), activeReceiver.getId());
-        assertThat(activeParticipant.getLastReadChatId()).isEqualTo(savedChatId);
+        assertThat(activeParticipant.getLastReadMessageId()).isEqualTo(savedChatId);
 
         // inactiveReceiver → cursor 갱신 안 됨
         SpaceMember inactiveParticipant = spaceMemberRepository
                 .findChatRoomBy(chatRoom.getId(), inactiveReceiver.getId());
-        assertThat(inactiveParticipant.getLastReadChatId()).isNull();
+        assertThat(inactiveParticipant.getLastReadMessageId()).isNull();
     }
 
     @Test
@@ -584,12 +584,12 @@ class MessageServiceTest {
         // then: cursor 갱신 없음
         SpaceMember participant = spaceMemberRepository
                 .findChatRoomBy(chatRoom.getId(), inRoomReceiver.getId());
-        assertThat(participant.getLastReadChatId()).isNull();
+        assertThat(participant.getLastReadMessageId()).isNull();
     }
 
     @Test
-    @DisplayName("수신자 첫 입장 시 lastReadChatId는 null이다.")
-    void findChatHistory_firstEnter_lastReadChatIdIsNull() {
+    @DisplayName("수신자 첫 입장 시 lastReadMessageId는 null이다.")
+    void findChatHistory_firstEnter_lastReadMessageIdIsNull() {
         // given
         Member sender = fixture.savedMemberBy("sender");
         Member receiver = fixture.savedMemberBy("receiver");
@@ -604,12 +604,12 @@ class MessageServiceTest {
                 receiver.getId(), null);
 
         // then
-        assertThat(response.getLastReadChatId()).isNull();
+        assertThat(response.getLastReadMessageId()).isNull();
     }
 
     @Test
-    @DisplayName("두 번째 입장 시 lastReadChatId는 직전 입장에서 갱신된 cursor 값이다.")
-    void findChatHistory_secondEnter_lastReadChatIdEqualsPreUpdateCursor() {
+    @DisplayName("두 번째 입장 시 lastReadMessageId는 직전 입장에서 갱신된 cursor 값이다.")
+    void findChatHistory_secondEnter_lastReadMessageIdEqualsPreUpdateCursor() {
         // given
         Member sender = fixture.savedMemberBy("sender");
         Member me = fixture.savedMemberBy("me");
@@ -630,12 +630,12 @@ class MessageServiceTest {
                 null);
 
         // then: cursor 갱신 이전 값 = 첫 입장 때 갱신된 secondChatId
-        assertThat(response.getLastReadChatId()).isEqualTo(secondChatId);
+        assertThat(response.getLastReadMessageId()).isEqualTo(secondChatId);
     }
 
     @Test
-    @DisplayName("발신자 재입장 시 lastReadChatId는 자신이 마지막으로 보낸 메시지 ID이다.")
-    void findChatHistory_senderReenter_lastReadChatIdEqualsSentMessageCursor() {
+    @DisplayName("발신자 재입장 시 lastReadMessageId는 자신이 마지막으로 보낸 메시지 ID이다.")
+    void findChatHistory_senderReenter_lastReadMessageIdEqualsSentMessageCursor() {
         // given
         Member sender = fixture.savedMemberBy("sender");
         Member receiver = fixture.savedMemberBy("receiver");
@@ -650,7 +650,7 @@ class MessageServiceTest {
                 null);
 
         // then: saveChat에서 갱신된 cursor = sentChatId
-        assertThat(response.getLastReadChatId()).isEqualTo(sentChatId);
+        assertThat(response.getLastReadMessageId()).isEqualTo(sentChatId);
     }
 
     @Test
@@ -685,7 +685,7 @@ class MessageServiceTest {
         // then: cursor가 최신 메시지까지 갱신되어야 한다
         SpaceMember participant = spaceMemberRepository
                 .findChatRoomBy(chatRoomId, receiver.getId());
-        assertThat(participant.getLastReadChatId()).isEqualTo(latestChatId);
+        assertThat(participant.getLastReadMessageId()).isEqualTo(latestChatId);
     }
 
     @Test
@@ -753,7 +753,7 @@ class MessageServiceTest {
 
         // receiver cursor 상태 확인 (inactive였으므로 null이어야 함)
         Long cursorBefore = spaceMemberRepository
-                .findLastReadChatIdBy(receiver.getId(), chatRoomId);
+                .findLastReadMessageIdBy(receiver.getId(), chatRoomId);
         assertThat(cursorBefore).isNull(); // inactive 중 메시지는 cursor advance 없음
 
         // when: ROOM_ACTIVE

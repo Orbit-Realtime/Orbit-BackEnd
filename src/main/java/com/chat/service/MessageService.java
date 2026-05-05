@@ -87,7 +87,7 @@ public class MessageService {
         }
 
         for (Long memberId : readMemberIds) {
-            spaceMemberRepository.updateLastReadChatId(memberId, chatRoomId, chat.getId());
+            spaceMemberRepository.updateLastReadMessageId(memberId, chatRoomId, chat.getId());
         }
     }
 
@@ -128,14 +128,14 @@ public class MessageService {
                 .map(Message::getId)
                 .toList();
 
-        Long lastReadChatId = null;
+        Long lastReadMessageId = null;
 
         if (beforeChatId == null) {
-            lastReadChatId = spaceMemberRepository
-                    .findLastReadChatIdBy(memberId, chatRoomId);
+            lastReadMessageId = spaceMemberRepository
+                    .findLastReadMessageIdBy(memberId, chatRoomId);
 
             Long currentLastReadChatId = chats.get(chats.size() - 1).getId();
-            int updatedCount = spaceMemberRepository.updateLastReadChatId(
+            int updatedCount = spaceMemberRepository.updateLastReadMessageId(
                     memberId, chatRoomId, currentLastReadChatId
             );
 
@@ -144,7 +144,7 @@ public class MessageService {
                 publisher.publishEvent(new PublishReadEvent(
                         memberId,
                         chatRoomId,
-                        lastReadChatId,
+                        lastReadMessageId,
                         currentLastReadChatId,
                         updatesByMemberId
                 ));
@@ -173,7 +173,7 @@ public class MessageService {
                     .build());
         }
 
-        return new ChatHistoryResponse(lastReadChatId, messages, hasMore);
+        return new ChatHistoryResponse(lastReadMessageId, messages, hasMore);
     }
 
     @Transactional
@@ -185,10 +185,10 @@ public class MessageService {
         Long latestChatId = latestChatIdOpt.get();
 
         Long previousLastReadChatId =
-                spaceMemberRepository.findLastReadChatIdBy(memberId, chatRoomId);
+                spaceMemberRepository.findLastReadMessageIdBy(memberId, chatRoomId);
 
         int updateCount =
-                spaceMemberRepository.updateLastReadChatId(memberId, chatRoomId, latestChatId);
+                spaceMemberRepository.updateLastReadMessageId(memberId, chatRoomId, latestChatId);
 
         if (updateCount == 0) {
             return;

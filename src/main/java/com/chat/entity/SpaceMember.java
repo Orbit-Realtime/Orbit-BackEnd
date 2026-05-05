@@ -22,8 +22,8 @@ public class SpaceMember extends BaseEntity {
     @Column(name = "chat_room_participant_id")
     private Long id;
 
-    @Column(name = "last_read_chat_id")
-    private Long lastReadChatId;
+    @Column(name = "last_read_message_id")
+    private Long lastReadMessageId;
 
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "member_id")
@@ -39,13 +39,13 @@ public class SpaceMember extends BaseEntity {
         this.space = space;
     }
 
-    public void updateLastReadChatId(Long chatId) {
-        if (chatId == null) {
+    public void updateLastReadMessageId(Long messageId) {
+        if (messageId == null) {
             return;
         }
 
-        if (this.lastReadChatId == null || this.lastReadChatId < chatId) {
-            this.lastReadChatId = chatId;
+        if (this.lastReadMessageId == null || this.lastReadMessageId < messageId) {
+            this.lastReadMessageId = messageId;
         }
     }
 }
