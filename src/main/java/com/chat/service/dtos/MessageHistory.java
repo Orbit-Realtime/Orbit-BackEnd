@@ -6,7 +6,7 @@ import lombok.Getter;
 import java.time.LocalDateTime;
 
 @Getter
-public class ChatHistory {
+public class MessageHistory {
 
     private Long chatId;
     private Long senderId;
@@ -16,7 +16,7 @@ public class ChatHistory {
     private LocalDateTime createdDate;
 
     @Builder
-    public ChatHistory(Long chatId, Long senderId, String senderNickname, String message, Long unreadMemberCount, LocalDateTime createdDate) {
+    public MessageHistory(Long chatId, Long senderId, String senderNickname, String message, Long unreadMemberCount, LocalDateTime createdDate) {
         this.chatId = chatId;
         this.senderId = senderId;
         this.senderNickname = senderNickname;

@@ -5,13 +5,13 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
-public class ChatHistoryResponse {
+public class MessageHistoryResponse {
 
     private Long lastReadMessageId;
-    private List<ChatHistory> messages;
+    private List<MessageHistory> messages;
     private boolean hasMore;
 
-    public ChatHistoryResponse(Long lastReadMessageId, List<ChatHistory> messages, boolean hasMore) {
+    public MessageHistoryResponse(Long lastReadMessageId, List<MessageHistory> messages, boolean hasMore) {
         this.lastReadMessageId = lastReadMessageId;
         this.messages = messages;
         this.hasMore = hasMore;

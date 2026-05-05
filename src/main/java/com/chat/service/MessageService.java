@@ -5,8 +5,8 @@ import com.chat.exception.CustomException;
 import com.chat.exception.ErrorCode;
 import com.chat.repository.*;
 import com.chat.repository.dtos.MessageUnreadMemberCount;
-import com.chat.service.dtos.ChatHistory;
-import com.chat.service.dtos.ChatHistoryResponse;
+import com.chat.service.dtos.MessageHistory;
+import com.chat.service.dtos.MessageHistoryResponse;
 import com.chat.service.dtos.SaveMessageData;
 import com.chat.service.dtos.chat.UpdateChatRoom;
 import com.chat.socket.event.PublishReadEvent;
@@ -92,16 +92,16 @@ public class MessageService {
     }
 
     @Transactional
-    public ChatHistoryResponse findMessageHistory(Long chatRoomId, Long memberId, Long beforeChatId) {
+    public MessageHistoryResponse findMessageHistory(Long chatRoomId, Long memberId, Long beforeChatId) {
 
         Member findMember = memberRepository.findById(memberId).orElseThrow(
                 () -> new CustomException(ErrorCode.MEMBER_NOT_FOUND)
         );
 
-        return createChatHistoryResponse(chatRoomId, findMember.getId(), beforeChatId);
+        return createMessageHistoryResponse(chatRoomId, findMember.getId(), beforeChatId);
     }
 
-    private ChatHistoryResponse createChatHistoryResponse(Long chatRoomId, Long memberId, Long beforeChatId) {
+    private MessageHistoryResponse createMessageHistoryResponse(Long chatRoomId, Long memberId, Long beforeChatId) {
 
         PageRequest pageable = PageRequest.of(0, PAGE_SIZE + 1);
         List<Message> chats;
@@ -113,7 +113,7 @@ public class MessageService {
         }
 
         if (chats.isEmpty()) {
-            return new ChatHistoryResponse(null, List.of(), false);
+            return new MessageHistoryResponse(null, List.of(), false);
         }
 
         boolean hasMore = chats.size() > PAGE_SIZE;
@@ -158,12 +158,12 @@ public class MessageService {
                         MessageUnreadMemberCount::getUnreadMemberCount
                 ));
 
-        List<ChatHistory> messages = new ArrayList<>(chats.size());
+        List<MessageHistory> messages = new ArrayList<>(chats.size());
         for (Message chat : chats) {
             Member sender = chat.getMember();
             Long unreadCount = unreadMemberCountMap.getOrDefault(chat.getId(), 0L);
 
-            messages.add(ChatHistory.builder()
+            messages.add(MessageHistory.builder()
                     .chatId(chat.getId())
                     .senderNickname(sender.getNickname())
                     .senderId(sender.getId())
@@ -173,7 +173,7 @@ public class MessageService {
                     .build());
         }
 
-        return new ChatHistoryResponse(lastReadMessageId, messages, hasMore);
+        return new MessageHistoryResponse(lastReadMessageId, messages, hasMore);
     }
 
     @Transactional
