@@ -117,8 +117,8 @@ public class ChatRoomServiceSocketTest {
         Space chatRoom = fixture.savedChatRoomBy("title", participants);
         Long chatRoomId = chatRoom.getId();
 
-        messageService.saveChat(firstId, chatRoomId, "firstChat");
-        messageService.saveChat(secondId, chatRoomId, "secondChat");
+        messageService.saveMessage(firstId, chatRoomId, "firstChat");
+        messageService.saveMessage(secondId, chatRoomId, "secondChat");
 
         String JSESSIONID = memberFixture.loginRequestBy("first", port);
 
@@ -289,7 +289,7 @@ public class ChatRoomServiceSocketTest {
         Long chatRoomId = chatRoom.getId();
 
         // second가 아직 방에 없는 상태에서 first가 메시지 전송 → second.isRead=false
-        messageService.saveChat(firstId, chatRoomId, "hello");
+        messageService.saveMessage(firstId, chatRoomId, "hello");
 
         // second가 WS 연결 및 방 입장
         String secondJSessionId = memberFixture.loginRequestBy(secondUsername, port);
@@ -303,7 +303,7 @@ public class ChatRoomServiceSocketTest {
         Thread.sleep(500);
 
         // when: second가 채팅 내역 조회 → updatedCount > 0 이면 READ_EVENT + UPDATE_CHAT_ROOM 발행
-        messageService.findChatHistory(chatRoomId, secondId, null);
+        messageService.findMessageHistory(chatRoomId, secondId, null);
 
         // then: UPDATE_CHAT_ROOM + READ_EVENT 수신 대기
         boolean received = latch.await(3, TimeUnit.SECONDS);
@@ -349,13 +349,13 @@ public class ChatRoomServiceSocketTest {
         Long chatRoomId = chatRoom.getId();
 
         // first가 첫 번째 메시지 전송 → second.isRead=false
-        Long firstChatId = messageService.saveChat(firstId, chatRoomId, "first message");
+        Long firstChatId = messageService.saveMessage(firstId, chatRoomId, "first message");
 
         // second 첫 번째 입장: firstChat 읽음 처리 (lastReadChatId=null, updatedCount=1)
-        messageService.findChatHistory(chatRoomId, secondId, null);
+        messageService.findMessageHistory(chatRoomId, secondId, null);
 
         // first가 두 번째 메시지 전송 → second.isRead=false
-        messageService.saveChat(firstId, chatRoomId, "second message");
+        messageService.saveMessage(firstId, chatRoomId, "second message");
 
         // second WS 연결 및 방 입장
         String secondJSessionId = memberFixture.loginRequestBy(secondUsername, port);
@@ -369,7 +369,7 @@ public class ChatRoomServiceSocketTest {
         Thread.sleep(500);
 
         // when: second 두 번째 채팅 내역 조회 → lastReadChatId = firstChatId (이전 방문 시 firstChat까지 읽었음)
-        messageService.findChatHistory(chatRoomId, secondId, null);
+        messageService.findMessageHistory(chatRoomId, secondId, null);
 
         // then: READ_EVENT에 lastReadChatId 포함 검증
         boolean received = latch.await(3, TimeUnit.SECONDS);

@@ -6,14 +6,14 @@ import lombok.Getter;
 import java.time.LocalDateTime;
 
 @Getter
-public class SaveChatData {
+public class SaveMessageData {
 
     private Long chatId;
     private Long unreadMemberCount;
     private LocalDateTime createdDate;
 
     @Builder
-    public SaveChatData(Long chatId, Long unreadMemberCount, LocalDateTime createdDate) {
+    public SaveMessageData(Long chatId, Long unreadMemberCount, LocalDateTime createdDate) {
         this.chatId = chatId;
         this.unreadMemberCount = unreadMemberCount;
         this.createdDate = createdDate;

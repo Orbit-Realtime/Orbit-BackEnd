@@ -44,8 +44,8 @@ class ChatApiControllerTest {
         Member member = fixture.savedMemberBy("member");
         Space chatRoom = fixture.savedChatRoomBy("room", List.of(member));
 
-        messageService.saveChat(member.getId(), chatRoom.getId(), "first");
-        messageService.saveChat(member.getId(), chatRoom.getId(), "second");
+        messageService.saveMessage(member.getId(), chatRoom.getId(), "first");
+        messageService.saveMessage(member.getId(), chatRoom.getId(), "second");
 
         MockHttpSession session = new MockHttpSession();
         session.setAttribute(SessionConst.SESSION_ID, member.getId());
@@ -84,9 +84,9 @@ class ChatApiControllerTest {
         Member member = fixture.savedMemberBy("member");
         Space chatRoom = fixture.savedChatRoomBy("room", List.of(member));
 
-        messageService.saveChat(member.getId(), chatRoom.getId(), "first");
-        messageService.saveChat(member.getId(), chatRoom.getId(), "second");
-        Long thirdChatId = messageService.saveChat(member.getId(), chatRoom.getId(), "third");
+        messageService.saveMessage(member.getId(), chatRoom.getId(), "first");
+        messageService.saveMessage(member.getId(), chatRoom.getId(), "second");
+        Long thirdChatId = messageService.saveMessage(member.getId(), chatRoom.getId(), "third");
 
         MockHttpSession session = new MockHttpSession();
         session.setAttribute(SessionConst.SESSION_ID, member.getId());

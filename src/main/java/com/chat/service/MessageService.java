@@ -7,7 +7,7 @@ import com.chat.repository.*;
 import com.chat.repository.dtos.MessageUnreadMemberCount;
 import com.chat.service.dtos.ChatHistory;
 import com.chat.service.dtos.ChatHistoryResponse;
-import com.chat.service.dtos.SaveChatData;
+import com.chat.service.dtos.SaveMessageData;
 import com.chat.service.dtos.chat.UpdateChatRoom;
 import com.chat.socket.event.PublishReadEvent;
 import com.chat.socket.manager.SpaceManager;
@@ -40,13 +40,13 @@ public class MessageService {
     private final SpaceMemberRepository spaceMemberRepository;
     private final MemberRepository memberRepository;
 
-    public SaveChatData findChatData(Long chatId) {
+    public SaveMessageData findMessageData(Long chatId) {
         Message findChat = messageRepository.findById(chatId).orElseThrow(
                 () -> new CustomException(ErrorCode.CHAT_NOT_EXIST)
         );
         Long unreadMemberCount = spaceMemberRepository.countMessageUnreadMembers(chatId);
 
-        return SaveChatData
+        return SaveMessageData
                 .builder()
                 .chatId(findChat.getId())
                 .createdDate(findChat.getCreatedDate())
@@ -55,7 +55,7 @@ public class MessageService {
     }
 
     @Transactional
-    public Long saveChat(Long senderId, Long chatRoomId, String message) {
+    public Long saveMessage(Long senderId, Long chatRoomId, String message) {
 
         Member findSender = memberRepository.findById(senderId).orElseThrow(
                 () -> new CustomException(ErrorCode.MEMBER_NOT_FOUND)
@@ -92,7 +92,7 @@ public class MessageService {
     }
 
     @Transactional
-    public ChatHistoryResponse findChatHistory(Long chatRoomId, Long memberId, Long beforeChatId) {
+    public ChatHistoryResponse findMessageHistory(Long chatRoomId, Long memberId, Long beforeChatId) {
 
         Member findMember = memberRepository.findById(memberId).orElseThrow(
                 () -> new CustomException(ErrorCode.MEMBER_NOT_FOUND)

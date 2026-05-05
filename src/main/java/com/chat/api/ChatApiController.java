@@ -24,7 +24,7 @@ public class ChatApiController {
                                                  @SessionAttribute(name = SessionConst.SESSION_ID) Long loginMemberId) {
 
         // 채팅 내역 조회
-        ChatHistoryResponse chatHistory = messageService.findChatHistory(chatRoomId, loginMemberId, beforeChatId);
+        ChatHistoryResponse chatHistory = messageService.findMessageHistory(chatRoomId, loginMemberId, beforeChatId);
 
         return Result
                 .<ChatHistoryResponse>builder()

@@ -7,7 +7,7 @@ import com.chat.exception.CustomException;
 import com.chat.exception.ErrorCode;
 import com.chat.repository.*;
 import com.chat.repository.dtos.RoomUnreadMessageCount;
-import com.chat.service.dtos.SaveChatData;
+import com.chat.service.dtos.SaveMessageData;
 import com.chat.service.dtos.SaveSpaceDTO;
 import com.chat.service.dtos.chat.BroadcastChat;
 import com.chat.service.dtos.chat.SendChat;
@@ -48,13 +48,13 @@ public class SpaceService {
     @Transactional
     public void broadCastMessage(Long memberId, SendChat sendChat) {
         Long chatRoomId = sendChat.getChatRoomId();
-        Long saveChatId = messageService.saveChat(memberId, chatRoomId, sendChat.getMessage());
+        Long savedMessageId = messageService.saveMessage(memberId, chatRoomId, sendChat.getMessage());
 
         Member sender = memberRepository.findById(memberId).orElseThrow(
                 () -> new CustomException(ErrorCode.MEMBER_NOT_FOUND)
         );
 
-        SaveChatData chatData = messageService.findChatData(saveChatId);
+        SaveMessageData messageData = messageService.findMessageData(savedMessageId);
 
         BroadcastChat broadcastChat = BroadcastChat.builder()
                 .messageType(MessageType.CHAT_MESSAGE)
@@ -62,9 +62,9 @@ public class SpaceService {
                 .senderNickname(sender.getNickname())
                 .chatRoomId(chatRoomId)
                 .message(sendChat.getMessage())
-                .chatId(chatData.getChatId())
-                .unreadMemberCount(chatData.getUnreadMemberCount())
-                .createdDate(chatData.getCreatedDate())
+                .chatId(messageData.getChatId())
+                .unreadMemberCount(messageData.getUnreadMemberCount())
+                .createdDate(messageData.getCreatedDate())
                 .build();
 
         Map<Long, UpdateChatRoom> updatesByMemberId = broadcastDataBuilder.build(chatRoomId);
