@@ -2,7 +2,7 @@ package com.chat.service;
 
 import com.chat.api.response.chatroom.SpaceMemberResponse;
 import com.chat.api.response.chatroom.SpaceSummaryResponse;
-import com.chat.entity.Chat;
+import com.chat.entity.Message;
 import com.chat.entity.Space;
 import com.chat.entity.SpaceMember;
 import com.chat.entity.Member;
@@ -155,7 +155,7 @@ class ChatRoomServiceTest {
         Member other = fixture.savedMemberBy("other");
         Space chatRoom = fixture.savedChatRoomBy("title", List.of(me, other));
 
-        Chat firstChat = fixture.savedSimpleChat("msg1", other, chatRoom);
+        Message firstChat = fixture.savedSimpleChat("msg1", other, chatRoom);
         fixture.savedSimpleChat("msg2", other, chatRoom);
 
         // me cursor를 첫 번째 메시지까지만 읽음 → 두 번째 메시지만 unread
@@ -308,7 +308,7 @@ class ChatRoomServiceTest {
         Space chatRoom = fixture.savedChatRoomBy("title", List.of(me, other));
 
         fixture.savedSimpleChat("msg1", other, chatRoom);
-        Chat lastChat = fixture.savedSimpleChat("msg2", other, chatRoom);
+        Message lastChat = fixture.savedSimpleChat("msg2", other, chatRoom);
 
         // me cursor를 최신 메시지로 설정
         spaceMemberRepository.updateLastReadChatId(

@@ -38,23 +38,23 @@ public class SpaceService {
     private final BroadcastDataBuilder broadcastDataBuilder;
     private final SpaceManager spaceManager;
 
-    private final ChatService chatService;
+    private final MessageService messageService;
 
     private final SpaceRepository spaceRepository;
     private final SpaceMemberRepository spaceMemberRepository;
-    private final ChatRepository chatRepository;
+    private final MessageRepository messageRepository;
     private final MemberRepository memberRepository;
 
     @Transactional
     public void broadCastMessage(Long memberId, SendChat sendChat) {
         Long chatRoomId = sendChat.getChatRoomId();
-        Long saveChatId = chatService.saveChat(memberId, chatRoomId, sendChat.getMessage());
+        Long saveChatId = messageService.saveChat(memberId, chatRoomId, sendChat.getMessage());
 
         Member sender = memberRepository.findById(memberId).orElseThrow(
                 () -> new CustomException(ErrorCode.MEMBER_NOT_FOUND)
         );
 
-        SaveChatData chatData = chatService.findChatData(saveChatId);
+        SaveChatData chatData = messageService.findChatData(saveChatId);
 
         BroadcastChat broadcastChat = BroadcastChat.builder()
                 .messageType(MessageType.CHAT_MESSAGE)
@@ -187,7 +187,7 @@ public class SpaceService {
                 .toList();
 
         // 채팅방별 마지막 메시지 일괄 조회
-        Map<Long, Chat> lastChatMap = chatRepository
+        Map<Long, Message> lastChatMap = messageRepository
                 .findLastChatsBy(chatRoomIds)
                 .stream()
                 .collect(Collectors.toMap(
@@ -208,7 +208,7 @@ public class SpaceService {
                 .stream()
                 .map(crp -> {
                     Long chatRoomId = crp.getSpace().getId();
-                    Chat lastChat = lastChatMap.get(chatRoomId);
+                    Message lastChat = lastChatMap.get(chatRoomId);
 
                     return SpaceSummaryResponse.builder()
                             .chatRoomId(chatRoomId)

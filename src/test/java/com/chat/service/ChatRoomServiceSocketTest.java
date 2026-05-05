@@ -1,12 +1,12 @@
 package com.chat.service;
 
-import com.chat.entity.Chat;
+import com.chat.entity.Message;
 import com.chat.entity.Space;
 import com.chat.entity.Member;
 import com.chat.fixture.MemberFixture;
 import com.chat.fixture.SocketFixture;
 import com.chat.fixture.TestDataFixture;
-import com.chat.repository.ChatRepository;
+import com.chat.repository.MessageRepository;
 import com.chat.service.dtos.chat.SendChat;
 import com.chat.socket.manager.SpaceManager;
 import com.chat.socket.manager.WebsocketSessionManager;
@@ -41,7 +41,7 @@ public class ChatRoomServiceSocketTest {
     @Autowired
     private SpaceService spaceService;
     @Autowired
-    private ChatService chatService;
+    private MessageService messageService;
 
     @Autowired
     private TestDataFixture fixture;
@@ -55,7 +55,7 @@ public class ChatRoomServiceSocketTest {
     @Autowired
     private WebsocketSessionManager websocketSessionManager;
     @Autowired
-    private ChatRepository chatRepository;
+    private MessageRepository messageRepository;
 
     @LocalServerPort
     private int port;
@@ -117,8 +117,8 @@ public class ChatRoomServiceSocketTest {
         Space chatRoom = fixture.savedChatRoomBy("title", participants);
         Long chatRoomId = chatRoom.getId();
 
-        chatService.saveChat(firstId, chatRoomId, "firstChat");
-        chatService.saveChat(secondId, chatRoomId, "secondChat");
+        messageService.saveChat(firstId, chatRoomId, "firstChat");
+        messageService.saveChat(secondId, chatRoomId, "secondChat");
 
         String JSESSIONID = memberFixture.loginRequestBy("first", port);
 
@@ -203,7 +203,7 @@ public class ChatRoomServiceSocketTest {
         assertThat(node.get("chatId").isNull()).isFalse();
         assertThat(node.has("unreadMemberCount")).isTrue();
         Long chatId = node.get("chatId").asLong();
-        Chat findChat = chatRepository.findById(chatId).get();
+        Message findChat = messageRepository.findById(chatId).get();
         assertThat(findChat.getMessage()).isEqualTo(message);
     }
 
@@ -265,7 +265,7 @@ public class ChatRoomServiceSocketTest {
         assertThat(node.get("senderNickname").asText()).isEqualTo(first.getNickname());
         // Chat이 DB에 firstId 기준으로 저장되었는지 확인
         Long savedChatId = node.get("chatId").asLong();
-        Chat savedChat = chatRepository.findById(savedChatId).orElseThrow();
+        Message savedChat = messageRepository.findById(savedChatId).orElseThrow();
         assertThat(savedChat.getMember().getId()).isEqualTo(firstId);
     }
 
@@ -289,7 +289,7 @@ public class ChatRoomServiceSocketTest {
         Long chatRoomId = chatRoom.getId();
 
         // second가 아직 방에 없는 상태에서 first가 메시지 전송 → second.isRead=false
-        chatService.saveChat(firstId, chatRoomId, "hello");
+        messageService.saveChat(firstId, chatRoomId, "hello");
 
         // second가 WS 연결 및 방 입장
         String secondJSessionId = memberFixture.loginRequestBy(secondUsername, port);
@@ -303,7 +303,7 @@ public class ChatRoomServiceSocketTest {
         Thread.sleep(500);
 
         // when: second가 채팅 내역 조회 → updatedCount > 0 이면 READ_EVENT + UPDATE_CHAT_ROOM 발행
-        chatService.findChatHistory(chatRoomId, secondId, null);
+        messageService.findChatHistory(chatRoomId, secondId, null);
 
         // then: UPDATE_CHAT_ROOM + READ_EVENT 수신 대기
         boolean received = latch.await(3, TimeUnit.SECONDS);
@@ -349,13 +349,13 @@ public class ChatRoomServiceSocketTest {
         Long chatRoomId = chatRoom.getId();
 
         // first가 첫 번째 메시지 전송 → second.isRead=false
-        Long firstChatId = chatService.saveChat(firstId, chatRoomId, "first message");
+        Long firstChatId = messageService.saveChat(firstId, chatRoomId, "first message");
 
         // second 첫 번째 입장: firstChat 읽음 처리 (lastReadChatId=null, updatedCount=1)
-        chatService.findChatHistory(chatRoomId, secondId, null);
+        messageService.findChatHistory(chatRoomId, secondId, null);
 
         // first가 두 번째 메시지 전송 → second.isRead=false
-        chatService.saveChat(firstId, chatRoomId, "second message");
+        messageService.saveChat(firstId, chatRoomId, "second message");
 
         // second WS 연결 및 방 입장
         String secondJSessionId = memberFixture.loginRequestBy(secondUsername, port);
@@ -369,7 +369,7 @@ public class ChatRoomServiceSocketTest {
         Thread.sleep(500);
 
         // when: second 두 번째 채팅 내역 조회 → lastReadChatId = firstChatId (이전 방문 시 firstChat까지 읽었음)
-        chatService.findChatHistory(chatRoomId, secondId, null);
+        messageService.findChatHistory(chatRoomId, secondId, null);
 
         // then: READ_EVENT에 lastReadChatId 포함 검증
         boolean received = latch.await(3, TimeUnit.SECONDS);

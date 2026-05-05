@@ -3,7 +3,7 @@ package com.chat.api;
 import com.chat.entity.Space;
 import com.chat.entity.Member;
 import com.chat.fixture.TestDataFixture;
-import com.chat.service.ChatService;
+import com.chat.service.MessageService;
 import com.chat.utils.consts.SessionConst;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -30,7 +30,7 @@ class ChatApiControllerTest {
     @Autowired
     private TestDataFixture fixture;
     @Autowired
-    private ChatService chatService;
+    private MessageService messageService;
 
     @AfterEach
     void tearDown() {
@@ -44,8 +44,8 @@ class ChatApiControllerTest {
         Member member = fixture.savedMemberBy("member");
         Space chatRoom = fixture.savedChatRoomBy("room", List.of(member));
 
-        chatService.saveChat(member.getId(), chatRoom.getId(), "first");
-        chatService.saveChat(member.getId(), chatRoom.getId(), "second");
+        messageService.saveChat(member.getId(), chatRoom.getId(), "first");
+        messageService.saveChat(member.getId(), chatRoom.getId(), "second");
 
         MockHttpSession session = new MockHttpSession();
         session.setAttribute(SessionConst.SESSION_ID, member.getId());
@@ -84,9 +84,9 @@ class ChatApiControllerTest {
         Member member = fixture.savedMemberBy("member");
         Space chatRoom = fixture.savedChatRoomBy("room", List.of(member));
 
-        chatService.saveChat(member.getId(), chatRoom.getId(), "first");
-        chatService.saveChat(member.getId(), chatRoom.getId(), "second");
-        Long thirdChatId = chatService.saveChat(member.getId(), chatRoom.getId(), "third");
+        messageService.saveChat(member.getId(), chatRoom.getId(), "first");
+        messageService.saveChat(member.getId(), chatRoom.getId(), "second");
+        Long thirdChatId = messageService.saveChat(member.getId(), chatRoom.getId(), "third");
 
         MockHttpSession session = new MockHttpSession();
         session.setAttribute(SessionConst.SESSION_ID, member.getId());

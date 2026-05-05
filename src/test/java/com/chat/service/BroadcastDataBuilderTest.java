@@ -1,6 +1,6 @@
 package com.chat.service;
 
-import com.chat.entity.Chat;
+import com.chat.entity.Message;
 import com.chat.entity.Space;
 import com.chat.entity.Member;
 import com.chat.fixture.TestDataFixture;
@@ -72,7 +72,7 @@ class BroadcastDataBuilderTest {
         Member sender = fixture.savedMemberBy("sender");
         Space chatRoom = fixture.savedChatRoomBy("title", List.of(me, other, sender));
 
-        Chat first = fixture.savedSimpleChat("msg1", sender, chatRoom);
+        Message first = fixture.savedSimpleChat("msg1", sender, chatRoom);
         fixture.savedSimpleChat("msg2", sender, chatRoom);
 
         // me: cursor null → 2개 unread

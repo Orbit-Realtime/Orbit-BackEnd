@@ -68,7 +68,7 @@ public interface SpaceMemberRepository extends JpaRepository<SpaceMember, Long> 
 
     @Query("SELECT new com.chat.repository.dtos.RoomUnreadMessageCount(crp.space.id, COUNT(c))" +
             " FROM SpaceMember crp" +
-            " JOIN Chat c ON c.space.id = crp.space.id" +
+            " JOIN Message c ON c.space.id = crp.space.id" +
             " WHERE crp.space.id IN :chatRoomIds" +
             " AND crp.member.id = :memberId" +
             " AND (crp.lastReadChatId IS NULL OR c.id > crp.lastReadChatId)" +
@@ -78,7 +78,7 @@ public interface SpaceMemberRepository extends JpaRepository<SpaceMember, Long> 
 
     @Query("SELECT new com.chat.repository.dtos.MemberUnreadCount(crp.member.id, COUNT(c))" +
             " FROM SpaceMember crp" +
-            " JOIN Chat c ON c.space.id = crp.space.id" +
+            " JOIN Message c ON c.space.id = crp.space.id" +
             " WHERE crp.space.id = :chatRoomId" +
             " AND crp.member.id IN :memberIds" +
             " AND (crp.lastReadChatId IS NULL OR c.id > crp.lastReadChatId)" +
@@ -94,14 +94,14 @@ public interface SpaceMemberRepository extends JpaRepository<SpaceMember, Long> 
                               @Param("chatRoomId") Long chatRoomId);
 
     @Query("SELECT COUNT (crp)" +
-            " FROM Chat c" +
+            " FROM Message c" +
             " JOIN SpaceMember crp ON crp.space.id = c.space.id" +
             " WHERE c.id = :messageId" +
             " AND (crp.lastReadChatId IS NULL OR crp.lastReadChatId < :messageId)")
     Long countMessageUnreadMembers(@Param("messageId") Long messageId);
 
     @Query("SELECT new com.chat.repository.dtos.MessageUnreadMemberCount(c.id, COUNT(crp))" +
-            " FROM Chat c" +
+            " FROM Message c" +
             " JOIN SpaceMember crp ON crp.space.id = c.space.id" +
             " WHERE c.id IN :messageIds" +
             " AND (crp.lastReadChatId IS NULL OR crp.lastReadChatId < c.id)" +

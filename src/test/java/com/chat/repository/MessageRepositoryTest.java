@@ -1,6 +1,6 @@
 package com.chat.repository;
 
-import com.chat.entity.Chat;
+import com.chat.entity.Message;
 import com.chat.entity.Space;
 import com.chat.entity.Member;
 import org.junit.jupiter.api.DisplayName;
@@ -18,10 +18,10 @@ import static org.assertj.core.api.Assertions.*;
 
 @Transactional
 @SpringBootTest
-class ChatRepositoryTest {
+class MessageRepositoryTest {
 
     @Autowired
-    private ChatRepository chatRepository;
+    private MessageRepository messageRepository;
     @Autowired
     private SpaceRepository spaceRepository;
     @Autowired
@@ -39,10 +39,10 @@ class ChatRepositoryTest {
         Space savedChatRoom = spaceRepository.save(chatRoom);
 
         String message = "message";
-        Chat chat = new Chat(message, savedMember, savedChatRoom);
+        Message chat = new Message(message, savedMember, savedChatRoom);
 
         // when
-        Chat savedChat = chatRepository.save(chat);
+        Message savedChat = messageRepository.save(chat);
 
         // then
         assertThat(savedChat.getId()).isNotNull();
@@ -64,17 +64,17 @@ class ChatRepositoryTest {
         Space chatRoom = createChatRoom(title);
 
         String firstMessage = "first";
-        Chat firstChat = new Chat(firstMessage, firstMember, chatRoom);
-        chatRepository.save(firstChat);
+        Message firstChat = new Message(firstMessage, firstMember, chatRoom);
+        messageRepository.save(firstChat);
 
         String secondMessage = "second";
-        Chat secondChat = new Chat(secondMessage, secondMember, chatRoom);
-        chatRepository.save(secondChat);
+        Message secondChat = new Message(secondMessage, secondMember, chatRoom);
+        messageRepository.save(secondChat);
 
         Pageable limitOne = createLimitOne();
 
         // when
-        List<Chat> lastChatArray = chatRepository.findLastChatBy(chatRoom.getId(), limitOne);
+        List<Message> lastChatArray = messageRepository.findLastChatBy(chatRoom.getId(), limitOne);
 
         // then
         assertThat(lastChatArray).hasSize(1);
@@ -90,19 +90,19 @@ class ChatRepositoryTest {
         Space firstRoom = createChatRoom("firstRoom");
         Space secondRoom = createChatRoom("secondRoom");
 
-        chatRepository.save(new Chat("first-1", member, firstRoom));
-        Chat lastOfFirst = chatRepository.save(new Chat("first-2", member, firstRoom));
+        messageRepository.save(new Message("first-1", member, firstRoom));
+        Message lastOfFirst = messageRepository.save(new Message("first-2", member, firstRoom));
 
-        Chat lastOfSecond = chatRepository.save(new Chat("second-1", member, secondRoom));
+        Message lastOfSecond = messageRepository.save(new Message("second-1", member, secondRoom));
 
         // when
-        List<Chat> lastChats = chatRepository
+        List<Message> lastChats = messageRepository
                 .findLastChatsBy(List.of(firstRoom.getId(), secondRoom.getId()));
 
         // then
         assertThat(lastChats).hasSize(2);
         assertThat(lastChats)
-                .extracting(Chat::getId)
+                .extracting(Message::getId)
                 .containsExactlyInAnyOrder(lastOfFirst.getId(), lastOfSecond.getId());
     }
 
@@ -115,10 +115,10 @@ class ChatRepositoryTest {
         Space roomWithChat = createChatRoom("roomWithChat");
         Space emptyRoom = createChatRoom("emptyRoom");
 
-        Chat chat = chatRepository.save(new Chat("message", member, roomWithChat));
+        Message chat = messageRepository.save(new Message("message", member, roomWithChat));
 
         // when
-        List<Chat> lastChats = chatRepository
+        List<Message> lastChats = messageRepository
                 .findLastChatsBy(List.of(roomWithChat.getId(), emptyRoom.getId()));
 
         // then
@@ -133,14 +133,14 @@ class ChatRepositoryTest {
         Member member = createMember("user");
         Space chatRoom = createChatRoom("room");
 
-        Chat first = chatRepository.save(new Chat("first", member, chatRoom));
-        Chat second = chatRepository.save(new Chat("second", member, chatRoom));
-        Chat third = chatRepository.save(new Chat("third", member, chatRoom));
+        Message first = messageRepository.save(new Message("first", member, chatRoom));
+        Message second = messageRepository.save(new Message("second", member, chatRoom));
+        Message third = messageRepository.save(new Message("third", member, chatRoom));
 
         Pageable limit2 = PageRequest.of(0, 2);
 
         // when
-        List<Chat> result = chatRepository.findLatestChats(chatRoom.getId(), limit2);
+        List<Message> result = messageRepository.findLatestChats(chatRoom.getId(), limit2);
 
         // then
         assertThat(result).hasSize(2);
@@ -156,13 +156,13 @@ class ChatRepositoryTest {
         Space targetRoom = createChatRoom("target");
         Space otherRoom = createChatRoom("other");
 
-        Chat targetChat = chatRepository.save(new Chat("target message", member, targetRoom));
-        chatRepository.save(new Chat("other message", member, otherRoom));
+        Message targetChat = messageRepository.save(new Message("target message", member, targetRoom));
+        messageRepository.save(new Message("other message", member, otherRoom));
 
         Pageable limit10 = PageRequest.of(0, 10);
 
         // when
-        List<Chat> result = chatRepository.findLatestChats(targetRoom.getId(), limit10);
+        List<Message> result = messageRepository.findLatestChats(targetRoom.getId(), limit10);
 
         // then
         assertThat(result).hasSize(1);
@@ -177,7 +177,7 @@ class ChatRepositoryTest {
         Pageable limit10 = PageRequest.of(0, 10);
 
         // when
-        List<Chat> result = chatRepository.findLatestChats(emptyRoom.getId(), limit10);
+        List<Message> result = messageRepository.findLatestChats(emptyRoom.getId(), limit10);
 
         // then
         assertThat(result).isEmpty();
@@ -190,14 +190,14 @@ class ChatRepositoryTest {
         Member member = createMember("user");
         Space chatRoom = createChatRoom("room");
 
-        Chat first = chatRepository.save(new Chat("first", member, chatRoom));
-        Chat second = chatRepository.save(new Chat("second", member, chatRoom));
-        Chat third = chatRepository.save(new Chat("third", member, chatRoom));
+        Message first = messageRepository.save(new Message("first", member, chatRoom));
+        Message second = messageRepository.save(new Message("second", member, chatRoom));
+        Message third = messageRepository.save(new Message("third", member, chatRoom));
 
         Pageable limit10 = PageRequest.of(0, 10);
 
         // when
-        List<Chat> result = chatRepository.findChatsBeforeId(chatRoom.getId(), third.getId(), limit10);
+        List<Message> result = messageRepository.findChatsBeforeId(chatRoom.getId(), third.getId(), limit10);
 
         // then
         assertThat(result).hasSize(2);
@@ -212,12 +212,12 @@ class ChatRepositoryTest {
         Member member = createMember("user");
         Space chatRoom = createChatRoom("room");
 
-        Chat firstChat = chatRepository.save(new Chat("only message", member, chatRoom));
+        Message firstChat = messageRepository.save(new Message("only message", member, chatRoom));
 
         Pageable limit10 = PageRequest.of(0, 10);
 
         // when
-        List<Chat> result = chatRepository.findChatsBeforeId(chatRoom.getId(), firstChat.getId(), limit10);
+        List<Message> result = messageRepository.findChatsBeforeId(chatRoom.getId(), firstChat.getId(), limit10);
 
         // then
         assertThat(result).isEmpty();
@@ -230,16 +230,16 @@ class ChatRepositoryTest {
         Member member = createMember("user");
         Space chatRoom = createChatRoom("room");
 
-        Chat first = chatRepository.save(new Chat("first", member, chatRoom));
-        Chat second = chatRepository.save(new Chat("second", member, chatRoom));
-        Chat third = chatRepository.save(new Chat("third", member, chatRoom));
-        Chat fourth = chatRepository.save(new Chat("fourth", member, chatRoom));
-        Chat fifth = chatRepository.save(new Chat("fifth", member, chatRoom));
+        Message first = messageRepository.save(new Message("first", member, chatRoom));
+        Message second = messageRepository.save(new Message("second", member, chatRoom));
+        Message third = messageRepository.save(new Message("third", member, chatRoom));
+        Message fourth = messageRepository.save(new Message("fourth", member, chatRoom));
+        Message fifth = messageRepository.save(new Message("fifth", member, chatRoom));
 
         Pageable limit2 = PageRequest.of(0, 2);
 
         // when
-        List<Chat> result = chatRepository.findChatsBeforeId(chatRoom.getId(), fifth.getId(), limit2);
+        List<Message> result = messageRepository.findChatsBeforeId(chatRoom.getId(), fifth.getId(), limit2);
 
         // then
         assertThat(result).hasSize(2);
@@ -255,14 +255,14 @@ class ChatRepositoryTest {
         Space targetRoom = createChatRoom("target");
         Space otherRoom = createChatRoom("other");
 
-        chatRepository.save(new Chat("other message", member, otherRoom));
-        Chat targetFirst = chatRepository.save(new Chat("target first", member, targetRoom));
-        Chat targetSecond = chatRepository.save(new Chat("target second", member, targetRoom));
+        messageRepository.save(new Message("other message", member, otherRoom));
+        Message targetFirst = messageRepository.save(new Message("target first", member, targetRoom));
+        Message targetSecond = messageRepository.save(new Message("target second", member, targetRoom));
 
         Pageable limit10 = PageRequest.of(0, 10);
 
         // when
-        List<Chat> result = chatRepository.findChatsBeforeId(
+        List<Message> result = messageRepository.findChatsBeforeId(
                 targetRoom.getId(), targetSecond.getId(), limit10);
 
         // then
@@ -277,11 +277,11 @@ class ChatRepositoryTest {
         Member member = createMember("user");
         Space chatRoom = createChatRoom("room");
 
-        chatRepository.save(new Chat("first", member, chatRoom));
-        Chat latest = chatRepository.save(new Chat("second", member, chatRoom));
+        messageRepository.save(new Message("first", member, chatRoom));
+        Message latest = messageRepository.save(new Message("second", member, chatRoom));
 
         // when
-        Optional<Long> result = chatRepository.findLastChatIdBy(chatRoom.getId());
+        Optional<Long> result = messageRepository.findLastChatIdBy(chatRoom.getId());
 
         // then
         assertThat(result).isPresent();
@@ -295,7 +295,7 @@ class ChatRepositoryTest {
         Space emptyRoom = createChatRoom("empty");
 
         // when
-        Optional<Long> result = chatRepository.findLastChatIdBy(emptyRoom.getId());
+        Optional<Long> result = messageRepository.findLastChatIdBy(emptyRoom.getId());
 
         // then
         assertThat(result).isEmpty();
@@ -309,12 +309,12 @@ class ChatRepositoryTest {
         Space targetRoom = createChatRoom("target");
         Space otherRoom = createChatRoom("other");
 
-        Chat targetChat = chatRepository.save(new Chat("target", member, targetRoom));
-        chatRepository.save(new Chat("other", member, otherRoom));
-        chatRepository.save(new Chat("other2", member, otherRoom));
+        Message targetChat = messageRepository.save(new Message("target", member, targetRoom));
+        messageRepository.save(new Message("other", member, otherRoom));
+        messageRepository.save(new Message("other2", member, otherRoom));
 
         // when
-        Optional<Long> result = chatRepository.findLastChatIdBy(targetRoom.getId());
+        Optional<Long> result = messageRepository.findLastChatIdBy(targetRoom.getId());
 
         // then
         assertThat(result).isPresent();

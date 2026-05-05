@@ -9,23 +9,23 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(indexes = {@Index(name = "idx_chat_room_id_id", columnList = "chat_room_id, chat_id DESC")})
-public class Chat extends BaseEntity {
+public class Message extends BaseEntity {
 
     @Id
     @GeneratedValue
     @Column(name = "chat_id")
     private Long id;
-    private String message; // 메시지
+    private String message;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
-    private Member member; // 발신자
+    private Member member;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "chat_room_id")
     private Space space;
 
-    public Chat(String message, Member member, Space space) {
+    public Message(String message, Member member, Space space) {
         this.message = message;
         this.member = member;
         this.space = space;

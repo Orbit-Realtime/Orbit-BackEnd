@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class ChatService {
+public class MessageService {
 
     private static final int PAGE_SIZE = 30;
 
@@ -35,13 +35,13 @@ public class ChatService {
 
     private final SpaceManager spaceManager;
 
-    private final ChatRepository chatRepository;
+    private final MessageRepository messageRepository;
     private final SpaceRepository spaceRepository;
     private final SpaceMemberRepository spaceMemberRepository;
     private final MemberRepository memberRepository;
 
     public SaveChatData findChatData(Long chatId) {
-        Chat findChat = chatRepository.findById(chatId).orElseThrow(
+        Message findChat = messageRepository.findById(chatId).orElseThrow(
                 () -> new CustomException(ErrorCode.CHAT_NOT_EXIST)
         );
         Long unreadMemberCount = spaceMemberRepository.countMessageUnreadMembers(chatId);
@@ -64,13 +64,13 @@ public class ChatService {
                 () -> new CustomException(ErrorCode.CHAT_ROOM_NOT_EXIST)
         );
 
-        Chat savedChat = chatRepository.save(new Chat(message, findSender, findChatRoom));
+        Message savedChat = messageRepository.save(new Message(message, findSender, findChatRoom));
         updateCursorsOnSend(findSender.getId(), findChatRoom.getId(), savedChat);
 
         return savedChat.getId();
     }
 
-    private void updateCursorsOnSend(Long senderId, Long chatRoomId, Chat chat) {
+    private void updateCursorsOnSend(Long senderId, Long chatRoomId, Message chat) {
 
         List<SpaceMember> findSpaceMembers
                 = spaceMemberRepository.findAllFetchMemberBy(chatRoomId);
@@ -104,12 +104,12 @@ public class ChatService {
     private ChatHistoryResponse createChatHistoryResponse(Long chatRoomId, Long memberId, Long beforeChatId) {
 
         PageRequest pageable = PageRequest.of(0, PAGE_SIZE + 1);
-        List<Chat> chats;
+        List<Message> chats;
 
         if (beforeChatId == null) {
-            chats = chatRepository.findLatestChats(chatRoomId, pageable);
+            chats = messageRepository.findLatestChats(chatRoomId, pageable);
         } else {
-            chats = chatRepository.findChatsBeforeId(chatRoomId, beforeChatId, pageable);
+            chats = messageRepository.findChatsBeforeId(chatRoomId, beforeChatId, pageable);
         }
 
         if (chats.isEmpty()) {
@@ -125,7 +125,7 @@ public class ChatService {
         Collections.reverse(chats);
 
         List<Long> chatIds = chats.stream()
-                .map(Chat::getId)
+                .map(Message::getId)
                 .toList();
 
         Long lastReadChatId = null;
@@ -159,7 +159,7 @@ public class ChatService {
                 ));
 
         List<ChatHistory> messages = new ArrayList<>(chats.size());
-        for (Chat chat : chats) {
+        for (Message chat : chats) {
             Member sender = chat.getMember();
             Long unreadCount = unreadMemberCountMap.getOrDefault(chat.getId(), 0L);
 
@@ -178,7 +178,7 @@ public class ChatService {
 
     @Transactional
     public void onRoomActive(Long memberId, Long chatRoomId) {
-        Optional<Long> latestChatIdOpt = chatRepository.findLastChatIdBy(chatRoomId);
+        Optional<Long> latestChatIdOpt = messageRepository.findLastChatIdBy(chatRoomId);
         if (latestChatIdOpt.isEmpty()) {
             return;
         }

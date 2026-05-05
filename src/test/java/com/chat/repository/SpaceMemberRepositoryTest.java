@@ -1,6 +1,6 @@
 package com.chat.repository;
 
-import com.chat.entity.Chat;
+import com.chat.entity.Message;
 import com.chat.entity.Space;
 import com.chat.entity.SpaceMember;
 import com.chat.entity.Member;
@@ -33,7 +33,7 @@ class SpaceMemberRepositoryTest {
     @Autowired
     private MemberRepository memberRepository;
     @Autowired
-    private ChatRepository chatRepository;
+    private MessageRepository messageRepository;
     @Autowired
     private EntityManager em;
 
@@ -361,9 +361,9 @@ class SpaceMemberRepositoryTest {
         spaceMemberRepository.save(
                 SpaceMember.builder().member(other).space(chatRoom).build());
 
-        Chat first  = chatRepository.save(new Chat("msg1", other, chatRoom));
-        Chat second = chatRepository.save(new Chat("msg2", other, chatRoom));
-        Chat third  = chatRepository.save(new Chat("msg3", other, chatRoom));
+        Message first  = messageRepository.save(new Message("msg1", other, chatRoom));
+        Message second = messageRepository.save(new Message("msg2", other, chatRoom));
+        Message third  = messageRepository.save(new Message("msg3", other, chatRoom));
 
         spaceMemberRepository.updateLastReadChatId(me.getId(), chatRoom.getId(),
                 first.getId());
@@ -395,8 +395,8 @@ class SpaceMemberRepositoryTest {
         spaceMemberRepository.save(
                 SpaceMember.builder().member(sender).space(chatRoom).build());
 
-        Chat first = chatRepository.save(new Chat("msg1", sender, chatRoom));
-        chatRepository.save(new Chat("msg2", sender, chatRoom));
+        Message first = messageRepository.save(new Message("msg1", sender, chatRoom));
+        messageRepository.save(new Message("msg2", sender, chatRoom));
 
         // me: cursor null → 전체 2개 unread
         // other: cursor = first → second만 1개 unread
@@ -469,7 +469,7 @@ class SpaceMemberRepositoryTest {
         spaceMemberRepository.save(
                 SpaceMember.builder().member(sender).space(chatRoom).build());
 
-        Chat chat = chatRepository.save(new Chat("hello", sender, chatRoom));
+        Message chat = messageRepository.save(new Message("hello", sender, chatRoom));
         // 발신자 cursor = chatId (saveChat 흐름 재현)
         spaceMemberRepository.updateLastReadChatId(
                 sender.getId(), chatRoom.getId(), chat.getId());
@@ -499,7 +499,7 @@ class SpaceMemberRepositoryTest {
         spaceMemberRepository.save(
                 SpaceMember.builder().member(receiver2).space(chatRoom).build());
 
-        Chat chat = chatRepository.save(new Chat("hello", sender, chatRoom));
+        Message chat = messageRepository.save(new Message("hello", sender, chatRoom));
         spaceMemberRepository.updateLastReadChatId(
                 sender.getId(), chatRoom.getId(), chat.getId());
         em.flush(); em.clear();
@@ -525,7 +525,7 @@ class SpaceMemberRepositoryTest {
         spaceMemberRepository.save(
                 SpaceMember.builder().member(receiver).space(chatRoom).build());
 
-        Chat chat = chatRepository.save(new Chat("hello", sender, chatRoom));
+        Message chat = messageRepository.save(new Message("hello", sender, chatRoom));
         spaceMemberRepository.updateLastReadChatId(
                 sender.getId(), chatRoom.getId(), chat.getId());
         em.flush(); em.clear();
@@ -560,8 +560,8 @@ class SpaceMemberRepositoryTest {
         spaceMemberRepository.save(
                 SpaceMember.builder().member(receiver).space(chatRoom).build());
 
-        Chat first = chatRepository.save(new Chat("first", sender, chatRoom));
-        Chat second = chatRepository.save(new Chat("second", sender, chatRoom));
+        Message first = messageRepository.save(new Message("first", sender, chatRoom));
+        Message second = messageRepository.save(new Message("second", sender, chatRoom));
 
         // sender: second까지 읽음, receiver: cursor=null
         spaceMemberRepository.updateLastReadChatId(
@@ -596,8 +596,8 @@ class SpaceMemberRepositoryTest {
         spaceMemberRepository.save(
                 SpaceMember.builder().member(noReader).space(chatRoom).build());
 
-        Chat first = chatRepository.save(new Chat("first", sender, chatRoom));
-        Chat second = chatRepository.save(new Chat("second", sender, chatRoom));
+        Message first = messageRepository.save(new Message("first", sender, chatRoom));
+        Message second = messageRepository.save(new Message("second", sender, chatRoom));
 
         // sender: second까지, readerOfFirst: first까지, noReader: cursor=null
         spaceMemberRepository.updateLastReadChatId(

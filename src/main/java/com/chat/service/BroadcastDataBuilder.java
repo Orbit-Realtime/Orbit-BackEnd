@@ -1,6 +1,6 @@
 package com.chat.service;
 
-import com.chat.entity.Chat;
+import com.chat.entity.Message;
 import com.chat.entity.Space;
 import com.chat.exception.CustomException;
 import com.chat.exception.ErrorCode;
@@ -23,7 +23,7 @@ public class BroadcastDataBuilder {
 
     private final MemberRepository memberRepository;
     private final SpaceRepository spaceRepository;
-    private final ChatRepository chatRepository;
+    private final MessageRepository messageRepository;
     private final SpaceMemberRepository spaceMemberRepository;
 
     public Map<Long, UpdateChatRoom> build(Long chatRoomId) {
@@ -44,7 +44,7 @@ public class BroadcastDataBuilder {
                 () -> new CustomException(ErrorCode.CHAT_ROOM_NOT_EXIST)
         );
 
-        Chat lastChat = chatRepository
+        Message lastChat = messageRepository
                 .findLastChatBy(chatRoomId, PageRequest.of(0, 1))
                 .stream().findFirst().orElse(null);
 
