@@ -45,7 +45,7 @@ public class BroadcastDataBuilder {
         );
 
         Message lastChat = messageRepository
-                .findLastChatBy(chatRoomId, PageRequest.of(0, 1))
+                .findLastMessageBy(chatRoomId, PageRequest.of(0, 1))
                 .stream().findFirst().orElse(null);
 
         Map<Long, Long> unreadCountMap = spaceMemberRepository

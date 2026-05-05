@@ -53,7 +53,7 @@ class MessageRepositoryTest {
 
     @Test
     @DisplayName("채팅방 ID 를 이용해 마지막 채팅 정보를 조회한다.")
-    void findLastChatByTest() {
+    void findLastMessageByTest() {
         // given
         String firstUser = "first";
         Member firstMember = createMember(firstUser);
@@ -74,7 +74,7 @@ class MessageRepositoryTest {
         Pageable limitOne = createLimitOne();
 
         // when
-        List<Message> lastChatArray = messageRepository.findLastChatBy(chatRoom.getId(), limitOne);
+        List<Message> lastChatArray = messageRepository.findLastMessageBy(chatRoom.getId(), limitOne);
 
         // then
         assertThat(lastChatArray).hasSize(1);
@@ -83,7 +83,7 @@ class MessageRepositoryTest {
 
     @Test
     @DisplayName("여러 채팅방의 마지막 메시지를 일괄 조회한다.")
-    void findLastChatsByMultipleRoomsTest() {
+    void findLastMessagesByMultipleRoomsTest() {
         // given
         Member member = createMember("user");
 
@@ -97,7 +97,7 @@ class MessageRepositoryTest {
 
         // when
         List<Message> lastChats = messageRepository
-                .findLastChatsBy(List.of(firstRoom.getId(), secondRoom.getId()));
+                .findLastMessagesBy(List.of(firstRoom.getId(), secondRoom.getId()));
 
         // then
         assertThat(lastChats).hasSize(2);
@@ -108,7 +108,7 @@ class MessageRepositoryTest {
 
     @Test
     @DisplayName("메시지가 없는 채팅방은 마지막 메시지 일괄 조회 결과에 포함되지 않는다.")
-    void findLastChatsBy_emptyRoomNotIncludedTest() {
+    void findLastMessagesBy_emptyRoomNotIncludedTest() {
         // given
         Member member = createMember("user");
 
@@ -119,7 +119,7 @@ class MessageRepositoryTest {
 
         // when
         List<Message> lastChats = messageRepository
-                .findLastChatsBy(List.of(roomWithChat.getId(), emptyRoom.getId()));
+                .findLastMessagesBy(List.of(roomWithChat.getId(), emptyRoom.getId()));
 
         // then
         assertThat(lastChats).hasSize(1);
@@ -128,7 +128,7 @@ class MessageRepositoryTest {
 
     @Test
     @DisplayName("채팅방 ID로 최신 메시지를 id 내림차순으로 조회한다.")
-    void findLatestChatsTest() {
+    void findLatestMessagesTest() {
         // given
         Member member = createMember("user");
         Space chatRoom = createChatRoom("room");
@@ -140,7 +140,7 @@ class MessageRepositoryTest {
         Pageable limit2 = PageRequest.of(0, 2);
 
         // when
-        List<Message> result = messageRepository.findLatestChats(chatRoom.getId(), limit2);
+        List<Message> result = messageRepository.findLatestMessages(chatRoom.getId(), limit2);
 
         // then
         assertThat(result).hasSize(2);
@@ -150,7 +150,7 @@ class MessageRepositoryTest {
 
     @Test
     @DisplayName("최신 메시지 조회 시 다른 채팅방의 메시지는 포함되지 않는다.")
-    void findLatestChats_doesNotIncludeOtherRoomsTest() {
+    void findLatestMessages_doesNotIncludeOtherRoomsTest() {
         // given
         Member member = createMember("user");
         Space targetRoom = createChatRoom("target");
@@ -162,7 +162,7 @@ class MessageRepositoryTest {
         Pageable limit10 = PageRequest.of(0, 10);
 
         // when
-        List<Message> result = messageRepository.findLatestChats(targetRoom.getId(), limit10);
+        List<Message> result = messageRepository.findLatestMessages(targetRoom.getId(), limit10);
 
         // then
         assertThat(result).hasSize(1);
@@ -171,13 +171,13 @@ class MessageRepositoryTest {
 
     @Test
     @DisplayName("메시지가 없는 채팅방의 최신 메시지 조회는 빈 리스트를 반환한다.")
-    void findLatestChats_emptyRoom_returnsEmptyListTest() {
+    void findLatestMessages_emptyRoom_returnsEmptyListTest() {
         // given
         Space emptyRoom = createChatRoom("empty");
         Pageable limit10 = PageRequest.of(0, 10);
 
         // when
-        List<Message> result = messageRepository.findLatestChats(emptyRoom.getId(), limit10);
+        List<Message> result = messageRepository.findLatestMessages(emptyRoom.getId(), limit10);
 
         // then
         assertThat(result).isEmpty();
@@ -185,7 +185,7 @@ class MessageRepositoryTest {
 
     @Test
     @DisplayName("커서 id보다 작은 메시지를 id 내림차순으로 조회한다.")
-    void findChatsBeforeIdTest() {
+    void findMessagesBeforeIdTest() {
         // given
         Member member = createMember("user");
         Space chatRoom = createChatRoom("room");
@@ -197,7 +197,7 @@ class MessageRepositoryTest {
         Pageable limit10 = PageRequest.of(0, 10);
 
         // when
-        List<Message> result = messageRepository.findChatsBeforeId(chatRoom.getId(), third.getId(), limit10);
+        List<Message> result = messageRepository.findMessagesBeforeId(chatRoom.getId(), third.getId(), limit10);
 
         // then
         assertThat(result).hasSize(2);
@@ -207,7 +207,7 @@ class MessageRepositoryTest {
 
     @Test
     @DisplayName("커서 id보다 오래된 메시지가 없으면 빈 리스트를 반환한다.")
-    void findChatsBeforeId_noPreviousMessages_returnsEmptyTest() {
+    void findMessagesBeforeId_noPreviousMessages_returnsEmptyTest() {
         // given
         Member member = createMember("user");
         Space chatRoom = createChatRoom("room");
@@ -217,7 +217,7 @@ class MessageRepositoryTest {
         Pageable limit10 = PageRequest.of(0, 10);
 
         // when
-        List<Message> result = messageRepository.findChatsBeforeId(chatRoom.getId(), firstChat.getId(), limit10);
+        List<Message> result = messageRepository.findMessagesBeforeId(chatRoom.getId(), firstChat.getId(), limit10);
 
         // then
         assertThat(result).isEmpty();
@@ -225,7 +225,7 @@ class MessageRepositoryTest {
 
     @Test
     @DisplayName("커서 기반 조회는 Pageable size 만큼만 반환한다.")
-    void findChatsBeforeId_respectsPageableLimitTest() {
+    void findMessagesBeforeId_respectsPageableLimitTest() {
         // given
         Member member = createMember("user");
         Space chatRoom = createChatRoom("room");
@@ -239,7 +239,7 @@ class MessageRepositoryTest {
         Pageable limit2 = PageRequest.of(0, 2);
 
         // when
-        List<Message> result = messageRepository.findChatsBeforeId(chatRoom.getId(), fifth.getId(), limit2);
+        List<Message> result = messageRepository.findMessagesBeforeId(chatRoom.getId(), fifth.getId(), limit2);
 
         // then
         assertThat(result).hasSize(2);
@@ -249,7 +249,7 @@ class MessageRepositoryTest {
 
     @Test
     @DisplayName("커서 기반 조회 시 다른 채팅방의 메시지는 포함되지 않는다.")
-    void findChatsBeforeId_doesNotIncludeOtherRoomsTest() {
+    void findMessagesBeforeId_doesNotIncludeOtherRoomsTest() {
         // given
         Member member = createMember("user");
         Space targetRoom = createChatRoom("target");
@@ -262,7 +262,7 @@ class MessageRepositoryTest {
         Pageable limit10 = PageRequest.of(0, 10);
 
         // when
-        List<Message> result = messageRepository.findChatsBeforeId(
+        List<Message> result = messageRepository.findMessagesBeforeId(
                 targetRoom.getId(), targetSecond.getId(), limit10);
 
         // then
@@ -272,7 +272,7 @@ class MessageRepositoryTest {
 
     @Test
     @DisplayName("메시지가 있는 채팅방의 최신 chatId를 반환한다.")
-    void findLastChatIdBy_returnsLatestChatIdTest() {
+    void findLastMessageIdBy_returnsLatestChatIdTest() {
         // given
         Member member = createMember("user");
         Space chatRoom = createChatRoom("room");
@@ -281,7 +281,7 @@ class MessageRepositoryTest {
         Message latest = messageRepository.save(new Message("second", member, chatRoom));
 
         // when
-        Optional<Long> result = messageRepository.findLastChatIdBy(chatRoom.getId());
+        Optional<Long> result = messageRepository.findLastMessageIdBy(chatRoom.getId());
 
         // then
         assertThat(result).isPresent();
@@ -290,20 +290,20 @@ class MessageRepositoryTest {
 
     @Test
     @DisplayName("메시지가 없는 채팅방은 Optional.empty를 반환한다.")
-    void findLastChatIdBy_emptyRoom_returnsEmptyTest() {
+    void findLastMessageIdBy_emptyRoom_returnsEmptyTest() {
         // given
         Space emptyRoom = createChatRoom("empty");
 
         // when
-        Optional<Long> result = messageRepository.findLastChatIdBy(emptyRoom.getId());
+        Optional<Long> result = messageRepository.findLastMessageIdBy(emptyRoom.getId());
 
         // then
         assertThat(result).isEmpty();
     }
 
     @Test
-    @DisplayName("다른 채팅방의 메시지는 findLastChatIdBy 결과에 포함되지 않는다.")
-    void findLastChatIdBy_doesNotIncludeOtherRoomsTest() {
+    @DisplayName("다른 채팅방의 메시지는 findLastMessageIdBy 결과에 포함되지 않는다.")
+    void findLastMessageIdBy_doesNotIncludeOtherRoomsTest() {
         // given
         Member member = createMember("user");
         Space targetRoom = createChatRoom("target");
@@ -314,7 +314,7 @@ class MessageRepositoryTest {
         messageRepository.save(new Message("other2", member, otherRoom));
 
         // when
-        Optional<Long> result = messageRepository.findLastChatIdBy(targetRoom.getId());
+        Optional<Long> result = messageRepository.findLastMessageIdBy(targetRoom.getId());
 
         // then
         assertThat(result).isPresent();

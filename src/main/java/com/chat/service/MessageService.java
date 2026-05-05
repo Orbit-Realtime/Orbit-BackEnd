@@ -107,9 +107,9 @@ public class MessageService {
         List<Message> chats;
 
         if (beforeChatId == null) {
-            chats = messageRepository.findLatestChats(chatRoomId, pageable);
+            chats = messageRepository.findLatestMessages(chatRoomId, pageable);
         } else {
-            chats = messageRepository.findChatsBeforeId(chatRoomId, beforeChatId, pageable);
+            chats = messageRepository.findMessagesBeforeId(chatRoomId, beforeChatId, pageable);
         }
 
         if (chats.isEmpty()) {
@@ -178,7 +178,7 @@ public class MessageService {
 
     @Transactional
     public void onRoomActive(Long memberId, Long chatRoomId) {
-        Optional<Long> latestChatIdOpt = messageRepository.findLastChatIdBy(chatRoomId);
+        Optional<Long> latestChatIdOpt = messageRepository.findLastMessageIdBy(chatRoomId);
         if (latestChatIdOpt.isEmpty()) {
             return;
         }

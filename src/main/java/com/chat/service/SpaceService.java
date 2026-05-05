@@ -188,7 +188,7 @@ public class SpaceService {
 
         // 채팅방별 마지막 메시지 일괄 조회
         Map<Long, Message> lastChatMap = messageRepository
-                .findLastChatsBy(chatRoomIds)
+                .findLastMessagesBy(chatRoomIds)
                 .stream()
                 .collect(Collectors.toMap(
                         c -> c.getSpace().getId(),

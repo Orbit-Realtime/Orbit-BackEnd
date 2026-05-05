@@ -14,12 +14,12 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
     @Query("SELECT c" +
             " FROM Message c" +
             " WHERE c.space.id = :chatRoomId ORDER BY c.id DESC")
-    List<Message> findLastChatBy(@Param("chatRoomId") Long chatRoomId, Pageable pageable);
+    List<Message> findLastMessageBy(@Param("chatRoomId") Long chatRoomId, Pageable pageable);
 
     @Query("SELECT MAX(c.id)" +
             " FROM Message c" +
             " WHERE c.space.id = :chatRoomId")
-    Optional<Long> findLastChatIdBy(@Param("chatRoomId") Long chatRoomId);
+    Optional<Long> findLastMessageIdBy(@Param("chatRoomId") Long chatRoomId);
 
     // todo delete (no usage)
     @Query("SELECT c" +
@@ -36,14 +36,14 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
             "   WHERE c2.space.id IN :chatRoomIds" +
             "   GROUP BY c2.space.id" +
             " )")
-    List<Message> findLastChatsBy(@Param("chatRoomIds") List<Long> chatRoomIds);
+    List<Message> findLastMessagesBy(@Param("chatRoomIds") List<Long> chatRoomIds);
 
     @Query("SELECT c" +
             " FROM Message c" +
             " JOIN FETCH c.member" +
             " WHERE c.space.id = :chatRoomId" +
             " ORDER BY c.id DESC")
-    List<Message> findLatestChats(@Param("chatRoomId") Long chatRoomId, Pageable pageable);
+    List<Message> findLatestMessages(@Param("chatRoomId") Long chatRoomId, Pageable pageable);
 
     @Query("SELECT c" +
             " FROM Message c" +
@@ -51,7 +51,7 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
             " WHERE c.space.id = :chatRoomId" +
             " AND c.id < :beforeChatId" +
             " ORDER BY c.id DESC")
-    List<Message> findChatsBeforeId(@Param("chatRoomId") Long chatRoomId,
+    List<Message> findMessagesBeforeId(@Param("chatRoomId") Long chatRoomId,
                                     @Param("beforeChatId") Long beforeChatId,
                                     Pageable pageable);
 }
