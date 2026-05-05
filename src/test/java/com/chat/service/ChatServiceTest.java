@@ -7,7 +7,7 @@ import com.chat.service.dtos.ChatHistory;
 import com.chat.service.dtos.ChatHistoryResponse;
 import com.chat.service.dtos.SaveChatData;
 import com.chat.socket.event.PublishReadEvent;
-import com.chat.socket.manager.ChatRoomManager;
+import com.chat.socket.manager.SpaceManager;
 import com.chat.utils.consts.SessionConst;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.AfterEach;
@@ -43,13 +43,13 @@ class ChatServiceTest {
     @Autowired
     private TestDataFixture fixture;
     @Autowired
-    private ChatRoomManager chatRoomManager;
+    private SpaceManager spaceManager;
     @Autowired
     private EntityManager em;
 
     @AfterEach
     void tearDown() {
-        chatRoomManager.clearAll();
+        spaceManager.clearAll();
     }
 
     @Test
@@ -542,8 +542,8 @@ class ChatServiceTest {
         given(mockSession.getId()).willReturn("session-active");
         given(mockSession.getAttributes())
                 .willReturn(Map.of(SessionConst.SESSION_ID, activeReceiver.getId()));
-        chatRoomManager.registerSession(mockSession);
-        chatRoomManager.addSessionToRoom(mockSession, chatRoom.getId());
+        spaceManager.registerSession(mockSession);
+        spaceManager.addSessionToSpace(mockSession, chatRoom.getId());
 
         // when
         Long savedChatId = chatService.saveChat(sender.getId(), chatRoom.getId(), "hello");
@@ -573,9 +573,9 @@ class ChatServiceTest {
         given(mockSession.getId()).willReturn("session-in-room");
         given(mockSession.getAttributes())
                 .willReturn(Map.of(SessionConst.SESSION_ID, inRoomReceiver.getId()));
-        chatRoomManager.registerSession(mockSession);
-        chatRoomManager.addSessionToRoom(mockSession, chatRoom.getId());        // auto-activate
-        chatRoomManager.deactivateRoom(mockSession.getId(), chatRoom.getId());  // ROOM_INACTIVE
+        spaceManager.registerSession(mockSession);
+        spaceManager.addSessionToSpace(mockSession, chatRoom.getId());        // auto-activate
+        spaceManager.deactivateSpace(mockSession.getId(), chatRoom.getId());  // ROOM_INACTIVE
 
         // when
         chatService.saveChat(sender.getId(), chatRoom.getId(), "hello");
@@ -667,9 +667,9 @@ class ChatServiceTest {
         given(mockSession.getId()).willReturn("session-receiver");
         given(mockSession.getAttributes())
                 .willReturn(Map.of(SessionConst.SESSION_ID, receiver.getId()));
-        chatRoomManager.registerSession(mockSession);
-        chatRoomManager.addSessionToRoom(mockSession, chatRoomId);
-        chatRoomManager.deactivateRoom(mockSession.getId(), chatRoomId);
+        spaceManager.registerSession(mockSession);
+        spaceManager.addSessionToSpace(mockSession, chatRoomId);
+        spaceManager.deactivateSpace(mockSession.getId(), chatRoomId);
 
         // inactive 동안 메시지 5개 도착
         chatService.saveChat(sender.getId(), chatRoomId, "msg1");
@@ -714,8 +714,8 @@ class ChatServiceTest {
         given(mockSession.getId()).willReturn("session-receiver");
         given(mockSession.getAttributes())
                 .willReturn(Map.of(SessionConst.SESSION_ID, receiver.getId()));
-        chatRoomManager.registerSession(mockSession);
-        chatRoomManager.addSessionToRoom(mockSession, chatRoomId);
+        spaceManager.registerSession(mockSession);
+        spaceManager.addSessionToSpace(mockSession, chatRoomId);
 
         // 메시지 전송 → receiver가 active이므로 cursor 즉시 갱신됨
         chatService.saveChat(sender.getId(), chatRoomId, "msg");
@@ -742,9 +742,9 @@ class ChatServiceTest {
         given(mockSession.getId()).willReturn("session-receiver");
         given(mockSession.getAttributes())
                 .willReturn(Map.of(SessionConst.SESSION_ID, receiver.getId()));
-        chatRoomManager.registerSession(mockSession);
-        chatRoomManager.addSessionToRoom(mockSession, chatRoomId);
-        chatRoomManager.deactivateRoom(mockSession.getId(), chatRoomId);
+        spaceManager.registerSession(mockSession);
+        spaceManager.addSessionToSpace(mockSession, chatRoomId);
+        spaceManager.deactivateSpace(mockSession.getId(), chatRoomId);
 
         // inactive 동안 메시지 3개
         Long firstChatId = chatService.saveChat(sender.getId(), chatRoomId, "msg1");

@@ -10,7 +10,7 @@ import com.chat.service.dtos.chat.ErrorResponse;
 import com.chat.service.dtos.chat.RoomActiveRequest;
 import com.chat.service.dtos.chat.RoomInactiveRequest;
 import com.chat.service.dtos.chat.SendChat;
-import com.chat.socket.manager.ChatRoomManager;
+import com.chat.socket.manager.SpaceManager;
 import com.chat.socket.manager.WebsocketSessionManager;
 import com.chat.utils.consts.SessionConst;
 import com.chat.utils.message.BaseWebSocketMessage;
@@ -34,7 +34,7 @@ import java.io.IOException;
 public class IntegrationTextSocketHandler extends TextWebSocketHandler {
 
     private final WebsocketSessionManager websocketSessionManager;
-    private final ChatRoomManager chatRoomManager;
+    private final SpaceManager spaceManager;
     private final SpaceService spaceService;
     private final ChatService chatService;
     private final MemberService memberService;
@@ -51,7 +51,7 @@ public class IntegrationTextSocketHandler extends TextWebSocketHandler {
 
         Long loginMemberId = (Long) sessionObject;
         websocketSessionManager.addSession(loginMemberId, session);
-        chatRoomManager.registerSession(session);
+        spaceManager.registerSession(session);
 
         log.info("Connect Websocket member : {}", loginMemberId);
     }
@@ -76,7 +76,7 @@ public class IntegrationTextSocketHandler extends TextWebSocketHandler {
                     Long chatRoomId = sendChat.getChatRoomId();
                     Long loginMemberId = (Long) session.getAttributes().get(SessionConst.SESSION_ID);
 
-                    if (chatRoomManager.getWebSocketSessionBy(chatRoomId).stream()
+                    if (spaceManager.getWebSocketSessionBy(chatRoomId).stream()
                             .noneMatch(s -> s.getId().equals(session.getId()))) {
                         log.warn("session not in room: session={}, chatRoomId={}", session.getId(),
                                 chatRoomId);
@@ -94,7 +94,7 @@ public class IntegrationTextSocketHandler extends TextWebSocketHandler {
                     Long enterMemberId = (Long) session.getAttributes().get(SessionConst.SESSION_ID);
                     spaceService.validateParticipant(enterMemberId, enterRoomRequest.getChatRoomId());
                     WebSocketSession safeSession = websocketSessionManager.getWrappedSession(session);
-                    chatRoomManager.addSessionToRoom(safeSession, enterRoomRequest.getChatRoomId());
+                    spaceManager.addSessionToSpace(safeSession, enterRoomRequest.getChatRoomId());
 
                     break;
                 case ROOM_ACTIVE:
@@ -102,12 +102,12 @@ public class IntegrationTextSocketHandler extends TextWebSocketHandler {
                     Long activeRoomId = activeRequest.getChatRoomId();
                     Long activeMemberId = (Long) session.getAttributes().get(SessionConst.SESSION_ID);
 
-                    chatRoomManager.activateRoom(session.getId(), activeRoomId);
+                    spaceManager.activateSpace(session.getId(), activeRoomId);
                     chatService.onRoomActive(activeMemberId, activeRoomId);
                     break;
                 case ROOM_INACTIVE:
                     RoomInactiveRequest inactiveRequest = (RoomInactiveRequest) baseMessage;
-                    chatRoomManager.deactivateRoom(session.getId(), inactiveRequest.getChatRoomId());
+                    spaceManager.deactivateSpace(session.getId(), inactiveRequest.getChatRoomId());
                     break;
                 default:
                     log.warn("알 수 없는 messageType: session={}, type={}", session.getId(), baseMessage.getMessageType());

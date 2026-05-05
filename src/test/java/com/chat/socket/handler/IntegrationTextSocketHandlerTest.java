@@ -5,7 +5,7 @@ import com.chat.entity.Member;
 import com.chat.fixture.MemberFixture;
 import com.chat.fixture.TestDataFixture;
 import com.chat.service.dtos.chat.SendChat;
-import com.chat.socket.manager.ChatRoomManager;
+import com.chat.socket.manager.SpaceManager;
 import com.chat.socket.manager.WebsocketSessionManager;
 import com.chat.utils.message.MessageType;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -47,7 +47,7 @@ class IntegrationTextSocketHandlerTest {
     @Autowired
     private WebsocketSessionManager websocketSessionManager;
     @Autowired
-    private ChatRoomManager chatRoomManager;
+    private SpaceManager spaceManager;
 
     @LocalServerPort
     private int port;
@@ -56,14 +56,14 @@ class IntegrationTextSocketHandlerTest {
     void beforeTearDown() {
         fixture.deleteAllData();
         websocketSessionManager.clearAll();
-        chatRoomManager.clearAll();
+        spaceManager.clearAll();
     }
 
     @AfterEach
     void afterTearDown() {
         fixture.deleteAllData();
         websocketSessionManager.clearAll();
-        chatRoomManager.clearAll();
+        spaceManager.clearAll();
     }
 
     @Test
@@ -124,7 +124,7 @@ class IntegrationTextSocketHandlerTest {
                 .get();
 
         WebSocketSession serverSession = websocketSessionManager.getSessionBy(memberId).iterator().next();
-        chatRoomManager.addSessionToRoom(serverSession, chatRoomId);
+        spaceManager.addSessionToSpace(serverSession, chatRoomId);
 
         ObjectMapper objectMapper = new ObjectMapper();
         SendChat sendChat = SendChat
@@ -188,7 +188,7 @@ class IntegrationTextSocketHandlerTest {
         boolean anyMessageReceived = latch.await(1, TimeUnit.SECONDS);
         assertThat(anyMessageReceived).isFalse();
         assertThat(receivedMessages).isEmpty();
-        assertThat(chatRoomManager.getWebSocketSessionBy(chatRoomId)).isEmpty();
+        assertThat(spaceManager.getWebSocketSessionBy(chatRoomId)).isEmpty();
     }
 
     @Test

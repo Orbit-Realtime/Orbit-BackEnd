@@ -17,14 +17,14 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest
-class ChatRoomManagerTest {
+class SpaceManagerTest {
 
     @Autowired
-    private ChatRoomManager chatRoomManager;
+    private SpaceManager spaceManager;
 
     @BeforeEach
     void init() {
-        chatRoomManager.clearAll();
+        spaceManager.clearAll();
     }
 
     @Test
@@ -33,7 +33,7 @@ class ChatRoomManagerTest {
         WebSocketSession session = mock(WebSocketSession.class);
         given(session.getAttributes()).willReturn(Map.of(SessionConst.SESSION_ID, 1L));
 
-        assertThatThrownBy(() -> chatRoomManager.addSessionToRoom(session, null))
+        assertThatThrownBy(() -> spaceManager.addSessionToSpace(session, null))
                 .isInstanceOf(CustomException.class);
     }
 
@@ -42,38 +42,38 @@ class ChatRoomManagerTest {
     void nonExistentRoomTest() {
         Long chatRoomId = 999L;
 
-        Set<WebSocketSession> result = chatRoomManager.getWebSocketSessionBy(chatRoomId);
+        Set<WebSocketSession> result = spaceManager.getWebSocketSessionBy(chatRoomId);
         assertThat(result).isEmpty();
     }
 
     @Test
     @DisplayName("채팅방이 없으면 false 를 반환하고 예외가 발생하지 않는다.")
-    void removeChatRoomSession_noRoomTest() {
+    void removeSpaceSession_noRoomTest() {
         Long chatRoomId = 999L;
         Long memberId = 42L;
 
         WebSocketSession mockSession = mock(WebSocketSession.class);
         given(mockSession.getAttributes()).willReturn(Map.of(SessionConst.SESSION_ID, memberId));
 
-        boolean result = chatRoomManager.removeChatRoomSession(chatRoomId, mockSession);
+        boolean result = spaceManager.removeSpaceSession(chatRoomId, mockSession);
 
         assertThat(result).isFalse();
     }
 
     @Test
-    @DisplayName("채팅방 자체가 없으면 isInRoom이 false를 반환한다.")
-    void isInRoom_returnsFalseForNonExistentRoom() {
+    @DisplayName("채팅방 자체가 없으면 isInSpace이 false를 반환한다.")
+    void isInSpace_returnsFalseForNonExistentRoom() {
         // given
         Long chatRoomId = 999L;
         Long memberId = 10L;
 
         // when & then
-        assertThat(chatRoomManager.isInRoom(chatRoomId, memberId)).isFalse();
+        assertThat(spaceManager.isInSpace(chatRoomId, memberId)).isFalse();
     }
 
     @Test
-    @DisplayName("ENTER_ROOM 하면 isRoomActive가 true를 반환한다.")
-    void isRoomActive_returnsTrueWhenActivated() {
+    @DisplayName("ENTER_ROOM 하면 isSpaceActive가 true를 반환한다.")
+    void isSpaceActive_returnsTrueWhenActivated() {
         Long chatRoomId = 1L;
         Long memberId = 10L;
 
@@ -81,15 +81,15 @@ class ChatRoomManagerTest {
         given(session.getId()).willReturn("session-1");
         given(session.getAttributes()).willReturn(Map.of(SessionConst.SESSION_ID, memberId));
 
-        chatRoomManager.registerSession(session);
-        chatRoomManager.addSessionToRoom(session, chatRoomId);
+        spaceManager.registerSession(session);
+        spaceManager.addSessionToSpace(session, chatRoomId);
 
-        assertThat(chatRoomManager.isRoomActive(memberId, chatRoomId)).isTrue();
+        assertThat(spaceManager.isSpaceActive(memberId, chatRoomId)).isTrue();
     }
 
     @Test
-    @DisplayName("ENTER_ROOM 후 ROOM_INACTIVE 하면 isRoomActive가 false를 반환한다.")
-    void isRoomActive_returnsFalseAfterEnterAndInactivate() {
+    @DisplayName("ENTER_ROOM 후 ROOM_INACTIVE 하면 isSpaceActive가 false를 반환한다.")
+    void isSpaceActive_returnsFalseAfterEnterAndInactivate() {
         Long chatRoomId = 1L;
         Long memberId = 10L;
 
@@ -97,16 +97,16 @@ class ChatRoomManagerTest {
         given(session.getId()).willReturn("session-1");
         given(session.getAttributes()).willReturn(Map.of(SessionConst.SESSION_ID, memberId));
 
-        chatRoomManager.registerSession(session);
-        chatRoomManager.addSessionToRoom(session, chatRoomId);    // auto-activate 됨
-        chatRoomManager.deactivateRoom("session-1", chatRoomId);  // deactivate
+        spaceManager.registerSession(session);
+        spaceManager.addSessionToSpace(session, chatRoomId);    // auto-activate 됨
+        spaceManager.deactivateSpace("session-1", chatRoomId);  // deactivate
 
-        assertThat(chatRoomManager.isRoomActive(memberId, chatRoomId)).isFalse();
+        assertThat(spaceManager.isSpaceActive(memberId, chatRoomId)).isFalse();
     }
 
     @Test
-    @DisplayName("ROOM_INACTIVE 후 ROOM_ACTIVE 하면 isRoomActive가 다시 true를 반환한다.")
-    void isRoomActive_returnsTrueAfterReactivate() {
+    @DisplayName("ROOM_INACTIVE 후 ROOM_ACTIVE 하면 isSpaceActive가 다시 true를 반환한다.")
+    void isSpaceActive_returnsTrueAfterReactivate() {
         Long chatRoomId = 1L;
         Long memberId = 10L;
 
@@ -114,17 +114,17 @@ class ChatRoomManagerTest {
         given(session.getId()).willReturn("session-1");
         given(session.getAttributes()).willReturn(Map.of(SessionConst.SESSION_ID, memberId));
 
-        chatRoomManager.registerSession(session);
-        chatRoomManager.addSessionToRoom(session, chatRoomId);   // auto-activate
-        chatRoomManager.deactivateRoom("session-1", chatRoomId); // ROOM_INACTIVE
-        chatRoomManager.activateRoom("session-1", chatRoomId);   // ROOM_ACTIVE (복구)
+        spaceManager.registerSession(session);
+        spaceManager.addSessionToSpace(session, chatRoomId);   // auto-activate
+        spaceManager.deactivateSpace("session-1", chatRoomId); // ROOM_INACTIVE
+        spaceManager.activateSpace("session-1", chatRoomId);   // ROOM_ACTIVE (복구)
 
-        assertThat(chatRoomManager.isRoomActive(memberId, chatRoomId)).isTrue();
+        assertThat(spaceManager.isSpaceActive(memberId, chatRoomId)).isTrue();
     }
 
     @Test
-    @DisplayName("다중 세션 중 하나라도 active이면 isRoomActive가 true를 반환한다.")
-    void isRoomActive_returnsTrueIfAnySessionActive() {
+    @DisplayName("다중 세션 중 하나라도 active이면 isSpaceActive가 true를 반환한다.")
+    void isSpaceActive_returnsTrueIfAnySessionActive() {
         Long chatRoomId = 1L;
         Long memberId = 10L;
 
@@ -136,20 +136,20 @@ class ChatRoomManagerTest {
         given(sessionB.getId()).willReturn("session-b");
         given(sessionB.getAttributes()).willReturn(Map.of(SessionConst.SESSION_ID, memberId));
 
-        chatRoomManager.registerSession(sessionA);
-        chatRoomManager.addSessionToRoom(sessionA, chatRoomId);   // auto-activate A
+        spaceManager.registerSession(sessionA);
+        spaceManager.addSessionToSpace(sessionA, chatRoomId);   // auto-activate A
 
-        chatRoomManager.registerSession(sessionB);
-        chatRoomManager.addSessionToRoom(sessionB, chatRoomId);   // auto-activate B
-        chatRoomManager.deactivateRoom("session-b", chatRoomId);  // B를 inactive로 전환
+        spaceManager.registerSession(sessionB);
+        spaceManager.addSessionToSpace(sessionB, chatRoomId);   // auto-activate B
+        spaceManager.deactivateSpace("session-b", chatRoomId);  // B를 inactive로 전환
 
         // A만 active인 상태
-        assertThat(chatRoomManager.isRoomActive(memberId, chatRoomId)).isTrue();
+        assertThat(spaceManager.isSpaceActive(memberId, chatRoomId)).isTrue();
     }
 
     @Test
-    @DisplayName("다중 세션 모두 inactive이면 isRoomActive가 false를 반환한다.")
-    void isRoomActive_returnsFalseWhenAllSessionsInactive() {
+    @DisplayName("다중 세션 모두 inactive이면 isSpaceActive가 false를 반환한다.")
+    void isSpaceActive_returnsFalseWhenAllSessionsInactive() {
         Long chatRoomId = 1L;
         Long memberId = 10L;
 
@@ -162,21 +162,21 @@ class ChatRoomManagerTest {
         given(sessionB.getAttributes()).willReturn(Map.of(SessionConst.SESSION_ID, memberId));
 
         // sessionA: add → auto-activate → deactivate
-        chatRoomManager.registerSession(sessionA);
-        chatRoomManager.addSessionToRoom(sessionA, chatRoomId);
-        chatRoomManager.deactivateRoom("session-a", chatRoomId);
+        spaceManager.registerSession(sessionA);
+        spaceManager.addSessionToSpace(sessionA, chatRoomId);
+        spaceManager.deactivateSpace("session-a", chatRoomId);
 
         // sessionB: add → auto-activate → deactivate
-        chatRoomManager.registerSession(sessionB);
-        chatRoomManager.addSessionToRoom(sessionB, chatRoomId);
-        chatRoomManager.deactivateRoom("session-b", chatRoomId);
+        spaceManager.registerSession(sessionB);
+        spaceManager.addSessionToSpace(sessionB, chatRoomId);
+        spaceManager.deactivateSpace("session-b", chatRoomId);
 
-        assertThat(chatRoomManager.isRoomActive(memberId, chatRoomId)).isFalse();
+        assertThat(spaceManager.isSpaceActive(memberId, chatRoomId)).isFalse();
     }
 
     @Test
     @DisplayName("방 전환(ENTER_ROOM) 시 이전 방의 active 상태가 자동으로 클리어된다.")
-    void addSessionToRoom_clearsActiveStateOnRoomSwitch() {
+    void addSessionToSpace_clearsActiveStateOnRoomSwitch() {
         Long room1 = 1L;
         Long room2 = 2L;
         Long memberId = 10L;
@@ -185,19 +185,19 @@ class ChatRoomManagerTest {
         given(session.getId()).willReturn("session-1");
         given(session.getAttributes()).willReturn(Map.of(SessionConst.SESSION_ID, memberId));
 
-        chatRoomManager.registerSession(session);
-        chatRoomManager.addSessionToRoom(session, room1);   // auto-activate room1
-        assertThat(chatRoomManager.isRoomActive(memberId, room1)).isTrue();
+        spaceManager.registerSession(session);
+        spaceManager.addSessionToSpace(session, room1);   // auto-activate room1
+        assertThat(spaceManager.isSpaceActive(memberId, room1)).isTrue();
 
         // room2로 이동
-        chatRoomManager.addSessionToRoom(session, room2);
+        spaceManager.addSessionToSpace(session, room2);
 
-        assertThat(chatRoomManager.isRoomActive(memberId, room1)).isFalse();  // room1 deactivated
-        assertThat(chatRoomManager.isRoomActive(memberId, room2)).isTrue();   // room2 activated
+        assertThat(spaceManager.isSpaceActive(memberId, room1)).isFalse();  // room1 deactivated
+        assertThat(spaceManager.isSpaceActive(memberId, room2)).isTrue();   // room2 activated
     }
 
     @Test
-    @DisplayName("removeSessionState 후 isRoomActive가 false를 반환한다.")
+    @DisplayName("removeSessionState 후 isSpaceActive가 false를 반환한다.")
     void removeSessionState_clearsActiveState() {
         Long chatRoomId = 1L;
         Long memberId = 10L;
@@ -206,18 +206,18 @@ class ChatRoomManagerTest {
         given(session.getId()).willReturn("session-1");
         given(session.getAttributes()).willReturn(Map.of(SessionConst.SESSION_ID, memberId));
 
-        chatRoomManager.registerSession(session);
-        chatRoomManager.addSessionToRoom(session, chatRoomId);   // auto-activate
-        assertThat(chatRoomManager.isRoomActive(memberId, chatRoomId)).isTrue();
+        spaceManager.registerSession(session);
+        spaceManager.addSessionToSpace(session, chatRoomId);   // auto-activate
+        assertThat(spaceManager.isSpaceActive(memberId, chatRoomId)).isTrue();
 
-        chatRoomManager.removeSessionState(session);
+        spaceManager.removeSessionState(session);
 
-        assertThat(chatRoomManager.isRoomActive(memberId, chatRoomId)).isFalse();
+        assertThat(spaceManager.isSpaceActive(memberId, chatRoomId)).isFalse();
     }
 
     @Test
-    @DisplayName("방에 등록되지 않은 세션으로 activateRoom을 호출해도 active 상태가 되지 않는다.")
-    void activateRoom_rejectsSessionNotInRoom() {
+    @DisplayName("방에 등록되지 않은 세션으로 activateSpace을 호출해도 active 상태가 되지 않는다.")
+    void activateSpace_rejectsSessionNotInRoom() {
         Long chatRoomId = 1L;
         Long memberId = 10L;
 
@@ -225,11 +225,11 @@ class ChatRoomManagerTest {
         given(session.getId()).willReturn("session-1");
         given(session.getAttributes()).willReturn(Map.of(SessionConst.SESSION_ID, memberId));
 
-        chatRoomManager.registerSession(session);
-        // addSessionToRoom 호출 안 함 — 방에 없음
+        spaceManager.registerSession(session);
+        // addSessionToSpace 호출 안 함 — 방에 없음
 
-        chatRoomManager.activateRoom("session-1", chatRoomId);
+        spaceManager.activateSpace("session-1", chatRoomId);
 
-        assertThat(chatRoomManager.isRoomActive(memberId, chatRoomId)).isFalse();
+        assertThat(spaceManager.isSpaceActive(memberId, chatRoomId)).isFalse();
     }
 }

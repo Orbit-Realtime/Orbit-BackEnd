@@ -7,7 +7,7 @@ import com.chat.fixture.SocketFixture;
 import com.chat.fixture.TestDataFixture;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.chat.service.dtos.chat.SendChat;
-import com.chat.socket.manager.ChatRoomManager;
+import com.chat.socket.manager.SpaceManager;
 import com.chat.socket.manager.WebsocketSessionManager;
 import com.chat.utils.consts.SessionConst;
 import com.chat.utils.message.MessageType;
@@ -49,7 +49,7 @@ public class SimpleChatRoomServiceSocketTest {
     private SpaceService spaceService;
 
     @Autowired
-    private ChatRoomManager chatRoomManager;
+    private SpaceManager spaceManager;
     @Autowired
     private WebsocketSessionManager websocketSessionManager;
 
@@ -61,7 +61,7 @@ public class SimpleChatRoomServiceSocketTest {
     @AfterEach
     void tearDown() {
         fixture.deleteAllData();
-        chatRoomManager.clearAll();
+        spaceManager.clearAll();
         websocketSessionManager.clearAll();
     }
 
@@ -107,12 +107,12 @@ public class SimpleChatRoomServiceSocketTest {
 
         // when
         WebSocketSession serverSession = websocketSessionManager.getSessionBy(encryptMemberId).iterator().next();
-        chatRoomManager.addSessionToRoom(serverSession, chatRoomId);
+        spaceManager.addSessionToSpace(serverSession, chatRoomId);
 
         // then: CHAT_ENTER 미전송, 세션이 방에 등록되었는지 확인
         Thread.sleep(500);
         assertThat(receivedMessages).isEmpty();
-        assertThat(chatRoomManager.getWebSocketSessionBy(chatRoomId)).contains(serverSession);
+        assertThat(spaceManager.getWebSocketSessionBy(chatRoomId)).contains(serverSession);
     }
 
     @Test
@@ -142,9 +142,9 @@ public class SimpleChatRoomServiceSocketTest {
         Long chatRoomId = chatRoom.getId();
 
         WebSocketSession firstServerSession = websocketSessionManager.getSessionBy(firstMemberId).iterator().next();
-        chatRoomManager.addSessionToRoom(firstServerSession, chatRoomId);
+        spaceManager.addSessionToSpace(firstServerSession, chatRoomId);
         WebSocketSession secondServerSession = websocketSessionManager.getSessionBy(secondMemberId).iterator().next();
-        chatRoomManager.addSessionToRoom(secondServerSession, chatRoomId);
+        spaceManager.addSessionToSpace(secondServerSession, chatRoomId);
 
         String message = "message";
         fixture.savedSimpleChat(message, firstMember, chatRoom);

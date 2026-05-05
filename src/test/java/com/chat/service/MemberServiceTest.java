@@ -7,7 +7,7 @@ import com.chat.entity.Member;
 import com.chat.exception.CustomException;
 import com.chat.repository.MemberRepository;
 import com.chat.service.dtos.LoginResponse;
-import com.chat.socket.manager.ChatRoomManager;
+import com.chat.socket.manager.SpaceManager;
 import com.chat.socket.manager.WebsocketSessionManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -32,12 +32,12 @@ class MemberServiceTest {
     @Autowired
     private WebsocketSessionManager websocketSessionManager;
     @Autowired
-    private ChatRoomManager chatRoomManager;
+    private SpaceManager spaceManager;
 
     @BeforeEach
     void setUp() {
         websocketSessionManager.clearAll();
-        chatRoomManager.clearAll();
+        spaceManager.clearAll();
     }
 
     @Test

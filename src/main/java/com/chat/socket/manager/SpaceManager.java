@@ -14,13 +14,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Component
-public class ChatRoomManager {
+public class SpaceManager {
 
     private final Map<Long, Set<WebSocketSession>> chatRooms = new ConcurrentHashMap<>();
     private final Map<Long, Set<Long>> memberToRoomsMap = new ConcurrentHashMap<>();
     private final Map<String, SessionState> sessionStates = new ConcurrentHashMap<>();
 
-    public void addSessionToRoom(WebSocketSession session, Long chatRoomId) {
+    public void addSessionToSpace(WebSocketSession session, Long chatRoomId) {
 
         IdValidator.requireChatRoomId(chatRoomId);
         Long loginMemberId = (Long) session.getAttributes().get(SessionConst.SESSION_ID);
@@ -34,10 +34,10 @@ public class ChatRoomManager {
                 if (state != null) {
                     state.deactivatedIfRoom(roomId);
                 } else {
-                    log.warn("addSessionToRoom: no SessionState for sessionId={}", session.getId());
+                    log.warn("addSessionToSpace: no SessionState for sessionId={}", session.getId());
                 }
 
-                removeChatRoomSession(roomId, session);
+                removeSpaceSession(roomId, session);
             }
         });
 
@@ -47,11 +47,11 @@ public class ChatRoomManager {
         if (state != null) {
             state.activate(chatRoomId);
         } else {
-            log.warn("addSessionToRoom: no SessionState for sessionId={}", session.getId());
+            log.warn("addSessionToSpace: no SessionState for sessionId={}", session.getId());
         }
     }
 
-    public boolean isInRoom(Long chatRoomId, Long memberId) {
+    public boolean isInSpace(Long chatRoomId, Long memberId) {
         return getWebSocketSessionBy(chatRoomId).stream()
                 .anyMatch(s -> memberId.equals(s.getAttributes().get(SessionConst.SESSION_ID)));
     }
@@ -64,13 +64,13 @@ public class ChatRoomManager {
         return sessions;
     }
 
-    public Set<Long> getChatRoomIdsBy(Long memberId) {
+    public Set<Long> getSpaceIdsBy(Long memberId) {
         Set<Long> rooms = memberToRoomsMap.get(memberId);
         if (rooms == null) return Collections.emptySet();
         return Set.copyOf(rooms);
     }
 
-    public boolean removeChatRoomSession(Long chatRoomId, WebSocketSession closingSession) {
+    public boolean removeSpaceSession(Long chatRoomId, WebSocketSession closingSession) {
         Set<WebSocketSession> sessions = chatRooms.get(chatRoomId);
         if (sessions == null) {
             return false;
@@ -104,10 +104,10 @@ public class ChatRoomManager {
         sessionStates.put(session.getId(), new SessionState(memberId));
     }
 
-    public void activateRoom(String sessionId, Long chatRoomId) {
+    public void activateSpace(String sessionId, Long chatRoomId) {
         SessionState state = sessionStates.get(sessionId);
         if (state == null) {
-            log.warn("activateRoom: no SessionState for sessionId={}", sessionId);
+            log.warn("activateSpace: no SessionState for sessionId={}", sessionId);
             return;
         }
 
@@ -115,19 +115,19 @@ public class ChatRoomManager {
         if (sessions == null ||
                 sessions.stream().noneMatch(s -> s.getId().equals(sessionId))) {
 
-            log.warn("activateRoom rejected: session={} not in room={}", sessionId, chatRoomId);
+            log.warn("activateSpace rejected: session={} not in room={}", sessionId, chatRoomId);
             return;
         }
         state.activate(chatRoomId);
     }
 
-    public boolean isRoomActive(Long memberId, Long chatRoomId) {
+    public boolean isSpaceActive(Long memberId, Long chatRoomId) {
         return sessionStates.values().stream()
                 .anyMatch(state -> memberId.equals(state.getMemberId())
                         && chatRoomId.equals(state.getActiveRoomId()));
     }
 
-    public void deactivateRoom(String sessionId, Long chatRoomId) {
+    public void deactivateSpace(String sessionId, Long chatRoomId) {
         SessionState state = sessionStates.get(sessionId);
         if (state == null) {
             return;

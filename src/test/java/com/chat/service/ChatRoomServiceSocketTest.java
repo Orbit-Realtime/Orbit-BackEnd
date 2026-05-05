@@ -8,7 +8,7 @@ import com.chat.fixture.SocketFixture;
 import com.chat.fixture.TestDataFixture;
 import com.chat.repository.ChatRepository;
 import com.chat.service.dtos.chat.SendChat;
-import com.chat.socket.manager.ChatRoomManager;
+import com.chat.socket.manager.SpaceManager;
 import com.chat.socket.manager.WebsocketSessionManager;
 import com.chat.utils.message.MessageType;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -51,7 +51,7 @@ public class ChatRoomServiceSocketTest {
     private SocketFixture socketFixture;
 
     @Autowired
-    private ChatRoomManager chatRoomManager;
+    private SpaceManager spaceManager;
     @Autowired
     private WebsocketSessionManager websocketSessionManager;
     @Autowired
@@ -64,7 +64,7 @@ public class ChatRoomServiceSocketTest {
     @AfterEach
     void tearDown() {
         fixture.deleteAllData();
-        chatRoomManager.clearAll();
+        spaceManager.clearAll();
         websocketSessionManager.clearAll();
     }
 
@@ -90,12 +90,12 @@ public class ChatRoomServiceSocketTest {
 
         // when
         WebSocketSession serverSession = websocketSessionManager.getSessionBy(memberId).iterator().next();
-        chatRoomManager.addSessionToRoom(serverSession, chatRoomId);
+        spaceManager.addSessionToSpace(serverSession, chatRoomId);
 
         // then: 세션만 등록됨, 클라이언트로 전송되는 메시지 없음
         Thread.sleep(500);
         assertThat(receivedMessages).isEmpty();
-        assertThat(chatRoomManager.getWebSocketSessionBy(chatRoomId)).contains(serverSession);
+        assertThat(spaceManager.getWebSocketSessionBy(chatRoomId)).contains(serverSession);
     }
 
     @Test
@@ -129,12 +129,12 @@ public class ChatRoomServiceSocketTest {
 
         // when
         WebSocketSession serverSession = websocketSessionManager.getSessionBy(firstId).iterator().next();
-        chatRoomManager.addSessionToRoom(serverSession, chatRoomId);
+        spaceManager.addSessionToSpace(serverSession, chatRoomId);
 
         // then: CHAT_ENTER 미전송, 세션 등록 여부만 확인
         Thread.sleep(500);
         assertThat(receivedMessages).isEmpty();
-        Set<WebSocketSession> webSocketSessions = chatRoomManager.getWebSocketSessionBy(chatRoomId);
+        Set<WebSocketSession> webSocketSessions = spaceManager.getWebSocketSessionBy(chatRoomId);
         assertThat(webSocketSessions).hasSize(1);
         Collection<WebSocketSession> memberSessions = websocketSessionManager.getSessionBy(firstId);
         assertThat(memberSessions).isNotEmpty();
@@ -172,9 +172,9 @@ public class ChatRoomServiceSocketTest {
         Thread.sleep(300);
 
         WebSocketSession firstServerSession = websocketSessionManager.getSessionBy(firstId).iterator().next();
-        chatRoomManager.addSessionToRoom(firstServerSession, chatRoomId);
+        spaceManager.addSessionToSpace(firstServerSession, chatRoomId);
         WebSocketSession secondServerSession = websocketSessionManager.getSessionBy(secondId).iterator().next();
-        chatRoomManager.addSessionToRoom(secondServerSession, chatRoomId);
+        spaceManager.addSessionToSpace(secondServerSession, chatRoomId);
 
         String message = "message";
         SendChat sendChat = SendChat
@@ -236,9 +236,9 @@ public class ChatRoomServiceSocketTest {
         Thread.sleep(300);
 
         WebSocketSession firstServerSession = websocketSessionManager.getSessionBy(firstId).iterator().next();
-        chatRoomManager.addSessionToRoom(firstServerSession, chatRoomId);
+        spaceManager.addSessionToSpace(firstServerSession, chatRoomId);
         WebSocketSession secondServerSession = websocketSessionManager.getSessionBy(secondId).iterator().next();
-        chatRoomManager.addSessionToRoom(secondServerSession, chatRoomId);
+        spaceManager.addSessionToSpace(secondServerSession, chatRoomId);
 
         // SendChat에 chatRoomId, message만 포함 — senderId, senderNickname 없음
         SendChat sendChat = SendChat
@@ -299,7 +299,7 @@ public class ChatRoomServiceSocketTest {
         Thread.sleep(300);
 
         WebSocketSession secondServerSession = websocketSessionManager.getSessionBy(secondId).iterator().next();
-        chatRoomManager.addSessionToRoom(secondServerSession, chatRoomId);
+        spaceManager.addSessionToSpace(secondServerSession, chatRoomId);
         Thread.sleep(500);
 
         // when: second가 채팅 내역 조회 → updatedCount > 0 이면 READ_EVENT + UPDATE_CHAT_ROOM 발행
@@ -365,7 +365,7 @@ public class ChatRoomServiceSocketTest {
         Thread.sleep(300);
 
         WebSocketSession secondServerSession = websocketSessionManager.getSessionBy(secondId).iterator().next();
-        chatRoomManager.addSessionToRoom(secondServerSession, chatRoomId);
+        spaceManager.addSessionToSpace(secondServerSession, chatRoomId);
         Thread.sleep(500);
 
         // when: second 두 번째 채팅 내역 조회 → lastReadChatId = firstChatId (이전 방문 시 firstChat까지 읽었음)
@@ -407,7 +407,7 @@ public class ChatRoomServiceSocketTest {
         Thread.sleep(300);
 
         WebSocketSession firstServerSession = websocketSessionManager.getSessionBy(firstId).iterator().next();
-        chatRoomManager.addSessionToRoom(firstServerSession, chatRoomId);
+        spaceManager.addSessionToSpace(firstServerSession, chatRoomId);
 
         // when: second가 채팅방 퇴장
         spaceService.leaveSpace(secondId, chatRoomId);
@@ -441,7 +441,7 @@ public class ChatRoomServiceSocketTest {
         Thread.sleep(300);
 
         WebSocketSession firstServerSession = websocketSessionManager.getSessionBy(firstId).iterator().next();
-        chatRoomManager.addSessionToRoom(firstServerSession, chatRoomId);
+        spaceManager.addSessionToSpace(firstServerSession, chatRoomId);
 
         // when: 채팅방 이름 변경
         spaceService.renameSpace(firstId, chatRoomId, "newTitle");
@@ -481,7 +481,7 @@ public class ChatRoomServiceSocketTest {
         Thread.sleep(300);
 
         WebSocketSession firstServerSession = websocketSessionManager.getSessionBy(firstId).iterator().next();
-        chatRoomManager.addSessionToRoom(firstServerSession, chatRoomId);
+        spaceManager.addSessionToSpace(firstServerSession, chatRoomId);
 
         // when: second를 초대
         spaceService.inviteMembers(firstId, chatRoomId, Set.of(secondId));

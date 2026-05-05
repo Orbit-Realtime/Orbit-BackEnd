@@ -10,7 +10,7 @@ import com.chat.service.dtos.ChatHistoryResponse;
 import com.chat.service.dtos.SaveChatData;
 import com.chat.service.dtos.chat.UpdateChatRoom;
 import com.chat.socket.event.PublishReadEvent;
-import com.chat.socket.manager.ChatRoomManager;
+import com.chat.socket.manager.SpaceManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -33,7 +33,7 @@ public class ChatService {
 
     private final BroadcastDataBuilder broadcastDataBuilder;
 
-    private final ChatRoomManager chatRoomManager;
+    private final SpaceManager spaceManager;
 
     private final ChatRepository chatRepository;
     private final SpaceRepository spaceRepository;
@@ -80,7 +80,7 @@ public class ChatService {
         for (ChatRoomParticipant crp : findChatRoomParticipants) {
             Long memberId = crp.getMember().getId();
             boolean isRead = memberId.equals(senderId)
-                    || chatRoomManager.isRoomActive(memberId, chatRoomId);
+                    || spaceManager.isSpaceActive(memberId, chatRoomId);
             if (isRead) {
                 readMemberIds.add(memberId);
             }

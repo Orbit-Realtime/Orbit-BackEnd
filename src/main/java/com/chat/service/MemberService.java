@@ -9,7 +9,7 @@ import com.chat.exception.ErrorCode;
 import com.chat.repository.MemberRepository;
 import com.chat.service.dtos.LoginResponse;
 import com.chat.service.utils.PasswordEncoder;
-import com.chat.socket.manager.ChatRoomManager;
+import com.chat.socket.manager.SpaceManager;
 import com.chat.socket.manager.WebsocketSessionManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +31,7 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
     private final WebsocketSessionManager websocketSessionManager;
-    private final ChatRoomManager chatRoomManager;
+    private final SpaceManager spaceManager;
 
     @Transactional
     public Long join(JoinRequest request) {
@@ -107,18 +107,18 @@ public class MemberService {
 
     public void removeSession(Long memberId, WebSocketSession closingSession) {
 
-        Set<Long> chatRoomIds = chatRoomManager.getChatRoomIdsBy(memberId);
+        Set<Long> chatRoomIds = spaceManager.getSpaceIdsBy(memberId);
         if (chatRoomIds.isEmpty()) {
             websocketSessionManager.removeSession(memberId, closingSession);
-            chatRoomManager.removeSessionState(closingSession);
+            spaceManager.removeSessionState(closingSession);
             return;
         }
 
         for (Long chatRoomId : chatRoomIds) {
-            chatRoomManager.removeChatRoomSession(chatRoomId, closingSession);
+            spaceManager.removeSpaceSession(chatRoomId, closingSession);
         }
 
         websocketSessionManager.removeSession(memberId, closingSession);
-        chatRoomManager.removeSessionState(closingSession);
+        spaceManager.removeSessionState(closingSession);
     }
 }

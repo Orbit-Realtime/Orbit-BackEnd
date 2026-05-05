@@ -14,7 +14,7 @@ import com.chat.service.dtos.chat.SendChat;
 import com.chat.service.dtos.chat.UpdateChatRoom;
 import com.chat.socket.event.PublishMessageEvent;
 import com.chat.socket.event.PublishUpdateEvent;
-import com.chat.socket.manager.ChatRoomManager;
+import com.chat.socket.manager.SpaceManager;
 import com.chat.utils.consts.SessionConst;
 import com.chat.utils.message.MessageType;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +36,7 @@ public class SpaceService {
 
     private final ApplicationEventPublisher publisher;
     private final BroadcastDataBuilder broadcastDataBuilder;
-    private final ChatRoomManager chatRoomManager;
+    private final SpaceManager spaceManager;
 
     private final ChatService chatService;
 
@@ -232,11 +232,11 @@ public class SpaceService {
 
         chatRoomParticipantRepository.deleteBy(chatRoomId, memberId);
 
-        Set<WebSocketSession> sessions = new HashSet<>(chatRoomManager.getWebSocketSessionBy(chatRoomId));
+        Set<WebSocketSession> sessions = new HashSet<>(spaceManager.getWebSocketSessionBy(chatRoomId));
         for (WebSocketSession session : sessions) {
             Long sessionMemberId = (Long) session.getAttributes().get(SessionConst.SESSION_ID);
             if (memberId.equals(sessionMemberId)) {
-                chatRoomManager.removeChatRoomSession(chatRoomId, session);
+                spaceManager.removeSpaceSession(chatRoomId, session);
             }
         }
 

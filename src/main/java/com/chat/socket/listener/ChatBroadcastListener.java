@@ -5,7 +5,7 @@ import com.chat.service.dtos.chat.UpdateChatRoom;
 import com.chat.socket.event.PublishMessageEvent;
 import com.chat.socket.event.PublishReadEvent;
 import com.chat.socket.event.PublishUpdateEvent;
-import com.chat.socket.manager.ChatRoomManager;
+import com.chat.socket.manager.SpaceManager;
 import com.chat.socket.manager.WebsocketSessionManager;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -26,14 +26,14 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ChatBroadcastListener {
 
-    private final ChatRoomManager chatRoomManager;
+    private final SpaceManager spaceManager;
     private final WebsocketSessionManager websocketSessionManager;
     private final ObjectMapper objectMapper;
 
     @Async("broadcastExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void publishMessageToSessions(PublishMessageEvent event) {
-        sendToRoomSessions(event.getChatRoomId(), event.getBroadcastChat());
+        sendToSpaceSessions(event.getChatRoomId(), event.getBroadcastChat());
         sendUpdateChatRoom(event.getUpdatesByMemberId());
     }
 
@@ -46,7 +46,7 @@ public class ChatBroadcastListener {
                 event.getPreviousLastReadChatId(),
                 event.getCurrentLastReadChatId()
         );
-        sendToRoomSessions(event.getChatRoomId(), readEvent);
+        sendToSpaceSessions(event.getChatRoomId(), readEvent);
         sendUpdateChatRoom(event.getUpdatesByMemberId());
     }
 
@@ -56,8 +56,8 @@ public class ChatBroadcastListener {
         sendUpdateChatRoom(event.getUpdatesByMemberId());
     }
 
-    private void sendToRoomSessions(Long chatRoomId, Object payload) {
-        send(chatRoomManager.getWebSocketSessionBy(chatRoomId), payload);
+    private void sendToSpaceSessions(Long chatRoomId, Object payload) {
+        send(spaceManager.getWebSocketSessionBy(chatRoomId), payload);
     }
 
     private void sendUpdateChatRoom(Map<Long, UpdateChatRoom> updatesByMemberId) {
