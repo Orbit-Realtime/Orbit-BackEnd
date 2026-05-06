@@ -39,14 +39,14 @@ class MessageRepositoryTest {
         Space savedChatRoom = spaceRepository.save(chatRoom);
 
         String message = "message";
-        Message chat = new Message(message, savedMember, savedChatRoom);
+        Message chat = Message.of(message, savedMember, savedChatRoom);
 
         // when
         Message savedChat = messageRepository.save(chat);
 
         // then
         assertThat(savedChat.getId()).isNotNull();
-        assertThat(savedChat.getMessage()).isEqualTo(message);
+        assertThat(savedChat.getContent()).isEqualTo(message);
         assertThat(savedChat.getMember()).isEqualTo(savedMember);
         assertThat(savedChat.getSpace()).isEqualTo(savedChatRoom);
     }
@@ -64,11 +64,11 @@ class MessageRepositoryTest {
         Space chatRoom = createChatRoom(title);
 
         String firstMessage = "first";
-        Message firstChat = new Message(firstMessage, firstMember, chatRoom);
+        Message firstChat = Message.of(firstMessage, firstMember, chatRoom);
         messageRepository.save(firstChat);
 
         String secondMessage = "second";
-        Message secondChat = new Message(secondMessage, secondMember, chatRoom);
+        Message secondChat = Message.of(secondMessage, secondMember, chatRoom);
         messageRepository.save(secondChat);
 
         Pageable limitOne = createLimitOne();
@@ -90,10 +90,10 @@ class MessageRepositoryTest {
         Space firstRoom = createChatRoom("firstRoom");
         Space secondRoom = createChatRoom("secondRoom");
 
-        messageRepository.save(new Message("first-1", member, firstRoom));
-        Message lastOfFirst = messageRepository.save(new Message("first-2", member, firstRoom));
+        messageRepository.save(Message.of("first-1", member, firstRoom));
+        Message lastOfFirst = messageRepository.save(Message.of("first-2", member, firstRoom));
 
-        Message lastOfSecond = messageRepository.save(new Message("second-1", member, secondRoom));
+        Message lastOfSecond = messageRepository.save(Message.of("second-1", member, secondRoom));
 
         // when
         List<Message> lastChats = messageRepository
@@ -115,7 +115,7 @@ class MessageRepositoryTest {
         Space roomWithChat = createChatRoom("roomWithChat");
         Space emptyRoom = createChatRoom("emptyRoom");
 
-        Message chat = messageRepository.save(new Message("message", member, roomWithChat));
+        Message chat = messageRepository.save(Message.of("message", member, roomWithChat));
 
         // when
         List<Message> lastChats = messageRepository
@@ -133,9 +133,9 @@ class MessageRepositoryTest {
         Member member = createMember("user");
         Space chatRoom = createChatRoom("room");
 
-        Message first = messageRepository.save(new Message("first", member, chatRoom));
-        Message second = messageRepository.save(new Message("second", member, chatRoom));
-        Message third = messageRepository.save(new Message("third", member, chatRoom));
+        Message first = messageRepository.save(Message.of("first", member, chatRoom));
+        Message second = messageRepository.save(Message.of("second", member, chatRoom));
+        Message third = messageRepository.save(Message.of("third", member, chatRoom));
 
         Pageable limit2 = PageRequest.of(0, 2);
 
@@ -156,8 +156,8 @@ class MessageRepositoryTest {
         Space targetRoom = createChatRoom("target");
         Space otherRoom = createChatRoom("other");
 
-        Message targetChat = messageRepository.save(new Message("target message", member, targetRoom));
-        messageRepository.save(new Message("other message", member, otherRoom));
+        Message targetChat = messageRepository.save(Message.of("target message", member, targetRoom));
+        messageRepository.save(Message.of("other message", member, otherRoom));
 
         Pageable limit10 = PageRequest.of(0, 10);
 
@@ -190,9 +190,9 @@ class MessageRepositoryTest {
         Member member = createMember("user");
         Space chatRoom = createChatRoom("room");
 
-        Message first = messageRepository.save(new Message("first", member, chatRoom));
-        Message second = messageRepository.save(new Message("second", member, chatRoom));
-        Message third = messageRepository.save(new Message("third", member, chatRoom));
+        Message first = messageRepository.save(Message.of("first", member, chatRoom));
+        Message second = messageRepository.save(Message.of("second", member, chatRoom));
+        Message third = messageRepository.save(Message.of("third", member, chatRoom));
 
         Pageable limit10 = PageRequest.of(0, 10);
 
@@ -212,7 +212,7 @@ class MessageRepositoryTest {
         Member member = createMember("user");
         Space chatRoom = createChatRoom("room");
 
-        Message firstChat = messageRepository.save(new Message("only message", member, chatRoom));
+        Message firstChat = messageRepository.save(Message.of("only message", member, chatRoom));
 
         Pageable limit10 = PageRequest.of(0, 10);
 
@@ -230,11 +230,11 @@ class MessageRepositoryTest {
         Member member = createMember("user");
         Space chatRoom = createChatRoom("room");
 
-        Message first = messageRepository.save(new Message("first", member, chatRoom));
-        Message second = messageRepository.save(new Message("second", member, chatRoom));
-        Message third = messageRepository.save(new Message("third", member, chatRoom));
-        Message fourth = messageRepository.save(new Message("fourth", member, chatRoom));
-        Message fifth = messageRepository.save(new Message("fifth", member, chatRoom));
+        Message first = messageRepository.save(Message.of("first", member, chatRoom));
+        Message second = messageRepository.save(Message.of("second", member, chatRoom));
+        Message third = messageRepository.save(Message.of("third", member, chatRoom));
+        Message fourth = messageRepository.save(Message.of("fourth", member, chatRoom));
+        Message fifth = messageRepository.save(Message.of("fifth", member, chatRoom));
 
         Pageable limit2 = PageRequest.of(0, 2);
 
@@ -255,9 +255,9 @@ class MessageRepositoryTest {
         Space targetRoom = createChatRoom("target");
         Space otherRoom = createChatRoom("other");
 
-        messageRepository.save(new Message("other message", member, otherRoom));
-        Message targetFirst = messageRepository.save(new Message("target first", member, targetRoom));
-        Message targetSecond = messageRepository.save(new Message("target second", member, targetRoom));
+        messageRepository.save(Message.of("other message", member, otherRoom));
+        Message targetFirst = messageRepository.save(Message.of("target first", member, targetRoom));
+        Message targetSecond = messageRepository.save(Message.of("target second", member, targetRoom));
 
         Pageable limit10 = PageRequest.of(0, 10);
 
@@ -277,8 +277,8 @@ class MessageRepositoryTest {
         Member member = createMember("user");
         Space chatRoom = createChatRoom("room");
 
-        messageRepository.save(new Message("first", member, chatRoom));
-        Message latest = messageRepository.save(new Message("second", member, chatRoom));
+        messageRepository.save(Message.of("first", member, chatRoom));
+        Message latest = messageRepository.save(Message.of("second", member, chatRoom));
 
         // when
         Optional<Long> result = messageRepository.findLastMessageIdBy(chatRoom.getId());
@@ -309,9 +309,9 @@ class MessageRepositoryTest {
         Space targetRoom = createChatRoom("target");
         Space otherRoom = createChatRoom("other");
 
-        Message targetChat = messageRepository.save(new Message("target", member, targetRoom));
-        messageRepository.save(new Message("other", member, otherRoom));
-        messageRepository.save(new Message("other2", member, otherRoom));
+        Message targetChat = messageRepository.save(Message.of("target", member, targetRoom));
+        messageRepository.save(Message.of("other", member, otherRoom));
+        messageRepository.save(Message.of("other2", member, otherRoom));
 
         // when
         Optional<Long> result = messageRepository.findLastMessageIdBy(targetRoom.getId());

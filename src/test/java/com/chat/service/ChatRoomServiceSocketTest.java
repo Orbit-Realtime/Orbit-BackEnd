@@ -204,7 +204,7 @@ public class ChatRoomServiceSocketTest {
         assertThat(node.has("unreadMemberCount")).isTrue();
         Long chatId = node.get("chatId").asLong();
         Message findChat = messageRepository.findById(chatId).get();
-        assertThat(findChat.getMessage()).isEqualTo(message);
+        assertThat(findChat.getContent()).isEqualTo(message);
     }
 
     @Test

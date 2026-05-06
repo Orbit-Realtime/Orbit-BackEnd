@@ -78,6 +78,6 @@ class DiscussionRepositoryTest {
     }
 
     private Message createMessage(String content, Member member, Space space) {
-        return messageRepository.save(new Message(content, member, space));
+        return messageRepository.save(Message.of(content, member, space));
     }
 }

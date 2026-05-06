@@ -61,7 +61,7 @@ public class TestDataFixture {
     }
 
     public Message savedSimpleChat(String message, Member member, Space chatRoom) {
-        Message chat = new Message(message, member, chatRoom);
+        Message chat = Message.of(message, member, chatRoom);
         return messageRepository.save(chat);
     }
 

@@ -361,9 +361,9 @@ class SpaceMemberRepositoryTest {
         spaceMemberRepository.save(
                 SpaceMember.of(other, chatRoom));
 
-        Message first  = messageRepository.save(new Message("msg1", other, chatRoom));
-        Message second = messageRepository.save(new Message("msg2", other, chatRoom));
-        Message third  = messageRepository.save(new Message("msg3", other, chatRoom));
+        Message first  = messageRepository.save(Message.of("msg1", other, chatRoom));
+        Message second = messageRepository.save(Message.of("msg2", other, chatRoom));
+        Message third  = messageRepository.save(Message.of("msg3", other, chatRoom));
 
         spaceMemberRepository.updateLastReadMessageId(me.getId(), chatRoom.getId(),
                 first.getId());
@@ -395,8 +395,8 @@ class SpaceMemberRepositoryTest {
         spaceMemberRepository.save(
                 SpaceMember.of(sender, chatRoom));
 
-        Message first = messageRepository.save(new Message("msg1", sender, chatRoom));
-        messageRepository.save(new Message("msg2", sender, chatRoom));
+        Message first = messageRepository.save(Message.of("msg1", sender, chatRoom));
+        messageRepository.save(Message.of("msg2", sender, chatRoom));
 
         // me: cursor null → 전체 2개 unread
         // other: cursor = first → second만 1개 unread
@@ -469,7 +469,7 @@ class SpaceMemberRepositoryTest {
         spaceMemberRepository.save(
                 SpaceMember.of(sender, chatRoom));
 
-        Message chat = messageRepository.save(new Message("hello", sender, chatRoom));
+        Message chat = messageRepository.save(Message.of("hello", sender, chatRoom));
         // 발신자 cursor = chatId (saveChat 흐름 재현)
         spaceMemberRepository.updateLastReadMessageId(
                 sender.getId(), chatRoom.getId(), chat.getId());
@@ -499,7 +499,7 @@ class SpaceMemberRepositoryTest {
         spaceMemberRepository.save(
                 SpaceMember.of(receiver2, chatRoom));
 
-        Message chat = messageRepository.save(new Message("hello", sender, chatRoom));
+        Message chat = messageRepository.save(Message.of("hello", sender, chatRoom));
         spaceMemberRepository.updateLastReadMessageId(
                 sender.getId(), chatRoom.getId(), chat.getId());
         em.flush(); em.clear();
@@ -525,7 +525,7 @@ class SpaceMemberRepositoryTest {
         spaceMemberRepository.save(
                 SpaceMember.of(receiver, chatRoom));
 
-        Message chat = messageRepository.save(new Message("hello", sender, chatRoom));
+        Message chat = messageRepository.save(Message.of("hello", sender, chatRoom));
         spaceMemberRepository.updateLastReadMessageId(
                 sender.getId(), chatRoom.getId(), chat.getId());
         em.flush(); em.clear();
@@ -560,8 +560,8 @@ class SpaceMemberRepositoryTest {
         spaceMemberRepository.save(
                 SpaceMember.of(receiver, chatRoom));
 
-        Message first = messageRepository.save(new Message("first", sender, chatRoom));
-        Message second = messageRepository.save(new Message("second", sender, chatRoom));
+        Message first = messageRepository.save(Message.of("first", sender, chatRoom));
+        Message second = messageRepository.save(Message.of("second", sender, chatRoom));
 
         // sender: second까지 읽음, receiver: cursor=null
         spaceMemberRepository.updateLastReadMessageId(
@@ -596,8 +596,8 @@ class SpaceMemberRepositoryTest {
         spaceMemberRepository.save(
                 SpaceMember.of(noReader, chatRoom));
 
-        Message first = messageRepository.save(new Message("first", sender, chatRoom));
-        Message second = messageRepository.save(new Message("second", sender, chatRoom));
+        Message first = messageRepository.save(Message.of("first", sender, chatRoom));
+        Message second = messageRepository.save(Message.of("second", sender, chatRoom));
 
         // sender: second까지, readerOfFirst: first까지, noReader: cursor=null
         spaceMemberRepository.updateLastReadMessageId(

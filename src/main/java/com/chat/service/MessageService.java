@@ -64,7 +64,7 @@ public class MessageService {
                 () -> new CustomException(ErrorCode.SPACE_NOT_FOUND)
         );
 
-        Message savedChat = messageRepository.save(new Message(message, findSender, findChatRoom));
+        Message savedChat = messageRepository.save(Message.of(message, findSender, findChatRoom));
         updateCursorsOnSend(findSender.getId(), findChatRoom.getId(), savedChat);
 
         return savedChat.getId();
@@ -167,7 +167,7 @@ public class MessageService {
                     .chatId(chat.getId())
                     .senderNickname(sender.getNickname())
                     .senderId(sender.getId())
-                    .message(chat.getMessage())
+                    .message(chat.getContent())
                     .unreadMemberCount(unreadCount)
                     .createdDate(chat.getCreatedDate())
                     .build());

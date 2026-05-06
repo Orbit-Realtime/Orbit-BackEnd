@@ -211,7 +211,7 @@ public class SpaceService {
                     return SpaceSummaryResponse.builder()
                             .chatRoomId(chatRoomId)
                             .title(crp.getSpace().getTitle())
-                            .lastMessage(lastChat != null ? lastChat.getMessage() : null)
+                            .lastMessage(lastChat != null ? lastChat.getContent() : null)
                             .lastChatId(lastChat != null ? lastChat.getId() : null)
                             .createdDate(lastChat != null ? lastChat.getCreatedDate() : null)
                             .unreadMessageCount(unreadMessageCountMap.getOrDefault(chatRoomId, 0L))

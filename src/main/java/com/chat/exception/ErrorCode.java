@@ -12,6 +12,7 @@ public enum ErrorCode {
     EMPTY_PASSWORD(HttpStatus.BAD_REQUEST, "비밀번호가 비어있습니다."),
     EMPTY_NICKNAME(HttpStatus.BAD_REQUEST, "닉네임이 비어있습니다."),
     EMPTY_SPACE_TITLE(HttpStatus.BAD_REQUEST, "Space 이름이 비어있습니다."),
+    EMPTY_MESSAGE_CONTENT(HttpStatus.BAD_REQUEST, "메시지 내용이 비어있습니다."),
 
     DUPLICATED_USERNAME(HttpStatus.BAD_REQUEST, "이미 사용 중인 아이디입니다."),
     USERNAME_NOT_MATCH(HttpStatus.BAD_REQUEST, "아이디가 일치하지 않습니다."),

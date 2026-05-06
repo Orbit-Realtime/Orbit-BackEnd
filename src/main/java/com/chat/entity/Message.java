@@ -1,5 +1,7 @@
 package com.chat.entity;
 
+import com.chat.exception.CustomException;
+import com.chat.exception.ErrorCode;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -8,26 +10,62 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(indexes = {@Index(name = "idx_space_id_message_id", columnList = "space_id, message_id DESC")})
+@Table(
+        name = "message",
+        indexes = {
+                @Index(
+                        name = "idx_space_id_message_id",
+                        columnList = "space_id, message_id DESC"
+                )
+        }
+)
 public class Message extends BaseEntity {
 
     @Id
     @GeneratedValue
     @Column(name = "message_id")
     private Long id;
-    private String message;
+
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String content;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id")
+    @JoinColumn(name = "member_id", nullable = false)
     private Member member;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "space_id")
+    @JoinColumn(name = "space_id", nullable = false)
     private Space space;
 
-    public Message(String message, Member member, Space space) {
-        this.message = message;
+    private Message(String content, Member member, Space space) {
+        validateContent(content);
+        validateMember(member);
+        validateSpace(space);
+
+        this.content = content;
         this.member = member;
         this.space = space;
+    }
+
+    public static Message of(String content, Member member, Space space) {
+        return new Message(content, member, space);
+    }
+
+    private static void validateContent(String content) {
+        if (content == null || content.isBlank()) {
+            throw new CustomException(ErrorCode.EMPTY_MESSAGE_CONTENT);
+        }
+    }
+
+    private static void validateMember(Member member) {
+        if (member == null) {
+            throw new CustomException(ErrorCode.MEMBER_NOT_FOUND);
+        }
+    }
+
+    private static void validateSpace(Space space) {
+        if (space == null) {
+            throw new CustomException(ErrorCode.SPACE_NOT_FOUND);
+        }
     }
 }
