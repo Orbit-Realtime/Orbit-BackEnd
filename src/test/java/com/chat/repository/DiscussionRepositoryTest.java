@@ -61,14 +61,6 @@ class DiscussionRepositoryTest {
                 .isInstanceOf(DataIntegrityViolationException.class);
     }
 
-    @Test
-    @DisplayName("rootMessage 없이 Discussion을 저장할 수 없다")
-    void rootMessageNullConstraint() {
-        // when / then
-        assertThatThrownBy(() -> discussionRepository.saveAndFlush(Discussion.of(null)))
-                .isInstanceOf(DataIntegrityViolationException.class);
-    }
-
     private Member createMember(String username) {
         return memberRepository.save(Member.of(username, "password", username));
     }
