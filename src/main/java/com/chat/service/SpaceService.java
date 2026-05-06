@@ -144,13 +144,11 @@ public class SpaceService {
     }
 
     private void saveSpaceParticipants(Space space, Member sender, List<Member> receivers) {
-        SpaceMember senderSpaceMember
-                = SpaceMember.builder().space(space).member(sender).build();
+        SpaceMember senderSpaceMember = SpaceMember.of(sender, space);
         spaceMemberRepository.save(senderSpaceMember);
 
         for (Member findReceiver : receivers) {
-            SpaceMember receiverSpaceMember
-                    = SpaceMember.builder().space(space).member(findReceiver).build();
+            SpaceMember receiverSpaceMember = SpaceMember.of(findReceiver, space);
             spaceMemberRepository.save(receiverSpaceMember);
         }
     }
@@ -297,13 +295,7 @@ public class SpaceService {
         List<Member> invitees = memberRepository.findAllById(inviteeIds);
         for (Member invitee : invitees) {
             if (!existingMemberIds.contains(invitee.getId())) {
-                spaceMemberRepository.save(
-                        SpaceMember
-                                .builder()
-                                .space(space)
-                                .member(invitee)
-                                .build()
-                );
+                spaceMemberRepository.save(SpaceMember.of(invitee, space));
             }
         }
 

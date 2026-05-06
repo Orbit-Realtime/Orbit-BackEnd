@@ -47,7 +47,7 @@ class SpaceMemberRepositoryTest {
         String title = "title";
         Space chatRoom = Space.of(title);
         Space savedChatRoom = spaceRepository.save(chatRoom);
-        SpaceMember spaceMember = SpaceMember.builder().member(savedMember).space(savedChatRoom).build();
+        SpaceMember spaceMember = SpaceMember.of(savedMember, savedChatRoom);
 
         // when
         SpaceMember savedSpaceMember = spaceMemberRepository.save(spaceMember);
@@ -78,9 +78,9 @@ class SpaceMemberRepositoryTest {
         String title = "title";
         Space chatRoom = createChatRoomBy(title);
 
-        spaceMemberRepository.save(SpaceMember.builder().member(firstMember).space(chatRoom).build());
-        spaceMemberRepository.save(SpaceMember.builder().member(secondMember).space(chatRoom).build());
-        spaceMemberRepository.save(SpaceMember.builder().member(thirdMember).space(chatRoom).build());
+        spaceMemberRepository.save(SpaceMember.of(firstMember, chatRoom));
+        spaceMemberRepository.save(SpaceMember.of(secondMember, chatRoom));
+        spaceMemberRepository.save(SpaceMember.of(thirdMember, chatRoom));
 
         // when
         List<Long> chatRoomIds = spaceMemberRepository.findChatRoomIdsByExactMembers(memberIds, memberIds.size());
@@ -108,9 +108,9 @@ class SpaceMemberRepositoryTest {
         String title = "title";
         Space chatRoom = createChatRoomBy(title);
 
-        spaceMemberRepository.save(SpaceMember.builder().member(firstMember).space(chatRoom).build());
-        spaceMemberRepository.save(SpaceMember.builder().member(secondMember).space(chatRoom).build());
-        spaceMemberRepository.save(SpaceMember.builder().member(thirdMember).space(chatRoom).build());
+        spaceMemberRepository.save(SpaceMember.of(firstMember, chatRoom));
+        spaceMemberRepository.save(SpaceMember.of(secondMember, chatRoom));
+        spaceMemberRepository.save(SpaceMember.of(thirdMember, chatRoom));
 
         // when
         List<Long> chatRoomIds = spaceMemberRepository.findChatRoomIdsByExactMembers(memberIds, memberIds.size());
@@ -139,8 +139,8 @@ class SpaceMemberRepositoryTest {
         String title = "title";
         Space chatRoom = createChatRoomBy(title);
 
-        spaceMemberRepository.save(SpaceMember.builder().member(firstMember).space(chatRoom).build());
-        spaceMemberRepository.save(SpaceMember.builder().member(secondMember).space(chatRoom).build());
+        spaceMemberRepository.save(SpaceMember.of(firstMember, chatRoom));
+        spaceMemberRepository.save(SpaceMember.of(secondMember, chatRoom));
 
         // when
         List<Long> chatRoomIds = spaceMemberRepository.findChatRoomIdsByExactMembers(memberIds, memberIds.size());
@@ -161,8 +161,8 @@ class SpaceMemberRepositoryTest {
         String secondTitle = "secondTitle";
         Space second = createChatRoomBy(secondTitle);
 
-        SpaceMember firstParticipant = spaceMemberRepository.save(SpaceMember.builder().member(member).space(first).build());
-        SpaceMember secondParticipant = spaceMemberRepository.save(SpaceMember.builder().member(member).space(second).build());
+        SpaceMember firstParticipant = spaceMemberRepository.save(SpaceMember.of(member, first));
+        SpaceMember secondParticipant = spaceMemberRepository.save(SpaceMember.of(member, second));
 
         // when
         List<SpaceMember> findSpaceMembers = spaceMemberRepository.findAllFetchChatRoomBy(member.getId());
@@ -180,7 +180,7 @@ class SpaceMemberRepositoryTest {
         Member member = createMemberBy(username);
         String title = "chatRoom";
         Space chatRoom = createChatRoomBy(title);
-        spaceMemberRepository.save(SpaceMember.builder().member(member).space(chatRoom).build());
+        spaceMemberRepository.save(SpaceMember.of(member, chatRoom));
 
         // when
         List<SpaceMember> spaceMembers
@@ -198,7 +198,7 @@ class SpaceMemberRepositoryTest {
         Member member = createMemberBy(username);
         String title = "chatRoom";
         Space chatRoom = createChatRoomBy(title);
-        spaceMemberRepository.save(SpaceMember.builder().member(member).space(chatRoom).build());
+        spaceMemberRepository.save(SpaceMember.of(member, chatRoom));
 
         em.flush();
         em.clear();
@@ -227,7 +227,7 @@ class SpaceMemberRepositoryTest {
         Member member = createMemberBy(username);
         String title = "chatRoom";
         Space chatRoom = createChatRoomBy(title);
-        spaceMemberRepository.save(SpaceMember.builder().member(member).space(chatRoom).build());
+        spaceMemberRepository.save(SpaceMember.of(member, chatRoom));
 
         // when
         SpaceMember spaceMember = spaceMemberRepository.findChatRoomBy(chatRoom.getId(), member.getId());
@@ -248,9 +248,9 @@ class SpaceMemberRepositoryTest {
         Space firstRoom = createChatRoomBy("firstRoom");
         Space secondRoom = createChatRoomBy("secondRoom");
 
-        spaceMemberRepository.save(SpaceMember.builder().member(firstMember).space(firstRoom).build());
-        spaceMemberRepository.save(SpaceMember.builder().member(secondMember).space(firstRoom).build());
-        spaceMemberRepository.save(SpaceMember.builder().member(thirdMember).space(secondRoom).build());
+        spaceMemberRepository.save(SpaceMember.of(firstMember, firstRoom));
+        spaceMemberRepository.save(SpaceMember.of(secondMember, firstRoom));
+        spaceMemberRepository.save(SpaceMember.of(thirdMember, secondRoom));
 
         em.flush();
         em.clear();
@@ -272,7 +272,7 @@ class SpaceMemberRepositoryTest {
         // given
         Member member = createMemberBy("username");
         Space chatRoom = createChatRoomBy("chatRoom");
-        spaceMemberRepository.save(SpaceMember.builder().member(member).space(chatRoom).build());
+        spaceMemberRepository.save(SpaceMember.of(member, chatRoom));
 
         // when
         spaceMemberRepository.deleteBy(chatRoom.getId(), member.getId());
@@ -293,7 +293,7 @@ class SpaceMemberRepositoryTest {
 
         // when
         SpaceMember saved = spaceMemberRepository.save(
-                SpaceMember.builder().member(member).space(chatRoom).build()
+                SpaceMember.of(member, chatRoom)
         );
 
         // then
@@ -307,7 +307,7 @@ class SpaceMemberRepositoryTest {
         Member member = createMemberBy("member");
         Space chatRoom = createChatRoomBy("room");
         spaceMemberRepository.save(
-                SpaceMember.builder().member(member).space(chatRoom).build()
+                SpaceMember.of(member, chatRoom)
         );
         em.flush();
         em.clear();
@@ -329,7 +329,7 @@ class SpaceMemberRepositoryTest {
         Member member = createMemberBy("member");
         Space chatRoom = createChatRoomBy("room");
         spaceMemberRepository.save(
-                SpaceMember.builder().member(member).space(chatRoom).build());
+                SpaceMember.of(member, chatRoom));
         spaceMemberRepository.updateLastReadMessageId(member.getId(), chatRoom.getId(),
                 200L);
         em.flush();
@@ -357,9 +357,9 @@ class SpaceMemberRepositoryTest {
         Member other = createMemberBy("other");
         Space chatRoom = createChatRoomBy("room");
         spaceMemberRepository.save(
-                SpaceMember.builder().member(me).space(chatRoom).build());
+                SpaceMember.of(me, chatRoom));
         spaceMemberRepository.save(
-                SpaceMember.builder().member(other).space(chatRoom).build());
+                SpaceMember.of(other, chatRoom));
 
         Message first  = messageRepository.save(new Message("msg1", other, chatRoom));
         Message second = messageRepository.save(new Message("msg2", other, chatRoom));
@@ -389,11 +389,11 @@ class SpaceMemberRepositoryTest {
         Space chatRoom = createChatRoomBy("room");
 
         spaceMemberRepository.save(
-                SpaceMember.builder().member(me).space(chatRoom).build());
+                SpaceMember.of(me, chatRoom));
         spaceMemberRepository.save(
-                SpaceMember.builder().member(other).space(chatRoom).build());
+                SpaceMember.of(other, chatRoom));
         spaceMemberRepository.save(
-                SpaceMember.builder().member(sender).space(chatRoom).build());
+                SpaceMember.of(sender, chatRoom));
 
         Message first = messageRepository.save(new Message("msg1", sender, chatRoom));
         messageRepository.save(new Message("msg2", sender, chatRoom));
@@ -427,7 +427,7 @@ class SpaceMemberRepositoryTest {
         Member member = createMemberBy("member");
         Space chatRoom = createChatRoomBy("room");
         spaceMemberRepository.save(
-                SpaceMember.builder().member(member).space(chatRoom).build());
+                SpaceMember.of(member, chatRoom));
         em.flush();
         em.clear();
 
@@ -446,7 +446,7 @@ class SpaceMemberRepositoryTest {
         Member member = createMemberBy("member");
         Space chatRoom = createChatRoomBy("room");
         spaceMemberRepository.save(
-                SpaceMember.builder().member(member).space(chatRoom).build());
+                SpaceMember.of(member, chatRoom));
         spaceMemberRepository.updateLastReadMessageId(member.getId(), chatRoom.getId(),
                 100L);
         em.flush();
@@ -467,7 +467,7 @@ class SpaceMemberRepositoryTest {
         Member sender = createMemberBy("sender");
         Space chatRoom = createChatRoomBy("room");
         spaceMemberRepository.save(
-                SpaceMember.builder().member(sender).space(chatRoom).build());
+                SpaceMember.of(sender, chatRoom));
 
         Message chat = messageRepository.save(new Message("hello", sender, chatRoom));
         // 발신자 cursor = chatId (saveChat 흐름 재현)
@@ -493,11 +493,11 @@ class SpaceMemberRepositoryTest {
         Space chatRoom = createChatRoomBy("room");
 
         spaceMemberRepository.save(
-                SpaceMember.builder().member(sender).space(chatRoom).build());
+                SpaceMember.of(sender, chatRoom));
         spaceMemberRepository.save(
-                SpaceMember.builder().member(receiver1).space(chatRoom).build());
+                SpaceMember.of(receiver1, chatRoom));
         spaceMemberRepository.save(
-                SpaceMember.builder().member(receiver2).space(chatRoom).build());
+                SpaceMember.of(receiver2, chatRoom));
 
         Message chat = messageRepository.save(new Message("hello", sender, chatRoom));
         spaceMemberRepository.updateLastReadMessageId(
@@ -521,9 +521,9 @@ class SpaceMemberRepositoryTest {
         Space chatRoom = createChatRoomBy("room");
 
         spaceMemberRepository.save(
-                SpaceMember.builder().member(sender).space(chatRoom).build());
+                SpaceMember.of(sender, chatRoom));
         spaceMemberRepository.save(
-                SpaceMember.builder().member(receiver).space(chatRoom).build());
+                SpaceMember.of(receiver, chatRoom));
 
         Message chat = messageRepository.save(new Message("hello", sender, chatRoom));
         spaceMemberRepository.updateLastReadMessageId(
@@ -556,9 +556,9 @@ class SpaceMemberRepositoryTest {
         Space chatRoom = createChatRoomBy("room");
 
         spaceMemberRepository.save(
-                SpaceMember.builder().member(sender).space(chatRoom).build());
+                SpaceMember.of(sender, chatRoom));
         spaceMemberRepository.save(
-                SpaceMember.builder().member(receiver).space(chatRoom).build());
+                SpaceMember.of(receiver, chatRoom));
 
         Message first = messageRepository.save(new Message("first", sender, chatRoom));
         Message second = messageRepository.save(new Message("second", sender, chatRoom));
@@ -590,11 +590,11 @@ class SpaceMemberRepositoryTest {
         Space chatRoom = createChatRoomBy("room");
 
         spaceMemberRepository.save(
-                SpaceMember.builder().member(sender).space(chatRoom).build());
+                SpaceMember.of(sender, chatRoom));
         spaceMemberRepository.save(
-                SpaceMember.builder().member(readerOfFirst).space(chatRoom).build());
+                SpaceMember.of(readerOfFirst, chatRoom));
         spaceMemberRepository.save(
-                SpaceMember.builder().member(noReader).space(chatRoom).build());
+                SpaceMember.of(noReader, chatRoom));
 
         Message first = messageRepository.save(new Message("first", sender, chatRoom));
         Message second = messageRepository.save(new Message("second", sender, chatRoom));

@@ -48,10 +48,7 @@ public class TestDataFixture {
         Space savedChatRoom = spaceRepository.save(chatRoom);
 
         for (Member participant : participants) {
-            SpaceMember spaceMember = SpaceMember.builder()
-                    .space(savedChatRoom)
-                    .member(participant)
-                    .build();
+            SpaceMember spaceMember = SpaceMember.of(participant, savedChatRoom);
             spaceMemberRepository.save(spaceMember);
         }
 

@@ -1,5 +1,7 @@
 package com.chat.entity;
 
+import com.chat.exception.CustomException;
+import com.chat.exception.ErrorCode;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -12,11 +14,15 @@ import static jakarta.persistence.FetchType.LAZY;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(
+        name = "space_member",
         indexes = {
-                @Index(name = "idx_space_member_space_id",  columnList = "space_id"),
+                @Index(name = "idx_space_member_space_id", columnList = "space_id"),
                 @Index(name = "idx_space_member_member_id", columnList = "member_id")
         },
-        uniqueConstraints = @UniqueConstraint(name = "uq_space_member", columnNames = {"member_id", "space_id"})
+        uniqueConstraints = @UniqueConstraint(
+                name = "uq_space_member",
+                columnNames = {"member_id", "space_id"}
+        )
 )
 public class SpaceMember extends BaseEntity {
 
@@ -28,27 +34,35 @@ public class SpaceMember extends BaseEntity {
     @Column(name = "last_read_message_id")
     private Long lastReadMessageId;
 
-    @ManyToOne(fetch = LAZY)
-    @JoinColumn(name = "member_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id", nullable = false)
     private Member member;
 
-    @ManyToOne(fetch = LAZY)
-    @JoinColumn(name = "space_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "space_id", nullable = false)
     private Space space;
 
-    @Builder
-    public SpaceMember(Member member, Space space) {
+    private SpaceMember(Member member, Space space) {
+        validateMember(member);
+        validateSpace(space);
+
         this.member = member;
         this.space = space;
     }
 
-    public void updateLastReadMessageId(Long messageId) {
-        if (messageId == null) {
-            return;
-        }
+    public static SpaceMember of(Member member, Space space) {
+        return new SpaceMember(member, space);
+    }
 
-        if (this.lastReadMessageId == null || this.lastReadMessageId < messageId) {
-            this.lastReadMessageId = messageId;
+    private void validateMember(Member member) {
+        if (member == null) {
+            throw new CustomException(ErrorCode.MEMBER_NOT_FOUND);
+        }
+    }
+
+    private void validateSpace(Space space) {
+        if (space == null) {
+            throw new CustomException(ErrorCode.SPACE_NOT_FOUND);
         }
     }
 }
