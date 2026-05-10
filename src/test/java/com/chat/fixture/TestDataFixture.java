@@ -67,6 +67,8 @@ public class TestDataFixture {
 
     @Transactional
     public void deleteAllData() {
+        em.createQuery("DELETE FROM DiscussionMessage").executeUpdate();
+        em.createQuery("DELETE FROM Discussion").executeUpdate();
         em.createQuery("DELETE FROM Message").executeUpdate();
         em.createQuery("DELETE FROM SpaceMember").executeUpdate();
         em.createQuery("DELETE FROM Space").executeUpdate();
