@@ -17,13 +17,12 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SpaceManager {
 
     private final Map<Long, Set<WebSocketSession>> chatRooms = new ConcurrentHashMap<>();
-    private final Map<Long, Set<Long>> memberToRoomsMap = new ConcurrentHashMap<>();
+    private final Map<String, Long> sessionToRoomMap = new ConcurrentHashMap<>();
     private final Map<String, SessionState> sessionStates = new ConcurrentHashMap<>();
 
     public void addSessionToSpace(WebSocketSession session, Long chatRoomId) {
 
         IdValidator.requireChatRoomId(chatRoomId);
-        Long loginMemberId = (Long) session.getAttributes().get(SessionConst.SESSION_ID);
 
         // 방 전환
         chatRooms.forEach((roomId, sessions) -> {
@@ -42,7 +41,7 @@ public class SpaceManager {
         });
 
         chatRooms.computeIfAbsent(chatRoomId, key -> ConcurrentHashMap.newKeySet()).add(session);
-        memberToRoomsMap.computeIfAbsent(loginMemberId, k -> ConcurrentHashMap.newKeySet()).add(chatRoomId);
+        sessionToRoomMap.put(session.getId(), chatRoomId);
         SessionState state = sessionStates.get(session.getId());
         if (state != null) {
             state.activate(chatRoomId);
@@ -64,10 +63,11 @@ public class SpaceManager {
         return sessions;
     }
 
-    public Set<Long> getSpaceIdsBy(Long memberId) {
-        Set<Long> rooms = memberToRoomsMap.get(memberId);
-        if (rooms == null) return Collections.emptySet();
-        return Set.copyOf(rooms);
+    public void removeSessionFromSpace(WebSocketSession session) {
+        Long roomId = sessionToRoomMap.get(session.getId());
+        if (roomId != null) {
+            removeSpaceSession(roomId, session);
+        }
     }
 
     public boolean removeSpaceSession(Long chatRoomId, WebSocketSession closingSession) {
@@ -77,20 +77,11 @@ public class SpaceManager {
         }
 
         sessions.removeIf(s -> s.getId().equals(closingSession.getId()));
+        sessionToRoomMap.remove(closingSession.getId());
 
         Long memberId = (Long) closingSession.getAttributes().get(SessionConst.SESSION_ID);
-        // 이 방에 같은 memberId의 다른 세션이 남아있는지 확인
         boolean memberStillInRoom = sessions.stream()
-                .anyMatch(s ->
-                        memberId.equals(s.getAttributes().get(SessionConst.SESSION_ID)));
-
-        if (!memberStillInRoom) {
-            Set<Long> rooms = memberToRoomsMap.get(memberId);
-            if (rooms != null) {
-                rooms.remove(chatRoomId);
-                if (rooms.isEmpty()) memberToRoomsMap.remove(memberId);
-            }
-        }
+                .anyMatch(s -> memberId.equals(s.getAttributes().get(SessionConst.SESSION_ID)));
 
         if (sessions.isEmpty()) {
             chatRooms.remove(chatRoomId);
@@ -142,7 +133,7 @@ public class SpaceManager {
     @VisibleForTesting
     public void clearAll() {
         chatRooms.clear();
-        memberToRoomsMap.clear();
+        sessionToRoomMap.clear();
         sessionStates.clear();
     }
 }

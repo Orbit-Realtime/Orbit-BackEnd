@@ -20,7 +20,6 @@ import org.springframework.web.socket.WebSocketSession;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 @Slf4j
 @Service
@@ -106,18 +105,7 @@ public class MemberService {
     }
 
     public void removeSession(Long memberId, WebSocketSession closingSession) {
-
-        Set<Long> chatRoomIds = spaceManager.getSpaceIdsBy(memberId);
-        if (chatRoomIds.isEmpty()) {
-            websocketSessionManager.removeSession(memberId, closingSession);
-            spaceManager.removeSessionState(closingSession);
-            return;
-        }
-
-        for (Long chatRoomId : chatRoomIds) {
-            spaceManager.removeSpaceSession(chatRoomId, closingSession);
-        }
-
+        spaceManager.removeSessionFromSpace(closingSession);
         websocketSessionManager.removeSession(memberId, closingSession);
         spaceManager.removeSessionState(closingSession);
     }
