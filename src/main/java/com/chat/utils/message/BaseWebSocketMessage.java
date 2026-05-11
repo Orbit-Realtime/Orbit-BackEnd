@@ -4,6 +4,7 @@ import com.chat.service.dtos.chat.EnterRoomRequest;
 import com.chat.service.dtos.chat.RoomActiveRequest;
 import com.chat.service.dtos.chat.RoomInactiveRequest;
 import com.chat.service.dtos.chat.SendChat;
+import com.chat.service.dtos.chat.SendDiscussionMessage;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.Getter;
@@ -24,6 +25,7 @@ import lombok.experimental.SuperBuilder;
         @JsonSubTypes.Type(value = EnterRoomRequest.class, name = "ENTER_ROOM"),
         @JsonSubTypes.Type(value = RoomActiveRequest.class, name = "ROOM_ACTIVE"),
         @JsonSubTypes.Type(value = RoomInactiveRequest.class, name = "ROOM_INACTIVE"),
+        @JsonSubTypes.Type(value = SendDiscussionMessage.class, name = "DISCUSSION_MESSAGE"),
         @JsonSubTypes.Type(value = BaseWebSocketMessage.class, name = "DEFAULT")
 })
 public class BaseWebSocketMessage {

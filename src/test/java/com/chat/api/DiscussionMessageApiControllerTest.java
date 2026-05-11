@@ -45,7 +45,7 @@ class DiscussionMessageApiControllerTest {
         Space space = fixture.savedChatRoomBy("space", List.of(member));
         Message message = fixture.savedSimpleChat("내용", member, space);
         Discussion discussion = discussionRepository.save(Discussion.of(message));
-        discussionMessageService.saveDiscussionMessage(discussion.getId(), member.getId(), "첫 번째 답글");
+        discussionMessageService.broadcastDiscussionMessage(discussion.getId(), member.getId(), "첫 번째 답글");
 
         MockHttpSession session = new MockHttpSession();
         session.setAttribute(SessionConst.SESSION_ID, member.getId());

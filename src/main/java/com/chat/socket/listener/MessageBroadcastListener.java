@@ -2,6 +2,7 @@ package com.chat.socket.listener;
 
 import com.chat.service.dtos.chat.ReadEvent;
 import com.chat.service.dtos.chat.UpdateChatRoom;
+import com.chat.socket.event.PublishDiscussionMessageEvent;
 import com.chat.socket.event.PublishMessageEvent;
 import com.chat.socket.event.PublishReadEvent;
 import com.chat.socket.event.PublishUpdateEvent;
@@ -54,6 +55,12 @@ public class MessageBroadcastListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void publishUpdateEventToSessions(PublishUpdateEvent event) {
         sendUpdateChatRoom(event.getUpdatesByMemberId());
+    }
+
+    @Async("broadcastExecutor")
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void publishDiscussionMessageToSessions(PublishDiscussionMessageEvent event) {
+        sendToSpaceSessions(event.getSpaceId(), event.getPayload());
     }
 
     private void sendToSpaceSessions(Long chatRoomId, Object payload) {

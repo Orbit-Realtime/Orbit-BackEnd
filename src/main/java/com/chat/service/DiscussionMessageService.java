@@ -11,7 +11,11 @@ import com.chat.repository.DiscussionMessageRepository;
 import com.chat.repository.DiscussionRepository;
 import com.chat.repository.MemberRepository;
 import com.chat.repository.SpaceMemberRepository;
+import com.chat.service.dtos.chat.DiscussionMessageEvent;
+import com.chat.socket.event.PublishDiscussionMessageEvent;
+import com.chat.utils.message.MessageType;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +26,7 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class DiscussionMessageService {
 
+    private final ApplicationEventPublisher publisher;
     private final DiscussionRepository discussionRepository;
     private final DiscussionMessageRepository discussionMessageRepository;
     private final SpaceMemberRepository spaceMemberRepository;
@@ -39,17 +44,27 @@ public class DiscussionMessageService {
     }
 
     @Transactional
-    public DiscussionMessageResponse saveDiscussionMessage(Long discussionId, Long memberId, String content) {
+    public void broadcastDiscussionMessage(Long discussionId, Long memberId, String content) {
         Discussion discussion = findAccessibleDiscussion(discussionId, memberId);
+        Long spaceId = discussion.getRootMessage().getSpace().getId();
 
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
 
         DiscussionMessage saved = discussionMessageRepository.save(
-                DiscussionMessage.of(content, discussion, member)
-        );
+                DiscussionMessage.of(content, discussion, member));
 
-        return DiscussionMessageResponse.from(saved);
+        DiscussionMessageEvent event = DiscussionMessageEvent.builder()
+                .messageType(MessageType.DISCUSSION_MESSAGE_EVENT)
+                .discussionMessageId(saved.getId())
+                .discussionId(discussionId)
+                .senderId(memberId)
+                .senderNickname(member.getNickname())
+                .content(saved.getContent())
+                .createdDate(saved.getCreatedDate())
+                .build();
+
+        publisher.publishEvent(new PublishDiscussionMessageEvent(event, spaceId));
     }
 
     private Discussion findAccessibleDiscussion(Long discussionId, Long memberId) {

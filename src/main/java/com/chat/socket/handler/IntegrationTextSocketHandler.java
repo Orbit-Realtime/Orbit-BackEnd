@@ -2,6 +2,7 @@ package com.chat.socket.handler;
 
 import com.chat.exception.CustomException;
 import com.chat.exception.ErrorCode;
+import com.chat.service.DiscussionMessageService;
 import com.chat.service.SpaceService;
 import com.chat.service.MessageService;
 import com.chat.service.MemberService;
@@ -10,6 +11,7 @@ import com.chat.service.dtos.chat.ErrorResponse;
 import com.chat.service.dtos.chat.RoomActiveRequest;
 import com.chat.service.dtos.chat.RoomInactiveRequest;
 import com.chat.service.dtos.chat.SendChat;
+import com.chat.service.dtos.chat.SendDiscussionMessage;
 import com.chat.socket.manager.SpaceManager;
 import com.chat.socket.manager.WebsocketSessionManager;
 import com.chat.utils.consts.SessionConst;
@@ -38,6 +40,7 @@ public class IntegrationTextSocketHandler extends TextWebSocketHandler {
     private final SpaceService spaceService;
     private final MessageService messageService;
     private final MemberService memberService;
+    private final DiscussionMessageService discussionMessageService;
     private final ObjectMapper objectMapper;
 
     @Override
@@ -108,6 +111,15 @@ public class IntegrationTextSocketHandler extends TextWebSocketHandler {
                 case ROOM_INACTIVE:
                     RoomInactiveRequest inactiveRequest = (RoomInactiveRequest) baseMessage;
                     spaceManager.deactivateSpace(session.getId(), inactiveRequest.getChatRoomId());
+                    break;
+                case DISCUSSION_MESSAGE:
+                    SendDiscussionMessage sendDiscussionMessage = (SendDiscussionMessage) baseMessage;
+                    Long discussionMemberId = (Long) session.getAttributes().get(SessionConst.SESSION_ID);
+                    discussionMessageService.broadcastDiscussionMessage(
+                            sendDiscussionMessage.getDiscussionId(),
+                            discussionMemberId,
+                            sendDiscussionMessage.getContent()
+                    );
                     break;
                 default:
                     log.warn("알 수 없는 messageType: session={}, type={}", session.getId(), baseMessage.getMessageType());

@@ -1,13 +1,18 @@
 package com.chat.socket.handler;
 
+import com.chat.entity.Discussion;
+import com.chat.entity.Message;
 import com.chat.entity.Space;
 import com.chat.entity.Member;
 import com.chat.fixture.MemberFixture;
 import com.chat.fixture.TestDataFixture;
+import com.chat.repository.DiscussionRepository;
 import com.chat.service.dtos.chat.SendChat;
+import com.chat.service.dtos.chat.SendDiscussionMessage;
 import com.chat.socket.manager.SpaceManager;
 import com.chat.socket.manager.WebsocketSessionManager;
 import com.chat.utils.message.MessageType;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,6 +48,8 @@ class IntegrationTextSocketHandlerTest {
     private TestDataFixture fixture;
     @Autowired
     private MemberFixture memberFixture;
+    @Autowired
+    private DiscussionRepository discussionRepository;
 
     @Autowired
     private WebsocketSessionManager websocketSessionManager;
@@ -227,5 +234,56 @@ class IntegrationTextSocketHandlerTest {
         // WebsocketSessionManager에서 세션이 제거되었는지 확인
         Collection<WebSocketSession> removedSessions = websocketSessionManager.getSessionBy(memberId);
         assertThat(removedSessions).isEmpty();
+    }
+
+    @Test
+    @DisplayName("DISCUSSION_MESSAGE 전송 시 Space 세션에 DISCUSSION_MESSAGE_EVENT가 수신된다.")
+    void discussionMessage_전송_시_Space_세션에_DISCUSSION_MESSAGE_EVENT가_수신된다()
+            throws Exception {
+        // given
+        String username = "username";
+        Member member = memberFixture.saveEncryptPasswordBy(username);
+
+        List<Member> participants = new ArrayList<>();
+        participants.add(member);
+        Space space = fixture.savedChatRoomBy("space", participants);
+        Message rootMessage = fixture.savedSimpleChat("원글", member, space);
+        Discussion discussion = discussionRepository.save(Discussion.of(rootMessage));
+
+        String JSessionId = memberFixture.loginRequestBy(username, port);
+        WebSocketHttpHeaders headers = new WebSocketHttpHeaders();
+        headers.add("Cookie", "JSESSIONID=" + JSessionId);
+
+        CountDownLatch latch = new CountDownLatch(1);
+        List<String> receivedMessages = new ArrayList<>();
+        TestWebSocketHandler handler = new TestWebSocketHandler(member.getId(), receivedMessages, latch);
+
+        WebSocketClient client = new StandardWebSocketClient();
+        WebSocketSession clientSession = client.execute(
+                handler, headers, URI.create("ws://localhost:" + port + "/ws/chat")).get();
+
+        // 서버 세션을 Space에 등록
+        WebSocketSession serverSession =
+                websocketSessionManager.getSessionBy(member.getId()).iterator().next();
+        spaceManager.addSessionToSpace(serverSession, space.getId());
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        SendDiscussionMessage sendDiscussionMessage = SendDiscussionMessage.builder()
+                .messageType(MessageType.DISCUSSION_MESSAGE)
+                .discussionId(discussion.getId())
+                .content("핸들러 테스트 답글")
+                .build();
+
+        // when
+        clientSession.sendMessage(
+                new TextMessage(objectMapper.writeValueAsString(sendDiscussionMessage)));
+
+        // then: DISCUSSION_MESSAGE_EVENT 1건 수신
+        boolean received = latch.await(3, TimeUnit.SECONDS);
+        assertThat(received).isTrue();
+        assertThat(receivedMessages).hasSize(1);
+
+        JsonNode node = objectMapper.readTree(receivedMessages.get(0));
+        assertThat(node.get("messageType").asText()).isEqualTo("DISCUSSION_MESSAGE_EVENT");
     }
 }
