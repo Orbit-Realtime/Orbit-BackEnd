@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 public class DiscussionMessageEvent {
 
     private final MessageType messageType;
+    private final Long chatId;
     private final Long discussionMessageId;
     private final Long discussionId;
     private final Long senderId;

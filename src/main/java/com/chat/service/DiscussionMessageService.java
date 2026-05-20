@@ -56,6 +56,7 @@ public class DiscussionMessageService {
 
         DiscussionMessageEvent event = DiscussionMessageEvent.builder()
                 .messageType(MessageType.DISCUSSION_MESSAGE_EVENT)
+                .chatId(discussion.getRootMessage().getId())
                 .discussionMessageId(saved.getId())
                 .discussionId(discussionId)
                 .senderId(memberId)
