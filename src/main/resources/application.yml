@@ -56,3 +56,5 @@ spring:
   datasource:
     hikari:
       register-mbeans: true
+  jmx:
+    enabled: true
