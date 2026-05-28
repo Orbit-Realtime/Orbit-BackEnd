@@ -42,3 +42,9 @@ bcrypt:
 
 app:
   allowed-origin: ${ALLOWED_ORIGIN}
+
+management:
+  metrics:
+    binders:
+      processor:
+        enabled: false
