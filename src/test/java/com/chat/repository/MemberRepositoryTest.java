@@ -40,6 +40,16 @@ class MemberRepositoryTest {
     }
 
     @Test
+    @DisplayName("존재하지 않는 username은 existsByUsername이 false를 반환한다.")
+    void 존재하지_않는_username은_existsByUsername이_false를_반환한다() {
+        // when
+        boolean result = memberRepository.existsByUsername("ghost");
+
+        // then
+        assertThat(result).isFalse();
+    }
+
+    @Test
     @DisplayName("사용자 ID 를 이용해 사용자 정보를 조회한다.")
     void findByUsernameTest() {
         // given
@@ -53,6 +63,16 @@ class MemberRepositoryTest {
         assertThat(findMemberOptional).isNotEmpty();
         assertThat(findMemberOptional.get()).isEqualTo(member);
         assertThat(findMemberOptional.get().getId()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 username으로 조회하면 Optional.empty를 반환한다.")
+    void 존재하지_않는_username으로_조회하면_Optional_empty를_반환한다() {
+        // when
+        Optional<Member> result = memberRepository.findByUsername("ghost");
+
+        // then
+        assertThat(result).isEmpty();
     }
 
     @Test
