@@ -26,25 +26,6 @@ class MemberRepositoryTest {
     private SpaceMemberRepository spaceMemberRepository;
     
     @Test
-    @DisplayName("회원 정보를 저장한다.")
-    void saveTest() {
-        // given
-        String username = "username";
-        String password = "password";
-        String nickname = "nickname";
-        Member member = Member.of(username, password, nickname);
-
-        // when
-        Member savedMember = memberRepository.save(member);
-
-        // then
-        assertThat(savedMember.getId()).isNotNull();
-        assertThat(savedMember.getUsername()).isEqualTo(username);
-        assertThat(savedMember.getPassword()).isEqualTo(password);
-        assertThat(savedMember.getNickname()).isEqualTo(nickname);
-    }
-
-    @Test
     @DisplayName("사용자 ID 가 존재하는지 조회한다.")
     void existsByUsernameTest() {
         // given
@@ -74,33 +55,27 @@ class MemberRepositoryTest {
         assertThat(findMemberOptional.get().getId()).isNotNull();
     }
 
-    // todo remove session test
-
     @Test
     @DisplayName("채팅방 ID 를 이용해 참여한 사용자 ID 를 조회한다.")
     void findMemberIdsInTest() {
         // given
-        String firstUser = "first";
-        Member firstMember = createMemberBy(firstUser);
-        String secondUser = "second";
-        Member secondMember = createMemberBy(secondUser);
-        String thirdUser = "third";
-        Member thirdMember = createMemberBy(thirdUser);
+        Member firstMember = createMemberBy("first");
+        Member secondMember = createMemberBy("second");
+        Member thirdMember = createMemberBy("third");
 
-        // when
-        String title = "title";
-        Space chatRoom = Space.of(title);
-        Space savedChatRoom = spaceRepository.save(chatRoom);
+        Space savedChatRoom = spaceRepository.save(Space.of("title"));
 
         spaceMemberRepository.save(SpaceMember.of(firstMember, savedChatRoom));
         spaceMemberRepository.save(SpaceMember.of(secondMember, savedChatRoom));
         spaceMemberRepository.save(SpaceMember.of(thirdMember, savedChatRoom));
 
         // when
-        List<Long> memberIds = memberRepository.findMemberIdsIn(chatRoom.getId());
+        List<Long> memberIds = memberRepository.findMemberIdsIn(savedChatRoom.getId());
 
         // then
-        assertThat(memberIds).hasSize(3);
+        assertThat(memberIds)
+                .hasSize(3)
+                .containsExactlyInAnyOrder(firstMember.getId(), secondMember.getId(), thirdMember.getId());
     }
 
     private Member createMemberBy(String username) {

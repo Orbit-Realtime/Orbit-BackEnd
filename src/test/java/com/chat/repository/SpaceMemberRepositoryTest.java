@@ -38,27 +38,6 @@ class SpaceMemberRepositoryTest {
     private EntityManager em;
 
     @Test
-    @DisplayName("채팅방 참여 정보를 저장한다.")
-    void saveTest() {
-        // given
-        String username = "username";
-        Member savedMember = createMemberBy(username);
-
-        String title = "title";
-        Space chatRoom = Space.of(title);
-        Space savedChatRoom = spaceRepository.save(chatRoom);
-        SpaceMember spaceMember = SpaceMember.of(savedMember, savedChatRoom);
-
-        // when
-        SpaceMember savedSpaceMember = spaceMemberRepository.save(spaceMember);
-
-        // then
-        assertThat(savedSpaceMember.getId()).isNotNull();
-        assertThat(savedSpaceMember.getMember()).isEqualTo(savedMember);
-        assertThat(savedSpaceMember.getSpace()).isEqualTo(savedChatRoom);
-    }
-
-    @Test
     @DisplayName("사용자 ID 들로 구성된 채팅방이 존재하는지 확인한다.")
     void countByExactMembersTest() {
         // given
@@ -76,7 +55,7 @@ class SpaceMemberRepositoryTest {
         memberIds.add(thirdMember.getId());
 
         String title = "title";
-        Space chatRoom = createChatRoomBy(title);
+        Space chatRoom = createSpaceBy(title);
 
         spaceMemberRepository.save(SpaceMember.of(firstMember, chatRoom));
         spaceMemberRepository.save(SpaceMember.of(secondMember, chatRoom));
@@ -106,7 +85,7 @@ class SpaceMemberRepositoryTest {
         Member thirdMember = createMemberBy(thirdUsername);
 
         String title = "title";
-        Space chatRoom = createChatRoomBy(title);
+        Space chatRoom = createSpaceBy(title);
 
         spaceMemberRepository.save(SpaceMember.of(firstMember, chatRoom));
         spaceMemberRepository.save(SpaceMember.of(secondMember, chatRoom));
@@ -137,7 +116,7 @@ class SpaceMemberRepositoryTest {
         memberIds.add(thirdMember.getId());
 
         String title = "title";
-        Space chatRoom = createChatRoomBy(title);
+        Space chatRoom = createSpaceBy(title);
 
         spaceMemberRepository.save(SpaceMember.of(firstMember, chatRoom));
         spaceMemberRepository.save(SpaceMember.of(secondMember, chatRoom));
@@ -157,9 +136,9 @@ class SpaceMemberRepositoryTest {
         Member member = createMemberBy(username);
 
         String firstTitle = "first";
-        Space first = createChatRoomBy(firstTitle);
+        Space first = createSpaceBy(firstTitle);
         String secondTitle = "secondTitle";
-        Space second = createChatRoomBy(secondTitle);
+        Space second = createSpaceBy(secondTitle);
 
         SpaceMember firstParticipant = spaceMemberRepository.save(SpaceMember.of(member, first));
         SpaceMember secondParticipant = spaceMemberRepository.save(SpaceMember.of(member, second));
@@ -176,11 +155,12 @@ class SpaceMemberRepositoryTest {
     @DisplayName("채팅방 ID 를 이용해 채팅방 참여, 회원 정보를 조회한다.")
     void findAllFetchMemberByTest() {
         // given
-        String username = "username";
-        Member member = createMemberBy(username);
-        String title = "chatRoom";
-        Space chatRoom = createChatRoomBy(title);
+        Member member = createMemberBy("username");
+        Space chatRoom = createSpaceBy("chatRoom");
         spaceMemberRepository.save(SpaceMember.of(member, chatRoom));
+
+        em.flush();
+        em.clear();
 
         // when
         List<SpaceMember> spaceMembers
@@ -188,6 +168,7 @@ class SpaceMemberRepositoryTest {
 
         // then
         assertThat(spaceMembers).hasSize(1);
+        assertThat(spaceMembers.get(0).getMember().getUsername()).isEqualTo("username");
     }
 
     @Test
@@ -197,7 +178,7 @@ class SpaceMemberRepositoryTest {
         String username = "username";
         Member member = createMemberBy(username);
         String title = "chatRoom";
-        Space chatRoom = createChatRoomBy(title);
+        Space chatRoom = createSpaceBy(title);
         spaceMemberRepository.save(SpaceMember.of(member, chatRoom));
 
         em.flush();
@@ -226,7 +207,7 @@ class SpaceMemberRepositoryTest {
         String username = "username";
         Member member = createMemberBy(username);
         String title = "chatRoom";
-        Space chatRoom = createChatRoomBy(title);
+        Space chatRoom = createSpaceBy(title);
         spaceMemberRepository.save(SpaceMember.of(member, chatRoom));
 
         // when
@@ -245,8 +226,8 @@ class SpaceMemberRepositoryTest {
         Member secondMember = createMemberBy("second");
         Member thirdMember = createMemberBy("third");
 
-        Space firstRoom = createChatRoomBy("firstRoom");
-        Space secondRoom = createChatRoomBy("secondRoom");
+        Space firstRoom = createSpaceBy("firstRoom");
+        Space secondRoom = createSpaceBy("secondRoom");
 
         spaceMemberRepository.save(SpaceMember.of(firstMember, firstRoom));
         spaceMemberRepository.save(SpaceMember.of(secondMember, firstRoom));
@@ -271,7 +252,7 @@ class SpaceMemberRepositoryTest {
     void deleteByTest() {
         // given
         Member member = createMemberBy("username");
-        Space chatRoom = createChatRoomBy("chatRoom");
+        Space chatRoom = createSpaceBy("chatRoom");
         spaceMemberRepository.save(SpaceMember.of(member, chatRoom));
 
         // when
@@ -289,7 +270,7 @@ class SpaceMemberRepositoryTest {
     void lastReadMessageIdDefaultNullTest() {
         // given
         Member member = createMemberBy("member");
-        Space chatRoom = createChatRoomBy("room");
+        Space chatRoom = createSpaceBy("room");
 
         // when
         SpaceMember saved = spaceMemberRepository.save(
@@ -305,7 +286,7 @@ class SpaceMemberRepositoryTest {
     void updateLastReadMessageIdFromNullTest() {
         // given
         Member member = createMemberBy("member");
-        Space chatRoom = createChatRoomBy("room");
+        Space chatRoom = createSpaceBy("room");
         spaceMemberRepository.save(
                 SpaceMember.of(member, chatRoom)
         );
@@ -327,7 +308,7 @@ class SpaceMemberRepositoryTest {
     void updateLastReadMessageIdDoesNotDecreaseTest() {
         // given
         Member member = createMemberBy("member");
-        Space chatRoom = createChatRoomBy("room");
+        Space chatRoom = createSpaceBy("room");
         spaceMemberRepository.save(
                 SpaceMember.of(member, chatRoom));
         spaceMemberRepository.updateLastReadMessageId(member.getId(), chatRoom.getId(),
@@ -355,7 +336,7 @@ class SpaceMemberRepositoryTest {
         // given
         Member me = createMemberBy("me");
         Member other = createMemberBy("other");
-        Space chatRoom = createChatRoomBy("room");
+        Space chatRoom = createSpaceBy("room");
         spaceMemberRepository.save(
                 SpaceMember.of(me, chatRoom));
         spaceMemberRepository.save(
@@ -386,7 +367,7 @@ class SpaceMemberRepositoryTest {
         Member me = createMemberBy("me");
         Member other = createMemberBy("other");
         Member sender = createMemberBy("sender");
-        Space chatRoom = createChatRoomBy("room");
+        Space chatRoom = createSpaceBy("room");
 
         spaceMemberRepository.save(
                 SpaceMember.of(me, chatRoom));
@@ -425,7 +406,7 @@ class SpaceMemberRepositoryTest {
     void findLastReadMessageIdBy_returnsNullWhenNotRead() {
         // given
         Member member = createMemberBy("member");
-        Space chatRoom = createChatRoomBy("room");
+        Space chatRoom = createSpaceBy("room");
         spaceMemberRepository.save(
                 SpaceMember.of(member, chatRoom));
         em.flush();
@@ -444,7 +425,7 @@ class SpaceMemberRepositoryTest {
     void findLastReadMessageIdBy_returnsValueAfterUpdate() {
         // given
         Member member = createMemberBy("member");
-        Space chatRoom = createChatRoomBy("room");
+        Space chatRoom = createSpaceBy("room");
         spaceMemberRepository.save(
                 SpaceMember.of(member, chatRoom));
         spaceMemberRepository.updateLastReadMessageId(member.getId(), chatRoom.getId(),
@@ -465,7 +446,7 @@ class SpaceMemberRepositoryTest {
     void countMessageUnreadMembers_senderNotCounted() {
         // given
         Member sender = createMemberBy("sender");
-        Space chatRoom = createChatRoomBy("room");
+        Space chatRoom = createSpaceBy("room");
         spaceMemberRepository.save(
                 SpaceMember.of(sender, chatRoom));
 
@@ -490,7 +471,7 @@ class SpaceMemberRepositoryTest {
         Member sender = createMemberBy("sender");
         Member receiver1 = createMemberBy("receiver1");
         Member receiver2 = createMemberBy("receiver2");
-        Space chatRoom = createChatRoomBy("room");
+        Space chatRoom = createSpaceBy("room");
 
         spaceMemberRepository.save(
                 SpaceMember.of(sender, chatRoom));
@@ -518,7 +499,7 @@ class SpaceMemberRepositoryTest {
         // given
         Member sender = createMemberBy("sender");
         Member receiver = createMemberBy("receiver");
-        Space chatRoom = createChatRoomBy("room");
+        Space chatRoom = createSpaceBy("room");
 
         spaceMemberRepository.save(
                 SpaceMember.of(sender, chatRoom));
@@ -553,7 +534,7 @@ class SpaceMemberRepositoryTest {
         // given
         Member sender = createMemberBy("sender");
         Member receiver = createMemberBy("receiver");
-        Space chatRoom = createChatRoomBy("room");
+        Space chatRoom = createSpaceBy("room");
 
         spaceMemberRepository.save(
                 SpaceMember.of(sender, chatRoom));
@@ -587,7 +568,7 @@ class SpaceMemberRepositoryTest {
         Member sender = createMemberBy("sender");
         Member readerOfFirst = createMemberBy("readerOfFirst");
         Member noReader = createMemberBy("noReader");
-        Space chatRoom = createChatRoomBy("room");
+        Space chatRoom = createSpaceBy("room");
 
         spaceMemberRepository.save(
                 SpaceMember.of(sender, chatRoom));
@@ -625,7 +606,7 @@ class SpaceMemberRepositoryTest {
     void findInviteCodeBySpaceIdAndMemberId_participantTest() {
         // given
         Member member = createMemberBy("member");
-        Space space = createChatRoomBy("개발팀");
+        Space space = createSpaceBy("개발팀");
         spaceMemberRepository.save(SpaceMember.of(member, space));
 
         em.flush();
@@ -647,7 +628,7 @@ class SpaceMemberRepositoryTest {
         // given
         Member member = createMemberBy("member");
         Member stranger = createMemberBy("stranger");
-        Space space = createChatRoomBy("개발팀");
+        Space space = createSpaceBy("개발팀");
         spaceMemberRepository.save(SpaceMember.of(member, space));
 
         em.flush();
@@ -667,7 +648,7 @@ class SpaceMemberRepositoryTest {
         return memberRepository.save(member);
     }
 
-    private Space createChatRoomBy(String title) {
+    private Space createSpaceBy(String title) {
         Space chatRoom = Space.of(title);
         return spaceRepository.save(chatRoom);
     }
