@@ -26,11 +26,11 @@ class MemberRepositoryTest {
     private SpaceMemberRepository spaceMemberRepository;
     
     @Test
-    @DisplayName("사용자 ID 가 존재하는지 조회한다.")
-    void existsByUsernameTest() {
+    @DisplayName("등록된 username은 existsByUsername이 true를 반환한다.")
+    void 등록된_username은_existsByUsername이_true를_반환한다() {
         // given
         String existUsername = "existUsername";
-        Member member = createMemberBy(existUsername);
+        createMemberBy(existUsername);
 
         // when
         boolean isExist = memberRepository.existsByUsername(existUsername);
@@ -50,8 +50,8 @@ class MemberRepositoryTest {
     }
 
     @Test
-    @DisplayName("사용자 ID 를 이용해 사용자 정보를 조회한다.")
-    void findByUsernameTest() {
+    @DisplayName("등록된 username으로 조회하면 해당 Member를 반환한다.")
+    void 등록된_username으로_조회하면_해당_Member를_반환한다() {
         // given
         String username = "username";
         Member member = createMemberBy(username);
@@ -76,8 +76,8 @@ class MemberRepositoryTest {
     }
 
     @Test
-    @DisplayName("채팅방 ID 를 이용해 참여한 사용자 ID 를 조회한다.")
-    void findMemberIdsInTest() {
+    @DisplayName("spaceId로 참여한 전체 memberId 목록을 조회한다.")
+    void spaceId로_참여한_전체_memberId_목록을_조회한다() {
         // given
         Member firstMember = createMemberBy("first");
         Member secondMember = createMemberBy("second");
