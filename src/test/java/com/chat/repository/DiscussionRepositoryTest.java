@@ -33,8 +33,8 @@ class DiscussionRepositoryTest {
     @Autowired private EntityManager em;
 
     @Test
-    @DisplayName("rootMessageId로 Discussion을 조회할 수 있다")
-    void findByRootMessageId_roundTrip() {
+    @DisplayName("rootMessageId로 Discussion을 DB에서 조회할 수 있다.")
+    void rootMessageId로_Discussion을_DB에서_조회할_수_있다() {
         // given
         Member member = createMember("user");
         Space space = createSpace("room");
@@ -53,8 +53,8 @@ class DiscussionRepositoryTest {
     }
 
     @Test
-    @DisplayName("하나의 Message에는 Discussion을 하나만 생성할 수 있다")
-    void uniqueRootMessage() {
+    @DisplayName("동일한 Message에 Discussion을 두 번 생성하면 DataIntegrityViolationException이 발생한다.")
+    void 동일한_Message에_Discussion을_두_번_생성하면_DataIntegrityViolationException이_발생한다() {
         // given
         Member member = createMember("user2");
         Space space = createSpace("room2");
