@@ -38,8 +38,8 @@ class SpaceMemberRepositoryTest {
     private EntityManager em;
 
     @Test
-    @DisplayName("사용자 ID 들로 구성된 채팅방이 존재하는지 확인한다.")
-    void countByExactMembersTest() {
+    @DisplayName("멤버 집합이 정확히 일치하는 Space를 조회한다.")
+    void 멤버_집합이_정확히_일치하는_Space를_조회한다() {
         // given
         List<Long> memberIds = new ArrayList<>();
         String firstUsername = "first";
@@ -69,8 +69,8 @@ class SpaceMemberRepositoryTest {
     }
 
     @Test
-    @DisplayName("일부 사용자만 포함된 경우 채팅방이 조회되지 않는다.")
-    void partialMemberChatRoomTest() {
+    @DisplayName("요청한 멤버가 Space 멤버의 일부이면 조회되지 않는다.")
+    void 요청한_멤버가_Space_멤버의_일부이면_조회되지_않는다() {
         // given
         List<Long> memberIds = new ArrayList<>();
         String firstUsername = "first";
@@ -99,8 +99,8 @@ class SpaceMemberRepositoryTest {
     }
 
     @Test
-    @DisplayName("채팅방 사용자보다 많은 ID 가 포함된 경우 채팅방이 조회되지 않는다.")
-    void memberChatRoomTest() {
+    @DisplayName("요청한 멤버가 Space 멤버보다 많으면 조회되지 않는다.")
+    void 요청한_멤버가_Space_멤버보다_많으면_조회되지_않는다() {
         // given
         List<Long> memberIds = new ArrayList<>();
         String firstUsername = "first";
@@ -129,8 +129,8 @@ class SpaceMemberRepositoryTest {
     }
 
     @Test
-    @DisplayName("사용자 ID 로 채팅방 참여 정보를 조회한다.")
-    void findAllByMemberIdTest() {
+    @DisplayName("memberId로 참여 중인 Space 목록을 조회한다.")
+    void memberId로_참여_중인_Space_목록을_조회한다() {
         // given
         String username = "username";
         Member member = createMemberBy(username);
@@ -152,8 +152,8 @@ class SpaceMemberRepositoryTest {
     }
 
     @Test
-    @DisplayName("채팅방 ID 를 이용해 채팅방 참여, 회원 정보를 조회한다.")
-    void findAllFetchMemberByTest() {
+    @DisplayName("spaceId로 참여자와 Member 정보를 fetch join으로 조회한다.")
+    void spaceId로_참여자와_Member_정보를_fetch_join으로_조회한다() {
         // given
         Member member = createMemberBy("username");
         Space chatRoom = createSpaceBy("chatRoom");
@@ -172,8 +172,8 @@ class SpaceMemberRepositoryTest {
     }
 
     @Test
-    @DisplayName("채팅방 참여 조회 시 사용자 정보를 fetch 해 쿼리가 1번만 실행된다.")
-    void shouldFetchMembersWithParticipantsUsingSingleQuery() {
+    @DisplayName("findAllFetchMemberBy는 Member 정보를 단일 쿼리로 조회한다.")
+    void findAllFetchMemberBy는_Member_정보를_단일_쿼리로_조회한다() {
         // given
         String username = "username";
         Member member = createMemberBy(username);
@@ -201,8 +201,8 @@ class SpaceMemberRepositoryTest {
     }
 
     @Test
-    @DisplayName("채팅방 ID 와 사용자 ID 를 이용해 채팅방 참여 데이터를 조회한다.")
-    void findChatRoomByChatRoomIdAndMemberIdTest() {
+    @DisplayName("spaceId와 memberId로 SpaceMember를 조회한다.")
+    void spaceId와_memberId로_SpaceMember를_조회한다() {
         // given
         String username = "username";
         Member member = createMemberBy(username);
@@ -235,8 +235,8 @@ class SpaceMemberRepositoryTest {
     }
 
     @Test
-    @DisplayName("여러 채팅방 ID 로 참여자와 회원 정보를 일괄 조회한다.")
-    void findAllFetchMemberByRoomIdsTest() {
+    @DisplayName("여러 spaceId로 참여자와 Member 정보를 일괄 조회한다.")
+    void 여러_spaceId로_참여자와_Member_정보를_일괄_조회한다() {
         // given
         Member firstMember = createMemberBy("first");
         Member secondMember = createMemberBy("second");
@@ -264,8 +264,8 @@ class SpaceMemberRepositoryTest {
     }
 
     @Test
-    @DisplayName("채팅방 ID 와 사용자 ID 로 채팅방 참여 데이터를 삭제한다.")
-    void deleteByTest() {
+    @DisplayName("spaceId와 memberId로 SpaceMember를 삭제하면 조회 결과에서 제거된다.")
+    void spaceId와_memberId로_SpaceMember를_삭제하면_조회_결과에서_제거된다() {
         // given
         Member member = createMemberBy("username");
         Space chatRoom = createSpaceBy("chatRoom");
@@ -282,8 +282,8 @@ class SpaceMemberRepositoryTest {
     }
 
     @Test
-    @DisplayName("채팅방 참여 생성 시 lastReadMessageId 기본값은 null 이다.")
-    void lastReadMessageIdDefaultNullTest() {
+    @DisplayName("SpaceMember 생성 시 lastReadMessageId 초기값은 null이다.")
+    void SpaceMember_생성_시_lastReadMessageId_초기값은_null이다() {
         // given
         Member member = createMemberBy("member");
         Space chatRoom = createSpaceBy("room");
@@ -298,8 +298,8 @@ class SpaceMemberRepositoryTest {
     }
 
     @Test
-    @DisplayName("lastReadMessageId 가 null 인 경우 특정 chatId 로 갱신된다.")
-    void updateLastReadMessageIdFromNullTest() {
+    @DisplayName("lastReadMessageId가 null일 때 새로운 값으로 갱신된다.")
+    void lastReadMessageId가_null일_때_새로운_값으로_갱신된다() {
         // given
         Member member = createMemberBy("member");
         Space chatRoom = createSpaceBy("room");
@@ -320,8 +320,8 @@ class SpaceMemberRepositoryTest {
     }
 
     @Test
-    @DisplayName("현재 cursor 보다 작은 chatId 로는 갱신되지 않는다.")
-    void updateLastReadMessageIdDoesNotDecreaseTest() {
+    @DisplayName("현재 cursor보다 작은 값으로는 cursor가 갱신되지 않는다.")
+    void 현재_cursor보다_작은_값으로는_cursor가_갱신되지_않는다() {
         // given
         Member member = createMemberBy("member");
         Space chatRoom = createSpaceBy("room");
@@ -372,7 +372,7 @@ class SpaceMemberRepositoryTest {
 
     @Test
     @DisplayName("cursor 이후 메시지만 미읽음으로 집계된다.")
-    void findRoomUnreadMessageCountsByTest() {
+    void cursor_이후_메시지만_미읽음으로_집계된다() {
         // given
         Member me = createMemberBy("me");
         Member other = createMemberBy("other");
@@ -453,7 +453,7 @@ class SpaceMemberRepositoryTest {
 
     @Test
     @DisplayName("방 내 여러 멤버의 cursor 기반 미읽음 수를 일괄 조회한다.")
-    void findMemberUnreadMessageCountsByTest() {
+    void 방_내_여러_멤버의_cursor_기반_미읽음_수를_일괄_조회한다() {
         // given
         Member me = createMemberBy("me");
         Member other = createMemberBy("other");
@@ -518,8 +518,8 @@ class SpaceMemberRepositoryTest {
     }
 
     @Test
-    @DisplayName("lastReadMessageId가 null이면 findLastReadMessageIdBy는 null을 반환한다.")
-    void findLastReadMessageIdBy_returnsNullWhenNotRead() {
+    @DisplayName("한 번도 읽지 않은 경우 lastReadMessageId는 null이다.")
+    void 한_번도_읽지_않은_경우_lastReadMessageId는_null이다() {
         // given
         Member member = createMemberBy("member");
         Space chatRoom = createSpaceBy("room");
@@ -537,8 +537,8 @@ class SpaceMemberRepositoryTest {
     }
 
     @Test
-    @DisplayName("lastReadMessageId 갱신 후 findLastReadMessageIdBy는 갱신된 값을 반환한다.")
-    void findLastReadMessageIdBy_returnsValueAfterUpdate() {
+    @DisplayName("cursor 갱신 후 lastReadMessageId가 갱신된 값을 반환한다.")
+    void cursor_갱신_후_lastReadMessageId가_갱신된_값을_반환한다() {
         // given
         Member member = createMemberBy("member");
         Space chatRoom = createSpaceBy("room");
@@ -559,7 +559,7 @@ class SpaceMemberRepositoryTest {
 
     @Test
     @DisplayName("메시지를 보낸 발신자는 unreadMemberCount 집계에서 제외된다.")
-    void countMessageUnreadMembers_senderNotCounted() {
+    void 메시지를_보낸_발신자는_unreadMemberCount_집계에서_제외된다() {
         // given
         Member sender = createMemberBy("sender");
         Space chatRoom = createSpaceBy("room");
@@ -582,7 +582,7 @@ class SpaceMemberRepositoryTest {
 
     @Test
     @DisplayName("cursor가 null인 수신자는 unreadMemberCount 집계에 포함된다.")
-    void countMessageUnreadMembers_receiverNotRead() {
+    void cursor가_null인_수신자는_unreadMemberCount_집계에_포함된다() {
         // given
         Member sender = createMemberBy("sender");
         Member receiver1 = createMemberBy("receiver1");
@@ -611,7 +611,7 @@ class SpaceMemberRepositoryTest {
 
     @Test
     @DisplayName("수신자 cursor가 갱신되면 해당 메시지의 unreadMemberCount가 감소한다.")
-    void countMessageUnreadMembers_afterReceiverReads() {
+    void 수신자_cursor가_갱신되면_해당_메시지의_unreadMemberCount가_감소한다() {
         // given
         Member sender = createMemberBy("sender");
         Member receiver = createMemberBy("receiver");
@@ -646,7 +646,7 @@ class SpaceMemberRepositoryTest {
 
     @Test
     @DisplayName("여러 메시지의 unreadMemberCount를 일괄 조회한다.")
-    void countMessageUnreadMembers_bulkPerMessage() {
+    void 여러_메시지의_unreadMemberCount를_일괄_조회한다() {
         // given
         Member sender = createMemberBy("sender");
         Member receiver = createMemberBy("receiver");
@@ -678,8 +678,8 @@ class SpaceMemberRepositoryTest {
     }
 
     @Test
-    @DisplayName("멤버마다 cursor 위치가 다를 때 각 메시지별 unreadMemberCount를 정확히 반환한다.")
-    void countMessageUnreadMembers_differentCursorPositions() {
+    @DisplayName("멤버마다 cursor 위치가 다를 때 메시지별 unreadMemberCount가 정확히 집계된다.")
+    void 멤버마다_cursor_위치가_다를_때_메시지별_unreadMemberCount가_정확히_집계된다() {
         // given
         Member sender = createMemberBy("sender");
         Member readerOfFirst = createMemberBy("readerOfFirst");
@@ -719,7 +719,7 @@ class SpaceMemberRepositoryTest {
 
     @Test
     @DisplayName("Space 참여자는 inviteCode를 조회할 수 있다.")
-    void findInviteCodeBySpaceIdAndMemberId_participantTest() {
+    void Space_참여자는_inviteCode를_조회할_수_있다() {
         // given
         Member member = createMemberBy("member");
         Space space = createSpaceBy("개발팀");
@@ -739,8 +739,8 @@ class SpaceMemberRepositoryTest {
     }
 
     @Test
-    @DisplayName("Space 미참여자는 findInviteCodeBySpaceIdAndMemberId 호출 시 Optional.empty를 반환한다.")
-    void findInviteCodeBySpaceIdAndMemberId_nonParticipantTest() {
+    @DisplayName("Space 미참여자는 inviteCode 조회 시 Optional.empty를 반환한다.")
+    void Space_미참여자는_inviteCode_조회_시_Optional_empty를_반환한다() {
         // given
         Member member = createMemberBy("member");
         Member stranger = createMemberBy("stranger");
