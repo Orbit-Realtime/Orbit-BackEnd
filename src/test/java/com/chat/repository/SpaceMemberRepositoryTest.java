@@ -401,6 +401,57 @@ class SpaceMemberRepositoryTest {
     }
 
     @Test
+    @DisplayName("cursor가 null이면 방의 전체 메시지가 미읽음으로 집계된다.")
+    void cursor가_null이면_방의_전체_메시지가_미읽음으로_집계된다() {
+        // given
+        Member me = createMemberBy("me");
+        Member sender = createMemberBy("sender");
+        Space chatRoom = createSpaceBy("room");
+        spaceMemberRepository.save(SpaceMember.of(me, chatRoom));
+        spaceMemberRepository.save(SpaceMember.of(sender, chatRoom));
+
+        messageRepository.save(Message.of("msg1", sender, chatRoom));
+        messageRepository.save(Message.of("msg2", sender, chatRoom));
+        // me의 cursor = null — updateLastReadMessageId 호출 없음
+
+        em.flush();
+        em.clear();
+
+        // when
+        List<RoomUnreadMessageCount> result = spaceMemberRepository
+                .findRoomUnreadMessageCountsBy(List.of(chatRoom.getId()), me.getId());
+
+        // then
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getUnreadMessageCount()).isEqualTo(2L);
+    }
+
+    @Test
+    @DisplayName("cursor가 최신 메시지와 같으면 방이 미읽음 집계 결과에서 제외된다.")
+    void cursor가_최신_메시지와_같으면_방이_미읽음_집계_결과에서_제외된다() {
+        // given
+        Member me = createMemberBy("me");
+        Member sender = createMemberBy("sender");
+        Space chatRoom = createSpaceBy("room");
+        spaceMemberRepository.save(SpaceMember.of(me, chatRoom));
+        spaceMemberRepository.save(SpaceMember.of(sender, chatRoom));
+
+        messageRepository.save(Message.of("msg1", sender, chatRoom));
+        Message latest = messageRepository.save(Message.of("msg2", sender, chatRoom));
+
+        spaceMemberRepository.updateLastReadMessageId(me.getId(), chatRoom.getId(), latest.getId());
+        em.flush();
+        em.clear();
+
+        // when
+        List<RoomUnreadMessageCount> result = spaceMemberRepository
+                .findRoomUnreadMessageCountsBy(List.of(chatRoom.getId()), me.getId());
+
+        // then: cursor = latest → c.id > cursor 만족하는 메시지 없음 → INNER JOIN 0행 → 방 자체가 결과에서 제외
+        assertThat(result).isEmpty();
+    }
+
+    @Test
     @DisplayName("방 내 여러 멤버의 cursor 기반 미읽음 수를 일괄 조회한다.")
     void findMemberUnreadMessageCountsByTest() {
         // given
@@ -439,6 +490,31 @@ class SpaceMemberRepositoryTest {
 
         assertThat(countMap.get(me.getId())).isEqualTo(2L);
         assertThat(countMap.get(other.getId())).isEqualTo(1L);
+    }
+
+    @Test
+    @DisplayName("cursor가 최신 메시지와 같으면 해당 멤버는 미읽음 집계 결과에 포함되지 않는다.")
+    void cursor가_최신_메시지와_같으면_해당_멤버는_미읽음_집계_결과에_포함되지_않는다() {
+        // given
+        Member readerAll = createMemberBy("readerAll");
+        Member sender = createMemberBy("sender");
+        Space chatRoom = createSpaceBy("room");
+        spaceMemberRepository.save(SpaceMember.of(readerAll, chatRoom));
+        spaceMemberRepository.save(SpaceMember.of(sender, chatRoom));
+
+        messageRepository.save(Message.of("msg1", sender, chatRoom));
+        Message latest = messageRepository.save(Message.of("msg2", sender, chatRoom));
+
+        spaceMemberRepository.updateLastReadMessageId(readerAll.getId(), chatRoom.getId(), latest.getId());
+        em.flush();
+        em.clear();
+
+        // when
+        List<MemberUnreadCount> result = spaceMemberRepository
+                .findMemberUnreadMessageCountsBy(chatRoom.getId(), List.of(readerAll.getId()));
+
+        // then: cursor = latest → c.id > cursor 만족하는 메시지 없음 → 해당 멤버는 결과 row 자체가 없음
+        assertThat(result).isEmpty();
     }
 
     @Test
