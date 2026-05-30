@@ -28,8 +28,8 @@ class MessageRepositoryTest {
     private MemberRepository memberRepository;
 
     @Test
-    @DisplayName("채팅방 ID 를 이용해 마지막 채팅 정보를 조회한다.")
-    void findLastMessageByTest() {
+    @DisplayName("spaceId로 마지막 메시지를 내림차순으로 조회한다.")
+    void spaceId로_마지막_메시지를_내림차순으로_조회한다() {
         // given
         String firstUser = "first";
         Member firstMember = createMember(firstUser);
@@ -58,8 +58,8 @@ class MessageRepositoryTest {
     }
 
     @Test
-    @DisplayName("여러 채팅방의 마지막 메시지를 일괄 조회한다.")
-    void findLastMessagesByMultipleRoomsTest() {
+    @DisplayName("여러 spaceId로 각 방의 마지막 메시지를 일괄 조회한다.")
+    void 여러_spaceId로_각_방의_마지막_메시지를_일괄_조회한다() {
         // given
         Member member = createMember("user");
 
@@ -83,8 +83,8 @@ class MessageRepositoryTest {
     }
 
     @Test
-    @DisplayName("메시지가 없는 채팅방은 마지막 메시지 일괄 조회 결과에 포함되지 않는다.")
-    void findLastMessagesBy_emptyRoomNotIncludedTest() {
+    @DisplayName("메시지가 없는 방은 일괄 마지막 메시지 조회 결과에 포함되지 않는다.")
+    void 메시지가_없는_방은_일괄_마지막_메시지_조회_결과에_포함되지_않는다() {
         // given
         Member member = createMember("user");
 
@@ -103,8 +103,8 @@ class MessageRepositoryTest {
     }
 
     @Test
-    @DisplayName("채팅방 ID로 최신 메시지를 id 내림차순으로 조회한다.")
-    void findLatestMessagesTest() {
+    @DisplayName("최신 메시지를 id 내림차순으로 Pageable 크기만큼 조회한다.")
+    void 최신_메시지를_id_내림차순으로_Pageable_크기만큼_조회한다() {
         // given
         Member member = createMember("user");
         Space chatRoom = createSpaceBy("room");
@@ -125,8 +125,8 @@ class MessageRepositoryTest {
     }
 
     @Test
-    @DisplayName("최신 메시지 조회 시 다른 채팅방의 메시지는 포함되지 않는다.")
-    void findLatestMessages_doesNotIncludeOtherRoomsTest() {
+    @DisplayName("최신 메시지 조회 시 다른 방의 메시지는 포함되지 않는다.")
+    void 최신_메시지_조회_시_다른_방의_메시지는_포함되지_않는다() {
         // given
         Member member = createMember("user");
         Space targetRoom = createSpaceBy("target");
@@ -146,8 +146,8 @@ class MessageRepositoryTest {
     }
 
     @Test
-    @DisplayName("메시지가 없는 채팅방의 최신 메시지 조회는 빈 리스트를 반환한다.")
-    void findLatestMessages_emptyRoom_returnsEmptyListTest() {
+    @DisplayName("메시지가 없는 방의 최신 메시지 조회는 빈 리스트를 반환한다.")
+    void 메시지가_없는_방의_최신_메시지_조회는_빈_리스트를_반환한다() {
         // given
         Space emptyRoom = createSpaceBy("empty");
         Pageable limit10 = PageRequest.of(0, 10);
@@ -160,8 +160,8 @@ class MessageRepositoryTest {
     }
 
     @Test
-    @DisplayName("커서 id보다 작은 메시지를 id 내림차순으로 조회한다.")
-    void findMessagesBeforeIdTest() {
+    @DisplayName("cursor 이전 메시지를 id 내림차순으로 조회한다.")
+    void cursor_이전_메시지를_id_내림차순으로_조회한다() {
         // given
         Member member = createMember("user");
         Space chatRoom = createSpaceBy("room");
@@ -182,8 +182,8 @@ class MessageRepositoryTest {
     }
 
     @Test
-    @DisplayName("커서 id보다 오래된 메시지가 없으면 빈 리스트를 반환한다.")
-    void findMessagesBeforeId_noPreviousMessages_returnsEmptyTest() {
+    @DisplayName("cursor 이전에 메시지가 없으면 빈 리스트를 반환한다.")
+    void cursor_이전에_메시지가_없으면_빈_리스트를_반환한다() {
         // given
         Member member = createMember("user");
         Space chatRoom = createSpaceBy("room");
@@ -200,8 +200,8 @@ class MessageRepositoryTest {
     }
 
     @Test
-    @DisplayName("커서 기반 조회는 Pageable size 만큼만 반환한다.")
-    void findMessagesBeforeId_respectsPageableLimitTest() {
+    @DisplayName("cursor 기반 조회는 Pageable size만큼만 반환한다.")
+    void cursor_기반_조회는_Pageable_size만큼만_반환한다() {
         // given
         Member member = createMember("user");
         Space chatRoom = createSpaceBy("room");
@@ -224,8 +224,8 @@ class MessageRepositoryTest {
     }
 
     @Test
-    @DisplayName("커서 기반 조회 시 다른 채팅방의 메시지는 포함되지 않는다.")
-    void findMessagesBeforeId_doesNotIncludeOtherRoomsTest() {
+    @DisplayName("cursor 기반 조회 시 다른 방의 메시지는 포함되지 않는다.")
+    void cursor_기반_조회_시_다른_방의_메시지는_포함되지_않는다() {
         // given
         Member member = createMember("user");
         Space targetRoom = createSpaceBy("target");
@@ -247,8 +247,8 @@ class MessageRepositoryTest {
     }
 
     @Test
-    @DisplayName("메시지가 있는 채팅방의 최신 chatId를 반환한다.")
-    void findLastMessageIdBy_returnsLatestChatIdTest() {
+    @DisplayName("메시지가 있는 방의 최신 messageId를 반환한다.")
+    void 메시지가_있는_방의_최신_messageId를_반환한다() {
         // given
         Member member = createMember("user");
         Space chatRoom = createSpaceBy("room");
@@ -265,8 +265,8 @@ class MessageRepositoryTest {
     }
 
     @Test
-    @DisplayName("메시지가 없는 채팅방은 Optional.empty를 반환한다.")
-    void findLastMessageIdBy_emptyRoom_returnsEmptyTest() {
+    @DisplayName("메시지가 없는 방은 최신 messageId 조회 시 Optional.empty를 반환한다.")
+    void 메시지가_없는_방은_최신_messageId_조회_시_Optional_empty를_반환한다() {
         // given
         Space emptyRoom = createSpaceBy("empty");
 
@@ -278,8 +278,8 @@ class MessageRepositoryTest {
     }
 
     @Test
-    @DisplayName("다른 채팅방의 메시지는 findLastMessageIdBy 결과에 포함되지 않는다.")
-    void findLastMessageIdBy_doesNotIncludeOtherRoomsTest() {
+    @DisplayName("최신 messageId 조회 시 다른 방의 메시지는 포함되지 않는다.")
+    void 최신_messageId_조회_시_다른_방의_메시지는_포함되지_않는다() {
         // given
         Member member = createMember("user");
         Space targetRoom = createSpaceBy("target");
