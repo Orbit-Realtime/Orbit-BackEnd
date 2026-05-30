@@ -219,6 +219,22 @@ class SpaceMemberRepositoryTest {
     }
 
     @Test
+    @DisplayName("미참여자는 SpaceMember 조회 결과가 null이다.")
+    void 미참여자는_SpaceMember_조회_결과가_null이다() {
+        // given
+        Member memberA = createMemberBy("memberA");
+        Member memberB = createMemberBy("memberB");
+        Space space = createSpaceBy("room");
+        spaceMemberRepository.save(SpaceMember.of(memberA, space));
+
+        // when
+        SpaceMember result = spaceMemberRepository.findChatRoomBy(space.getId(), memberB.getId());
+
+        // then
+        assertThat(result).isNull();
+    }
+
+    @Test
     @DisplayName("여러 채팅방 ID 로 참여자와 회원 정보를 일괄 조회한다.")
     void findAllFetchMemberByRoomIdsTest() {
         // given
@@ -328,6 +344,30 @@ class SpaceMemberRepositoryTest {
         SpaceMember found =
                 spaceMemberRepository.findChatRoomBy(chatRoom.getId(), member.getId());
         assertThat(found.getLastReadMessageId()).isEqualTo(200L);
+    }
+
+    @Test
+    @DisplayName("현재 cursor와 동일한 값으로는 cursor가 갱신되지 않는다.")
+    void 현재_cursor와_동일한_값으로는_cursor가_갱신되지_않는다() {
+        // given
+        Member member = createMemberBy("member");
+        Space chatRoom = createSpaceBy("room");
+        spaceMemberRepository.save(SpaceMember.of(member, chatRoom));
+        spaceMemberRepository.updateLastReadMessageId(member.getId(), chatRoom.getId(), 100L);
+        em.flush();
+        em.clear();
+
+        // when
+        int updated = spaceMemberRepository.updateLastReadMessageId(
+                member.getId(), chatRoom.getId(), 100L);
+        em.flush();
+        em.clear();
+
+        // then
+        assertThat(updated).isEqualTo(0);
+        Long currentCursor = spaceMemberRepository.findLastReadMessageIdBy(
+                member.getId(), chatRoom.getId());
+        assertThat(currentCursor).isEqualTo(100L);
     }
 
     @Test
