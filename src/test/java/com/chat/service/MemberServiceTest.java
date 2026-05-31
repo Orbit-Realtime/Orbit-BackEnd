@@ -5,6 +5,7 @@ import com.chat.api.request.member.LoginRequest;
 import com.chat.api.response.member.GetMembersResponse;
 import com.chat.entity.Member;
 import com.chat.exception.CustomException;
+import com.chat.exception.ErrorCode;
 import com.chat.repository.MemberRepository;
 import com.chat.service.dtos.LoginResponse;
 import com.chat.socket.manager.SpaceManager;
@@ -136,6 +137,26 @@ class MemberServiceTest {
         // then
         Member findMember = memberRepository.findById(memberId).get();
         assertThat(findMember.getPassword()).isNotEqualTo(oldPassword);
+    }
+
+    @Test
+    @DisplayName("이미 존재하는 username으로 회원가입하면 DUPLICATED_USERNAME 예외가 발생한다.")
+    void join_duplicatedUsername_throwsCustomException() {
+        // given
+        String duplicatedUsername = "username";
+        joinSimpleMember(duplicatedUsername);
+
+        JoinRequest duplicateRequest = JoinRequest.builder()
+                .username(duplicatedUsername)
+                .password("anotherPassword")
+                .nickname("anotherNickname")
+                .build();
+
+        // when & then
+        assertThatThrownBy(() -> memberService.join(duplicateRequest))
+                .isInstanceOf(CustomException.class)
+                .extracting(ex -> ((CustomException) ex).getErrorCode())
+                .isEqualTo(ErrorCode.DUPLICATED_USERNAME);
     }
 
     @Test
