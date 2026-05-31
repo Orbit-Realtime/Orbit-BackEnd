@@ -1,4 +1,4 @@
-package com.chat.service;
+package com.chat.socket;
 
 import com.chat.entity.Discussion;
 import com.chat.entity.Member;
@@ -8,6 +8,7 @@ import com.chat.fixture.MemberFixture;
 import com.chat.fixture.SocketFixture;
 import com.chat.fixture.TestDataFixture;
 import com.chat.repository.DiscussionRepository;
+import com.chat.service.DiscussionMessageService;
 import com.chat.socket.manager.SpaceManager;
 import com.chat.socket.manager.WebsocketSessionManager;
 import com.fasterxml.jackson.databind.JsonNode;

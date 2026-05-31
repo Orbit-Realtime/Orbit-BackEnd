@@ -1,4 +1,4 @@
-package com.chat.service;
+package com.chat.socket;
 
 import com.chat.entity.Message;
 import com.chat.entity.Space;
@@ -7,6 +7,8 @@ import com.chat.fixture.MemberFixture;
 import com.chat.fixture.SocketFixture;
 import com.chat.fixture.TestDataFixture;
 import com.chat.repository.MessageRepository;
+import com.chat.service.MessageService;
+import com.chat.service.SpaceService;
 import com.chat.service.dtos.chat.SendChat;
 import com.chat.socket.manager.SpaceManager;
 import com.chat.socket.manager.WebsocketSessionManager;
