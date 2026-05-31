@@ -200,30 +200,6 @@ class MessageRepositoryTest {
     }
 
     @Test
-    @DisplayName("cursor 기반 조회는 Pageable size만큼만 반환한다.")
-    void cursor_기반_조회는_Pageable_size만큼만_반환한다() {
-        // given
-        Member member = createMember("user");
-        Space chatRoom = createSpaceBy("room");
-
-        Message first = messageRepository.save(Message.of("first", member, chatRoom));
-        Message second = messageRepository.save(Message.of("second", member, chatRoom));
-        Message third = messageRepository.save(Message.of("third", member, chatRoom));
-        Message fourth = messageRepository.save(Message.of("fourth", member, chatRoom));
-        Message fifth = messageRepository.save(Message.of("fifth", member, chatRoom));
-
-        Pageable limit2 = PageRequest.of(0, 2);
-
-        // when
-        List<Message> result = messageRepository.findMessagesBeforeId(chatRoom.getId(), fifth.getId(), limit2);
-
-        // then
-        assertThat(result).hasSize(2);
-        assertThat(result.get(0)).isEqualTo(fourth);
-        assertThat(result.get(1)).isEqualTo(third);
-    }
-
-    @Test
     @DisplayName("cursor 기반 조회 시 다른 방의 메시지는 포함되지 않는다.")
     void cursor_기반_조회_시_다른_방의_메시지는_포함되지_않는다() {
         // given

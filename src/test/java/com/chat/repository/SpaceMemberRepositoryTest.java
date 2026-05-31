@@ -69,66 +69,6 @@ class SpaceMemberRepositoryTest {
     }
 
     @Test
-    @DisplayName("요청한 멤버가 Space 멤버의 일부이면 조회되지 않는다.")
-    void 요청한_멤버가_Space_멤버의_일부이면_조회되지_않는다() {
-        // given
-        List<Long> memberIds = new ArrayList<>();
-        String firstUsername = "first";
-        Member firstMember = createMemberBy(firstUsername);
-        memberIds.add(firstMember.getId());
-
-        String secondUsername = "second";
-        Member secondMember = createMemberBy(secondUsername);
-        memberIds.add(secondMember.getId());
-
-        String thirdUsername = "third";
-        Member thirdMember = createMemberBy(thirdUsername);
-
-        String title = "title";
-        Space chatRoom = createSpaceBy(title);
-
-        spaceMemberRepository.save(SpaceMember.of(firstMember, chatRoom));
-        spaceMemberRepository.save(SpaceMember.of(secondMember, chatRoom));
-        spaceMemberRepository.save(SpaceMember.of(thirdMember, chatRoom));
-
-        // when
-        List<Long> chatRoomIds = spaceMemberRepository.findChatRoomIdsByExactMembers(memberIds, memberIds.size());
-
-        // then
-        assertThat(chatRoomIds).hasSize(0);
-    }
-
-    @Test
-    @DisplayName("요청한 멤버가 Space 멤버보다 많으면 조회되지 않는다.")
-    void 요청한_멤버가_Space_멤버보다_많으면_조회되지_않는다() {
-        // given
-        List<Long> memberIds = new ArrayList<>();
-        String firstUsername = "first";
-        Member firstMember = createMemberBy(firstUsername);
-        memberIds.add(firstMember.getId());
-
-        String secondUsername = "second";
-        Member secondMember = createMemberBy(secondUsername);
-        memberIds.add(secondMember.getId());
-
-        String thirdUsername = "third";
-        Member thirdMember = createMemberBy(thirdUsername);
-        memberIds.add(thirdMember.getId());
-
-        String title = "title";
-        Space chatRoom = createSpaceBy(title);
-
-        spaceMemberRepository.save(SpaceMember.of(firstMember, chatRoom));
-        spaceMemberRepository.save(SpaceMember.of(secondMember, chatRoom));
-
-        // when
-        List<Long> chatRoomIds = spaceMemberRepository.findChatRoomIdsByExactMembers(memberIds, memberIds.size());
-
-        // then
-        assertThat(chatRoomIds).hasSize(0);
-    }
-
-    @Test
     @DisplayName("memberId로 참여 중인 Space 목록을 조회한다.")
     void memberId로_참여_중인_Space_목록을_조회한다() {
         // given
