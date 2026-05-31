@@ -9,6 +9,7 @@ import com.chat.fixture.TestDataFixture;
 import com.chat.repository.MessageRepository;
 import com.chat.service.MessageService;
 import com.chat.service.SpaceService;
+import com.chat.service.dtos.chat.RoomActiveRequest;
 import com.chat.service.dtos.chat.SendChat;
 import com.chat.socket.manager.SpaceManager;
 import com.chat.socket.manager.WebsocketSessionManager;
@@ -23,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.util.ArrayList;
@@ -496,5 +498,61 @@ public class SpaceServiceSocketTest {
         JsonNode node = objectMapper.readTree(firstMessages.get(0));
         assertThat(node.get("messageType").asText()).isEqualTo("UPDATE_CHAT_ROOM");
         assertThat(node.get("chatRoomId").asLong()).isEqualTo(spaceId);
+    }
+
+    @Test
+    @DisplayName("ROOM_ACTIVE 전송 시 unread가 있으면 READ_EVENT와 UPDATE_CHAT_ROOM이 소켓으로 전달된다.")
+    void ROOM_ACTIVE_전송_시_unread가_있으면_READ_EVENT와_UPDATE_CHAT_ROOM이_소켓으로_전달된다()
+            throws Exception {
+        // given
+        String firstUsername = "first";
+        Member first = memberFixture.saveEncryptPasswordBy(firstUsername);
+        Long firstId = first.getId();
+
+        String secondUsername = "second";
+        Member second = memberFixture.saveEncryptPasswordBy(secondUsername);
+        Long secondId = second.getId();
+
+        Space space = fixture.savedChatRoomBy("title", List.of(first, second));
+        Long spaceId = space.getId();
+
+        // second 연결 전 first가 메시지 전송 → second cursor=null (unread=1)
+        messageService.saveMessage(firstId, spaceId, "hello");
+
+        // second WS 연결 (latch=2: READ_EVENT + UPDATE_CHAT_ROOM 각 1건)
+        String secondJSessionId = memberFixture.loginRequestBy(secondUsername, port);
+        CountDownLatch latch = new CountDownLatch(2);
+        List<String> secondMessages = new ArrayList<>();
+        WebSocketSession secondClientSession =
+                socketFixture.connectSocket(secondJSessionId, secondId, port, secondMessages, latch);
+        Thread.sleep(300);
+
+        // 기존 패턴과 동일: addSessionToSpace 직접 호출로 Space 세션 등록
+        WebSocketSession secondServerSession =
+                websocketSessionManager.getSessionBy(secondId).iterator().next();
+        spaceManager.addSessionToSpace(secondServerSession, spaceId);
+        Thread.sleep(500);
+
+        // when: second 클라이언트가 ROOM_ACTIVE WS 메시지 전송
+        RoomActiveRequest roomActive = RoomActiveRequest.builder()
+                .messageType(MessageType.ROOM_ACTIVE)
+                .chatRoomId(spaceId)
+                .build();
+        secondClientSession.sendMessage(new TextMessage(objectMapper.writeValueAsString(roomActive)));
+
+        // then: 3초 안에 READ_EVENT + UPDATE_CHAT_ROOM 수신
+        boolean received = latch.await(3, TimeUnit.SECONDS);
+        assertThat(received).isTrue();
+
+        List<String> messageTypes = secondMessages.stream()
+                .map(msg -> {
+                    try {
+                        return objectMapper.readTree(msg).get("messageType").asText();
+                    } catch (Exception e) {
+                        return "";
+                    }
+                })
+                .collect(Collectors.toList());
+        assertThat(messageTypes).containsExactlyInAnyOrder("READ_EVENT", "UPDATE_CHAT_ROOM");
     }
 }
