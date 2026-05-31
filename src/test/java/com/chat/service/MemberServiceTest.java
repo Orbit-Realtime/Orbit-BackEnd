@@ -42,8 +42,8 @@ class MemberServiceTest {
     }
 
     @Test
-    @DisplayName("사용자가 회원가입한다.")
-    void joinTest() {
+    @DisplayName("회원가입 시 비밀번호가 BCrypt로 인코딩되어 저장된다.")
+    void 회원가입_시_비밀번호가_BCrypt로_인코딩되어_저장된다() {
         // given
         JoinRequest request = JoinRequest.builder()
                 .username("username")
@@ -62,8 +62,8 @@ class MemberServiceTest {
     }
 
     @Test
-    @DisplayName("사용자가 로그인한다.")
-    void loginTest() {
+    @DisplayName("올바른 자격증명으로 로그인하면 memberId와 닉네임을 반환한다.")
+    void 올바른_자격증명으로_로그인하면_memberId와_닉네임을_반환한다() {
         // given
         Long joinMemberId = joinMember("username", "password", "nickname");
 
@@ -92,8 +92,8 @@ class MemberServiceTest {
     }
 
     @Test
-    @DisplayName("가입된 모든 사용자를 조회한다.")
-    void findMembersTest() {
+    @DisplayName("가입된 전체 회원 목록을 조회한다.")
+    void 가입된_전체_회원_목록을_조회한다() {
         // given
         String firstUsername = "first";
         Long firstMemberId = joinSimpleMember(firstUsername);
@@ -110,8 +110,8 @@ class MemberServiceTest {
     }
 
     @Test
-    @DisplayName("닉네임을 변경한다.")
-    void changeNicknameTest() {
+    @DisplayName("유효한 닉네임으로 변경하면 닉네임이 갱신된다.")
+    void 유효한_닉네임으로_변경하면_닉네임이_갱신된다() {
         // given
         Long memberId = joinSimpleMember("user");
         String newNickname = "newNickname";
@@ -125,8 +125,8 @@ class MemberServiceTest {
     }
 
     @Test
-    @DisplayName("비밀번호를 변경한다.")
-    void changePasswordTest() {
+    @DisplayName("현재 비밀번호가 맞으면 새 비밀번호로 변경된다.")
+    void 현재_비밀번호가_맞으면_새_비밀번호로_변경된다() {
         // given
         Long memberId = joinMember("user", "oldPassword", "nickname");
         String oldPassword = memberRepository.findById(memberId).get().getPassword();
@@ -141,7 +141,7 @@ class MemberServiceTest {
 
     @Test
     @DisplayName("이미 존재하는 username으로 회원가입하면 DUPLICATED_USERNAME 예외가 발생한다.")
-    void join_duplicatedUsername_throwsCustomException() {
+    void 이미_존재하는_username으로_회원가입하면_DUPLICATED_USERNAME_예외가_발생한다() {
         // given
         String duplicatedUsername = "username";
         joinSimpleMember(duplicatedUsername);
@@ -161,7 +161,7 @@ class MemberServiceTest {
 
     @Test
     @DisplayName("현재 비밀번호가 틀리면 비밀번호 변경 시 예외가 발생한다.")
-    void changePassword_wrongCurrentPassword_throwsException() {
+    void 현재_비밀번호가_틀리면_비밀번호_변경_시_예외가_발생한다() {
         // given
         Long memberId = joinMember("user", "correctPassword", "nickname");
 
