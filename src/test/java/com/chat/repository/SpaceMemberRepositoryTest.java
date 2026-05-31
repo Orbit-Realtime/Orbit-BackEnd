@@ -15,7 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -36,37 +35,6 @@ class SpaceMemberRepositoryTest {
     private MessageRepository messageRepository;
     @Autowired
     private EntityManager em;
-
-    @Test
-    @DisplayName("멤버 집합이 정확히 일치하는 Space를 조회한다.")
-    void 멤버_집합이_정확히_일치하는_Space를_조회한다() {
-        // given
-        List<Long> memberIds = new ArrayList<>();
-        String firstUsername = "first";
-        Member firstMember = createMemberBy(firstUsername);
-        memberIds.add(firstMember.getId());
-
-        String secondUsername = "second";
-        Member secondMember = createMemberBy(secondUsername);
-        memberIds.add(secondMember.getId());
-
-        String thirdUsername = "third";
-        Member thirdMember = createMemberBy(thirdUsername);
-        memberIds.add(thirdMember.getId());
-
-        String title = "title";
-        Space chatRoom = createSpaceBy(title);
-
-        spaceMemberRepository.save(SpaceMember.of(firstMember, chatRoom));
-        spaceMemberRepository.save(SpaceMember.of(secondMember, chatRoom));
-        spaceMemberRepository.save(SpaceMember.of(thirdMember, chatRoom));
-
-        // when
-        List<Long> chatRoomIds = spaceMemberRepository.findChatRoomIdsByExactMembers(memberIds, memberIds.size());
-
-        // then
-        assertThat(chatRoomIds).hasSize(1);
-    }
 
     @Test
     @DisplayName("memberId로 참여 중인 Space 목록을 조회한다.")

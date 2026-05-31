@@ -1,6 +1,5 @@
 package com.chat.repository;
 
-import com.chat.entity.Member;
 import com.chat.entity.SpaceMember;
 import com.chat.repository.dtos.MessageUnreadMemberCount;
 import com.chat.repository.dtos.MemberUnreadCount;
@@ -14,18 +13,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface SpaceMemberRepository extends JpaRepository<SpaceMember, Long> {
-
-    @Query("SELECT crp.space.id" +
-            " FROM SpaceMember crp" +
-            " WHERE crp.member.id IN :memberIds" +
-            " GROUP BY crp.space.id" +
-            " HAVING COUNT(DISTINCT crp.member.id) = :size" +
-            " AND COUNT(DISTINCT crp.member.id) =" +
-            " (SELECT COUNT(DISTINCT sub.member.id)" +
-            " FROM SpaceMember sub" +
-            " WHERE sub.space.id = crp.space.id)")
-    List<Long> findChatRoomIdsByExactMembers(@Param("memberIds") List<Long> memberIds,
-                                             @Param("size") long size);
 
     @Query(value = "SELECT crp" +
             " FROM SpaceMember crp" +
