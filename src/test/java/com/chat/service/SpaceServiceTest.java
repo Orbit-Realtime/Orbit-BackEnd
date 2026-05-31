@@ -499,6 +499,46 @@ class SpaceServiceTest {
         assertThat(spaces.get(0).getUnreadMessageCount()).isEqualTo(0L);
     }
 
+    @Test
+    @DisplayName("여러 Space의 unreadCount는 서로 독립적으로 계산된다.")
+    void 여러_Space의_unreadCount는_서로_독립적으로_계산된다() {
+        // given
+        Member member = fixture.savedMemberBy("member");
+        Member sender = fixture.savedMemberBy("sender");
+
+        Space spaceA = fixture.savedChatRoomBy("spaceA", List.of(member, sender));
+        Space spaceB = fixture.savedChatRoomBy("spaceB", List.of(member, sender));
+
+        // Space A: unread 2개 — member cursor=null (한 번도 읽지 않음)
+        fixture.savedSimpleChat("A-msg1", sender, spaceA);
+        fixture.savedSimpleChat("A-msg2", sender, spaceA);
+
+        // Space B: 모두 읽음 — member cursor를 최신 메시지로 갱신
+        Message lastOfB = fixture.savedSimpleChat("B-msg1", sender, spaceB);
+        spaceMemberRepository.updateLastReadMessageId(
+                member.getId(), spaceB.getId(), lastOfB.getId());
+
+        em.flush();
+        em.clear();
+
+        // when
+        List<SpaceSummaryResponse> spaces = spaceService.findSpaces(member.getId());
+
+        // then: 순서에 의존하지 않고 spaceId 기준으로 결과를 찾아 검증
+        SpaceSummaryResponse resultA = spaces.stream()
+                .filter(s -> s.getChatRoomId().equals(spaceA.getId()))
+                .findFirst()
+                .orElseThrow();
+        SpaceSummaryResponse resultB = spaces.stream()
+                .filter(s -> s.getChatRoomId().equals(spaceB.getId()))
+                .findFirst()
+                .orElseThrow();
+
+        assertThat(spaces).hasSize(2);
+        assertThat(resultA.getUnreadMessageCount()).isEqualTo(2L);
+        assertThat(resultB.getUnreadMessageCount()).isEqualTo(0L);
+    }
+
     private List<Member> createParticipantsBy(Member first, Member second) {
         List<Member> participants = new ArrayList<>();
         participants.add(first);
