@@ -5,8 +5,6 @@ import com.chat.utils.consts.SessionConst;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.util.Map;
@@ -16,19 +14,17 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
-@SpringBootTest
 class SpaceManagerTest {
 
-    @Autowired
     private SpaceManager spaceManager;
 
     @BeforeEach
     void init() {
-        spaceManager.clearAll();
+        spaceManager = new SpaceManager();
     }
 
     @Test
-    @DisplayName("채팅방 ID가 유효하지 않으면 예외 발생")
+    @DisplayName("Space ID가 유효하지 않으면 예외 발생")
     void invalidChatRoomIdTest() {
         WebSocketSession session = mock(WebSocketSession.class);
         given(session.getAttributes()).willReturn(Map.of(SessionConst.SESSION_ID, 1L));
@@ -38,7 +34,7 @@ class SpaceManagerTest {
     }
 
     @Test
-    @DisplayName("채팅방이 존재하지 않으면 빈 세트를 반환한다")
+    @DisplayName("Space가 존재하지 않으면 빈 세트를 반환한다")
     void nonExistentRoomTest() {
         Long chatRoomId = 999L;
 
@@ -47,7 +43,7 @@ class SpaceManagerTest {
     }
 
     @Test
-    @DisplayName("채팅방이 없으면 false 를 반환하고 예외가 발생하지 않는다.")
+    @DisplayName("Space가 없으면 false 를 반환하고 예외가 발생하지 않는다.")
     void removeSpaceSession_noRoomTest() {
         Long chatRoomId = 999L;
         Long memberId = 42L;
@@ -61,7 +57,7 @@ class SpaceManagerTest {
     }
 
     @Test
-    @DisplayName("채팅방 자체가 없으면 isInSpace이 false를 반환한다.")
+    @DisplayName("Space 자체가 없으면 isInSpace이 false를 반환한다.")
     void isInSpace_returnsFalseForNonExistentRoom() {
         // given
         Long chatRoomId = 999L;
