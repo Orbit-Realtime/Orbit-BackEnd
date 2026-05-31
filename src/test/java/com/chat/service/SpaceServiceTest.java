@@ -4,6 +4,8 @@ import com.chat.api.response.chatroom.SpaceInviteCodeResponse;
 import com.chat.api.response.chatroom.SpaceInviteInfoResponse;
 import com.chat.api.response.chatroom.SpaceMemberResponse;
 import com.chat.api.response.chatroom.SpaceSummaryResponse;
+import com.chat.entity.Discussion;
+import com.chat.entity.DiscussionMessage;
 import com.chat.entity.Message;
 import com.chat.entity.Space;
 import com.chat.entity.SpaceMember;
@@ -11,9 +13,12 @@ import com.chat.entity.Member;
 import com.chat.exception.CustomException;
 import com.chat.exception.ErrorCode;
 import com.chat.fixture.TestDataFixture;
+import com.chat.repository.DiscussionMessageRepository;
+import com.chat.repository.DiscussionRepository;
 import com.chat.repository.SpaceMemberRepository;
 import com.chat.repository.SpaceRepository;
 import com.chat.service.dtos.SaveSpaceDTO;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +41,12 @@ class SpaceServiceTest {
     private SpaceRepository spaceRepository;
     @Autowired
     private SpaceMemberRepository spaceMemberRepository;
+    @Autowired
+    private DiscussionRepository discussionRepository;
+    @Autowired
+    private DiscussionMessageRepository discussionMessageRepository;
+    @Autowired
+    private EntityManager em;
     @Autowired
     private TestDataFixture fixture;
 
@@ -456,6 +467,36 @@ class SpaceServiceTest {
                 .isInstanceOf(CustomException.class)
                 .extracting(ex -> ((CustomException) ex).getErrorCode())
                 .isEqualTo(ErrorCode.SPACE_NOT_FOUND);
+    }
+
+    @Test
+    @DisplayName("DiscussionMessage 작성 후 Space unreadCount는 증가하지 않는다.")
+    void DiscussionMessage_작성_후_Space_unreadCount는_증가하지_않는다() {
+        // given
+        Member memberA = fixture.savedMemberBy("memberA");
+        Member memberB = fixture.savedMemberBy("memberB");
+        Space space = fixture.savedChatRoomBy("space", List.of(memberA, memberB));
+
+        Message rootMessage = fixture.savedSimpleChat("root message", memberA, space);
+
+        // memberB가 rootMessage까지 읽은 상태
+        spaceMemberRepository.updateLastReadMessageId(
+                memberB.getId(), space.getId(), rootMessage.getId());
+
+        Discussion discussion = discussionRepository.save(Discussion.of(rootMessage));
+        discussionMessageRepository.save(DiscussionMessage.of("reply1", discussion, memberA));
+        discussionMessageRepository.save(DiscussionMessage.of("reply2", discussion, memberA));
+        discussionMessageRepository.save(DiscussionMessage.of("reply3", discussion, memberA));
+
+        em.flush();
+        em.clear();
+
+        // when
+        List<SpaceSummaryResponse> spaces = spaceService.findSpaces(memberB.getId());
+
+        // then
+        assertThat(spaces).hasSize(1);
+        assertThat(spaces.get(0).getUnreadMessageCount()).isEqualTo(0L);
     }
 
     private List<Member> createParticipantsBy(Member first, Member second) {
