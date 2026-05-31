@@ -32,19 +32,19 @@ class BcryptPasswordEncoderTest {
 
     @Test
     @DisplayName("올바른 비밀번호는 true를 반환한다.")
-    void match_correctPassword_returnsTrue() {
+    void 올바른_비밀번호는_true를_반환한다() {
         assertThat(encoder.match(RAW_PASSWORD, encodedPassword)).isTrue();
     }
 
     @Test
     @DisplayName("틀린 비밀번호는 false를 반환한다.")
-    void match_wrongPassword_returnsFalse() {
+    void 틀린_비밀번호는_false를_반환한다() {
         assertThat(encoder.match("wrongPassword", encodedPassword)).isFalse();
     }
 
     @Test
     @DisplayName("Semaphore 슬롯이 모두 사용 중이면 SERVER_BUSY 예외가 발생한다.")
-    void match_semaphoreFull_throwsServerBusy() throws InterruptedException {
+    void Semaphore가_고갈되면_SERVER_BUSY_예외가_발생한다() throws InterruptedException {
         // given: permits=1인 Semaphore를 수동으로 소진
         Semaphore semaphore = (Semaphore) ReflectionTestUtils.getField(encoder, "semaphore");
         semaphore.acquire();
@@ -61,8 +61,8 @@ class BcryptPasswordEncoderTest {
     }
 
     @Test
-    @DisplayName("match() 완료 후 Semaphore가 반납되어 다음 호출이 성공한다.")
-    void match_afterCompletion_semaphoreReleased() {
+    @DisplayName("match 완료 후 Semaphore 슬롯이 반납된다.")
+    void match_완료_후_Semaphore_슬롯이_반납된다() {
         // given: permits=1이므로 첫 번째 호출이 슬롯을 점유했다가 반납
         encoder.match(RAW_PASSWORD, encodedPassword);
 
