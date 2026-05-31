@@ -36,7 +36,7 @@ import static org.assertj.core.api.Assertions.*;
 
 @AutoConfigureMockMvc
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class ChatRoomServiceSocketTest {
+public class SpaceServiceSocketTest {
 
     @Autowired
     private SpaceService spaceService;
@@ -69,8 +69,8 @@ public class ChatRoomServiceSocketTest {
     }
 
     @Test
-    @DisplayName("채팅 데이터가 없는 채팅방 소켓에 연결하면 세션이 방에 등록된다.")
-    void connectChatRoomSocketWithoutChatDataTest() throws ExecutionException, InterruptedException {
+    @DisplayName("메시지가 없는 Space 소켓에 연결하면 세션이 방에 등록된다.")
+    void 메시지가_없는_Space_소켓에_연결하면_세션이_방에_등록된다() throws ExecutionException, InterruptedException {
         // given
         String username = "username";
         Member member = memberFixture.saveEncryptPasswordBy(username);
@@ -78,8 +78,8 @@ public class ChatRoomServiceSocketTest {
 
         List<Member> participants = new ArrayList<>();
         participants.add(member);
-        Space chatRoom = fixture.savedChatRoomBy("title", participants);
-        Long chatRoomId = chatRoom.getId();
+        Space space = fixture.savedChatRoomBy("title", participants);
+        Long spaceId = space.getId();
 
         String JSESSIONID = memberFixture.loginRequestBy(username, port);
 
@@ -90,17 +90,17 @@ public class ChatRoomServiceSocketTest {
 
         // when
         WebSocketSession serverSession = websocketSessionManager.getSessionBy(memberId).iterator().next();
-        spaceManager.addSessionToSpace(serverSession, chatRoomId);
+        spaceManager.addSessionToSpace(serverSession, spaceId);
 
         // then: 세션만 등록됨, 클라이언트로 전송되는 메시지 없음
         Thread.sleep(500);
         assertThat(receivedMessages).isEmpty();
-        assertThat(spaceManager.getWebSocketSessionBy(chatRoomId)).contains(serverSession);
+        assertThat(spaceManager.getWebSocketSessionBy(spaceId)).contains(serverSession);
     }
 
     @Test
-    @DisplayName("채팅 데이터가 존재하는 채팅방 소켓에 연결하면 세션이 방에 등록된다.")
-    void connectChatRoomSocketWithChatDataTest() throws ExecutionException, InterruptedException {
+    @DisplayName("메시지가 있는 Space 소켓에 연결하면 세션이 방에 등록된다.")
+    void 메시지가_있는_Space_소켓에_연결하면_세션이_방에_등록된다() throws ExecutionException, InterruptedException {
         // given
         String firstUsername = "first";
         Member first = memberFixture.saveEncryptPasswordBy(firstUsername);
@@ -114,11 +114,11 @@ public class ChatRoomServiceSocketTest {
         participants.add(first);
         participants.add(second);
 
-        Space chatRoom = fixture.savedChatRoomBy("title", participants);
-        Long chatRoomId = chatRoom.getId();
+        Space space = fixture.savedChatRoomBy("title", participants);
+        Long spaceId = space.getId();
 
-        messageService.saveMessage(firstId, chatRoomId, "firstChat");
-        messageService.saveMessage(secondId, chatRoomId, "secondChat");
+        messageService.saveMessage(firstId, spaceId, "firstChat");
+        messageService.saveMessage(secondId, spaceId, "secondChat");
 
         String JSESSIONID = memberFixture.loginRequestBy("first", port);
 
@@ -129,12 +129,12 @@ public class ChatRoomServiceSocketTest {
 
         // when
         WebSocketSession serverSession = websocketSessionManager.getSessionBy(firstId).iterator().next();
-        spaceManager.addSessionToSpace(serverSession, chatRoomId);
+        spaceManager.addSessionToSpace(serverSession, spaceId);
 
         // then: CHAT_ENTER 미전송, 세션 등록 여부만 확인
         Thread.sleep(500);
         assertThat(receivedMessages).isEmpty();
-        Set<WebSocketSession> webSocketSessions = spaceManager.getWebSocketSessionBy(chatRoomId);
+        Set<WebSocketSession> webSocketSessions = spaceManager.getWebSocketSessionBy(spaceId);
         assertThat(webSocketSessions).hasSize(1);
         Collection<WebSocketSession> memberSessions = websocketSessionManager.getSessionBy(firstId);
         assertThat(memberSessions).isNotEmpty();
@@ -142,8 +142,8 @@ public class ChatRoomServiceSocketTest {
     }
 
     @Test
-    @DisplayName("채팅방에 참여한 회원들에게 메시지를 전송한다.")
-    void broadCastMessageTest() throws ExecutionException, InterruptedException, JsonProcessingException {
+    @DisplayName("Space에 연결된 모든 참여자에게 메시지가 전송된다.")
+    void Space에_연결된_모든_참여자에게_메시지가_전송된다() throws ExecutionException, InterruptedException, JsonProcessingException {
         // given
         String firstUsername = "first";
         Member first = memberFixture.saveEncryptPasswordBy(firstUsername);
@@ -157,8 +157,8 @@ public class ChatRoomServiceSocketTest {
         participants.add(first);
         participants.add(second);
 
-        Space chatRoom = fixture.savedChatRoomBy("title", participants);
-        Long chatRoomId = chatRoom.getId();
+        Space space = fixture.savedChatRoomBy("title", participants);
+        Long spaceId = space.getId();
 
         CountDownLatch latch = new CountDownLatch(2);
 
@@ -172,15 +172,15 @@ public class ChatRoomServiceSocketTest {
         Thread.sleep(300);
 
         WebSocketSession firstServerSession = websocketSessionManager.getSessionBy(firstId).iterator().next();
-        spaceManager.addSessionToSpace(firstServerSession, chatRoomId);
+        spaceManager.addSessionToSpace(firstServerSession, spaceId);
         WebSocketSession secondServerSession = websocketSessionManager.getSessionBy(secondId).iterator().next();
-        spaceManager.addSessionToSpace(secondServerSession, chatRoomId);
+        spaceManager.addSessionToSpace(secondServerSession, spaceId);
 
         String message = "message";
         SendChat sendChat = SendChat
                 .builder()
                 .messageType(MessageType.CHAT_MESSAGE)
-                .chatRoomId(chatRoomId)
+                .chatRoomId(spaceId)
                 .message(message)
                 .build();
 
@@ -202,14 +202,14 @@ public class ChatRoomServiceSocketTest {
         assertThat(node.get("senderNickname").asText()).isEqualTo(first.getNickname());
         assertThat(node.get("chatId").isNull()).isFalse();
         assertThat(node.has("unreadMemberCount")).isTrue();
-        Long chatId = node.get("chatId").asLong();
-        Message findChat = messageRepository.findById(chatId).get();
-        assertThat(findChat.getContent()).isEqualTo(message);
+        Long messageId = node.get("chatId").asLong();
+        Message foundMessage = messageRepository.findById(messageId).get();
+        assertThat(foundMessage.getContent()).isEqualTo(message);
     }
 
     @Test
-    @DisplayName("broadCastMessage는 senderId와 senderNickname을 서버 세션과 DB 기준으로 설정한다.")
-    void broadCastMessage_senderIsFromSessionAndDB() throws ExecutionException, InterruptedException, JsonProcessingException {
+    @DisplayName("메시지 전송 시 senderId와 senderNickname은 세션과 DB 기준으로 설정된다.")
+    void 메시지_전송_시_senderId와_senderNickname은_세션과_DB_기준으로_설정된다() throws ExecutionException, InterruptedException, JsonProcessingException {
         // given
         String firstUsername = "first";
         Member first = memberFixture.saveEncryptPasswordBy(firstUsername);
@@ -222,8 +222,8 @@ public class ChatRoomServiceSocketTest {
         List<Member> participants = new ArrayList<>();
         participants.add(first);
         participants.add(second);
-        Space chatRoom = fixture.savedChatRoomBy("title", participants);
-        Long chatRoomId = chatRoom.getId();
+        Space space = fixture.savedChatRoomBy("title", participants);
+        Long spaceId = space.getId();
 
         CountDownLatch latch = new CountDownLatch(2);
         List<String> firstMessages = new ArrayList<>();
@@ -236,15 +236,15 @@ public class ChatRoomServiceSocketTest {
         Thread.sleep(300);
 
         WebSocketSession firstServerSession = websocketSessionManager.getSessionBy(firstId).iterator().next();
-        spaceManager.addSessionToSpace(firstServerSession, chatRoomId);
+        spaceManager.addSessionToSpace(firstServerSession, spaceId);
         WebSocketSession secondServerSession = websocketSessionManager.getSessionBy(secondId).iterator().next();
-        spaceManager.addSessionToSpace(secondServerSession, chatRoomId);
+        spaceManager.addSessionToSpace(secondServerSession, spaceId);
 
         // SendChat에 chatRoomId, message만 포함 — senderId, senderNickname 없음
         SendChat sendChat = SendChat
                 .builder()
                 .messageType(MessageType.CHAT_MESSAGE)
-                .chatRoomId(chatRoomId)
+                .chatRoomId(spaceId)
                 .message("hello")
                 .build();
 
@@ -264,14 +264,14 @@ public class ChatRoomServiceSocketTest {
         // senderNickname은 DB에서 조회된 값
         assertThat(node.get("senderNickname").asText()).isEqualTo(first.getNickname());
         // Chat이 DB에 firstId 기준으로 저장되었는지 확인
-        Long savedChatId = node.get("chatId").asLong();
-        Message savedChat = messageRepository.findById(savedChatId).orElseThrow();
-        assertThat(savedChat.getMember().getId()).isEqualTo(firstId);
+        Long savedMessageId = node.get("chatId").asLong();
+        Message savedMessage = messageRepository.findById(savedMessageId).orElseThrow();
+        assertThat(savedMessage.getMember().getId()).isEqualTo(firstId);
     }
 
     @Test
-    @DisplayName("findChatHistory는 방에 접속 중인 세션에 UPDATE_CHAT_ROOM과 READ_EVENT를 전송한다.")
-    void broadcastAfterReadTest() throws ExecutionException, InterruptedException, JsonProcessingException {
+    @DisplayName("채팅 내역 조회 시 방에 접속 중인 세션에 UPDATE_CHAT_ROOM과 READ_EVENT가 전송된다.")
+    void 채팅_내역_조회_시_방에_접속_중인_세션에_UPDATE_CHAT_ROOM과_READ_EVENT가_전송된다() throws ExecutionException, InterruptedException, JsonProcessingException {
         // given
         String firstUsername = "first";
         Member first = memberFixture.saveEncryptPasswordBy(firstUsername);
@@ -285,11 +285,11 @@ public class ChatRoomServiceSocketTest {
         participants.add(first);
         participants.add(second);
 
-        Space chatRoom = fixture.savedChatRoomBy("title", participants);
-        Long chatRoomId = chatRoom.getId();
+        Space space = fixture.savedChatRoomBy("title", participants);
+        Long spaceId = space.getId();
 
         // second가 아직 방에 없는 상태에서 first가 메시지 전송 → second.isRead=false
-        messageService.saveMessage(firstId, chatRoomId, "hello");
+        messageService.saveMessage(firstId, spaceId, "hello");
 
         // second가 WS 연결 및 방 입장
         String secondJSessionId = memberFixture.loginRequestBy(secondUsername, port);
@@ -299,11 +299,11 @@ public class ChatRoomServiceSocketTest {
         Thread.sleep(300);
 
         WebSocketSession secondServerSession = websocketSessionManager.getSessionBy(secondId).iterator().next();
-        spaceManager.addSessionToSpace(secondServerSession, chatRoomId);
+        spaceManager.addSessionToSpace(secondServerSession, spaceId);
         Thread.sleep(500);
 
         // when: second가 채팅 내역 조회 → updatedCount > 0 이면 READ_EVENT + UPDATE_CHAT_ROOM 발행
-        messageService.findMessageHistory(chatRoomId, secondId, null);
+        messageService.findMessageHistory(spaceId, secondId, null);
 
         // then: UPDATE_CHAT_ROOM + READ_EVENT 수신 대기
         boolean received = latch.await(3, TimeUnit.SECONDS);
@@ -328,14 +328,14 @@ public class ChatRoomServiceSocketTest {
                 .orElseThrow();
         JsonNode readEventNode = objectMapper.readTree(readEventPayload);
         assertThat(readEventNode.get("memberId").asLong()).isEqualTo(secondId);
-        assertThat(readEventNode.get("chatRoomId").asLong()).isEqualTo(chatRoomId);
+        assertThat(readEventNode.get("chatRoomId").asLong()).isEqualTo(spaceId);
         assertThat(readEventNode.get("previousLastReadChatId").isNull()).isTrue();
         assertThat(readEventNode.get("currentLastReadChatId").isNull()).isFalse();
     }
 
     @Test
-    @DisplayName("findChatHistory는 READ_EVENT에 이전 방문 시 마지막으로 읽은 chatId를 포함한다.")
-    void findChatHistory_READ_EVENT에_lastReadMessageId를_포함한다() throws ExecutionException, InterruptedException, JsonProcessingException {
+    @DisplayName("채팅 내역 조회 시 READ_EVENT에 이전 방문의 lastReadMessageId가 포함된다.")
+    void 채팅_내역_조회_시_READ_EVENT에_이전_방문의_lastReadMessageId가_포함된다() throws ExecutionException, InterruptedException, JsonProcessingException {
         // given
         String firstUsername = "first";
         Member first = memberFixture.saveEncryptPasswordBy(firstUsername);
@@ -345,17 +345,17 @@ public class ChatRoomServiceSocketTest {
         Member second = memberFixture.saveEncryptPasswordBy(secondUsername);
         Long secondId = second.getId();
 
-        Space chatRoom = fixture.savedChatRoomBy("title", List.of(first, second));
-        Long chatRoomId = chatRoom.getId();
+        Space space = fixture.savedChatRoomBy("title", List.of(first, second));
+        Long spaceId = space.getId();
 
         // first가 첫 번째 메시지 전송 → second.isRead=false
-        Long firstChatId = messageService.saveMessage(firstId, chatRoomId, "first message");
+        Long firstMessageId = messageService.saveMessage(firstId, spaceId, "first message");
 
         // second 첫 번째 입장: firstChat 읽음 처리 (lastReadChatId=null, updatedCount=1)
-        messageService.findMessageHistory(chatRoomId, secondId, null);
+        messageService.findMessageHistory(spaceId, secondId, null);
 
         // first가 두 번째 메시지 전송 → second.isRead=false
-        messageService.saveMessage(firstId, chatRoomId, "second message");
+        messageService.saveMessage(firstId, spaceId, "second message");
 
         // second WS 연결 및 방 입장
         String secondJSessionId = memberFixture.loginRequestBy(secondUsername, port);
@@ -365,11 +365,11 @@ public class ChatRoomServiceSocketTest {
         Thread.sleep(300);
 
         WebSocketSession secondServerSession = websocketSessionManager.getSessionBy(secondId).iterator().next();
-        spaceManager.addSessionToSpace(secondServerSession, chatRoomId);
+        spaceManager.addSessionToSpace(secondServerSession, spaceId);
         Thread.sleep(500);
 
-        // when: second 두 번째 채팅 내역 조회 → lastReadChatId = firstChatId (이전 방문 시 firstChat까지 읽었음)
-        messageService.findMessageHistory(chatRoomId, secondId, null);
+        // when: second 두 번째 채팅 내역 조회 → lastReadChatId = firstMessageId (이전 방문 시 firstChat까지 읽었음)
+        messageService.findMessageHistory(spaceId, secondId, null);
 
         // then: READ_EVENT에 lastReadChatId 포함 검증
         boolean received = latch.await(3, TimeUnit.SECONDS);
@@ -381,12 +381,12 @@ public class ChatRoomServiceSocketTest {
                 .orElseThrow();
         JsonNode readEventNode = objectMapper.readTree(readEventPayload);
         assertThat(readEventNode.get("memberId").asLong()).isEqualTo(secondId);
-        assertThat(readEventNode.get("previousLastReadChatId").asLong()).isEqualTo(firstChatId);
+        assertThat(readEventNode.get("previousLastReadChatId").asLong()).isEqualTo(firstMessageId);
     }
 
     @Test
-    @DisplayName("leaveChatRoom은 남은 참여자에게 UPDATE_CHAT_ROOM을 전송한다.")
-    void leaveChatRoom_UPDATE_CHAT_ROOM_전송() throws ExecutionException, InterruptedException, JsonProcessingException {
+    @DisplayName("Space 나가기 시 남은 참여자에게 UPDATE_CHAT_ROOM이 전송된다.")
+    void Space_나가기_시_남은_참여자에게_UPDATE_CHAT_ROOM이_전송된다() throws ExecutionException, InterruptedException, JsonProcessingException {
         // given
         String firstUsername = "first";
         Member first = memberFixture.saveEncryptPasswordBy(firstUsername);
@@ -396,8 +396,8 @@ public class ChatRoomServiceSocketTest {
         Member second = memberFixture.saveEncryptPasswordBy(secondUsername);
         Long secondId = second.getId();
 
-        Space chatRoom = fixture.savedChatRoomBy("title", List.of(first, second));
-        Long chatRoomId = chatRoom.getId();
+        Space space = fixture.savedChatRoomBy("title", List.of(first, second));
+        Long spaceId = space.getId();
 
         // first가 WS 연결 및 방 입장
         String firstJSessionId = memberFixture.loginRequestBy(firstUsername, port);
@@ -407,10 +407,10 @@ public class ChatRoomServiceSocketTest {
         Thread.sleep(300);
 
         WebSocketSession firstServerSession = websocketSessionManager.getSessionBy(firstId).iterator().next();
-        spaceManager.addSessionToSpace(firstServerSession, chatRoomId);
+        spaceManager.addSessionToSpace(firstServerSession, spaceId);
 
         // when: second가 채팅방 퇴장
-        spaceService.leaveSpace(secondId, chatRoomId);
+        spaceService.leaveSpace(secondId, spaceId);
 
         // then: 남은 first에게 UPDATE_CHAT_ROOM 전송
         boolean received = latch.await(3, TimeUnit.SECONDS);
@@ -419,19 +419,19 @@ public class ChatRoomServiceSocketTest {
 
         JsonNode node = objectMapper.readTree(firstMessages.get(0));
         assertThat(node.get("messageType").asText()).isEqualTo("UPDATE_CHAT_ROOM");
-        assertThat(node.get("chatRoomId").asLong()).isEqualTo(chatRoomId);
+        assertThat(node.get("chatRoomId").asLong()).isEqualTo(spaceId);
     }
 
     @Test
-    @DisplayName("renameChatRoom은 참여자에게 변경된 제목의 UPDATE_CHAT_ROOM을 전송한다.")
-    void renameChatRoom_UPDATE_CHAT_ROOM_전송() throws ExecutionException, InterruptedException, JsonProcessingException {
+    @DisplayName("Space 이름 변경 시 참여자에게 변경된 제목의 UPDATE_CHAT_ROOM이 전송된다.")
+    void Space_이름_변경_시_참여자에게_변경된_제목의_UPDATE_CHAT_ROOM이_전송된다() throws ExecutionException, InterruptedException, JsonProcessingException {
         // given
         String firstUsername = "first";
         Member first = memberFixture.saveEncryptPasswordBy(firstUsername);
         Long firstId = first.getId();
 
-        Space chatRoom = fixture.savedChatRoomBy("oldTitle", List.of(first));
-        Long chatRoomId = chatRoom.getId();
+        Space space = fixture.savedChatRoomBy("oldTitle", List.of(first));
+        Long spaceId = space.getId();
 
         // first가 WS 연결 및 방 입장
         String firstJSessionId = memberFixture.loginRequestBy(firstUsername, port);
@@ -441,10 +441,10 @@ public class ChatRoomServiceSocketTest {
         Thread.sleep(300);
 
         WebSocketSession firstServerSession = websocketSessionManager.getSessionBy(firstId).iterator().next();
-        spaceManager.addSessionToSpace(firstServerSession, chatRoomId);
+        spaceManager.addSessionToSpace(firstServerSession, spaceId);
 
         // when: 채팅방 이름 변경
-        spaceService.renameSpace(firstId, chatRoomId, "newTitle");
+        spaceService.renameSpace(firstId, spaceId, "newTitle");
 
         // then: UPDATE_CHAT_ROOM에 변경된 title 포함
         boolean received = latch.await(3, TimeUnit.SECONDS);
@@ -453,13 +453,13 @@ public class ChatRoomServiceSocketTest {
 
         JsonNode node = objectMapper.readTree(firstMessages.get(0));
         assertThat(node.get("messageType").asText()).isEqualTo("UPDATE_CHAT_ROOM");
-        assertThat(node.get("chatRoomId").asLong()).isEqualTo(chatRoomId);
+        assertThat(node.get("chatRoomId").asLong()).isEqualTo(spaceId);
         assertThat(node.get("title").asText()).isEqualTo("newTitle");
     }
 
     @Test
-    @DisplayName("inviteMembers는 기존 참여자에게 UPDATE_CHAT_ROOM을 전송한다.")
-    void inviteMembers_UPDATE_CHAT_ROOM_전송() throws ExecutionException, InterruptedException, JsonProcessingException {
+    @DisplayName("멤버 초대 시 기존 참여자에게 UPDATE_CHAT_ROOM이 전송된다.")
+    void 멤버_초대_시_기존_참여자에게_UPDATE_CHAT_ROOM이_전송된다() throws ExecutionException, InterruptedException, JsonProcessingException {
         // given
         String firstUsername = "first";
         Member first = memberFixture.saveEncryptPasswordBy(firstUsername);
@@ -470,8 +470,8 @@ public class ChatRoomServiceSocketTest {
         Long secondId = second.getId();
 
         // 초기 방: first만 참여
-        Space chatRoom = fixture.savedChatRoomBy("title", List.of(first));
-        Long chatRoomId = chatRoom.getId();
+        Space space = fixture.savedChatRoomBy("title", List.of(first));
+        Long spaceId = space.getId();
 
         // first가 WS 연결 및 방 입장
         String firstJSessionId = memberFixture.loginRequestBy(firstUsername, port);
@@ -481,10 +481,10 @@ public class ChatRoomServiceSocketTest {
         Thread.sleep(300);
 
         WebSocketSession firstServerSession = websocketSessionManager.getSessionBy(firstId).iterator().next();
-        spaceManager.addSessionToSpace(firstServerSession, chatRoomId);
+        spaceManager.addSessionToSpace(firstServerSession, spaceId);
 
         // when: second를 초대
-        spaceService.inviteMembers(firstId, chatRoomId, Set.of(secondId));
+        spaceService.inviteMembers(firstId, spaceId, Set.of(secondId));
 
         // then: 기존 참여자 first에게 UPDATE_CHAT_ROOM 전송
         boolean received = latch.await(3, TimeUnit.SECONDS);
@@ -493,6 +493,6 @@ public class ChatRoomServiceSocketTest {
 
         JsonNode node = objectMapper.readTree(firstMessages.get(0));
         assertThat(node.get("messageType").asText()).isEqualTo("UPDATE_CHAT_ROOM");
-        assertThat(node.get("chatRoomId").asLong()).isEqualTo(chatRoomId);
+        assertThat(node.get("chatRoomId").asLong()).isEqualTo(spaceId);
     }
 }
