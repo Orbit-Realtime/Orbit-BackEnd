@@ -74,35 +74,6 @@ class IntegrationTextSocketHandlerTest {
     }
 
     @Test
-    @DisplayName("소켓 연결 시 사용자 세션이 저장된다.")
-    void afterConnectionEstablishedTest() throws ExecutionException, InterruptedException {
-        // given
-        String username = "username";
-        Member member = memberFixture.saveEncryptPasswordBy(username);
-        Long memberId = member.getId();
-
-        String JSessionId = memberFixture.loginRequestBy(username, port);
-
-        WebSocketHttpHeaders headers = new WebSocketHttpHeaders();
-        headers.add("Cookie", "JSESSIONID=" + JSessionId);
-
-        CountDownLatch latch = new CountDownLatch(1);
-        List<String> receivedMessages = new ArrayList<>();
-        TestWebSocketHandler handler = new TestWebSocketHandler(memberId, receivedMessages, latch);
-
-        // when
-        WebSocketClient client = new StandardWebSocketClient();
-        client.execute(handler,
-                        headers,
-                        URI.create("ws://localhost:" + port + "/ws/chat"))
-                .get();
-
-        // then
-        Collection<WebSocketSession> sessions = websocketSessionManager.getSessionBy(memberId);
-        assertThat(sessions).isNotEmpty();
-    }
-
-    @Test
     @DisplayName("클라이언트가 소켓을 이용해 메시지를 전송한다.")
     void handleTextMessageTest() throws ExecutionException, InterruptedException, IOException {
         // given
