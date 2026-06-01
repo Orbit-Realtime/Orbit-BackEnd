@@ -42,6 +42,10 @@ import static org.assertj.core.api.Assertions.*;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class SpaceServiceSocketTest {
 
+    private static final long CONNECT_SETTLE_MS = 300;
+    private static final long ROOM_JOIN_SETTLE_MS = 500;
+    private static final long BROADCAST_TIMEOUT_SECONDS = 3;
+
     @Autowired
     private SpaceService spaceService;
     @Autowired
@@ -90,14 +94,14 @@ public class SpaceServiceSocketTest {
         CountDownLatch latch = new CountDownLatch(1);
         List<String> receivedMessages = new ArrayList<>();
         socketFixture.connectSocket(JSESSIONID, memberId, port, receivedMessages, latch);
-        Thread.sleep(300);
+        Thread.sleep(CONNECT_SETTLE_MS);
 
         // when
         WebSocketSession serverSession = websocketSessionManager.getSessionBy(memberId).iterator().next();
         spaceManager.addSessionToSpace(serverSession, spaceId);
 
         // then: 세션만 등록됨, 클라이언트로 전송되는 메시지 없음
-        Thread.sleep(500);
+        Thread.sleep(ROOM_JOIN_SETTLE_MS);
         assertThat(receivedMessages).isEmpty();
         assertThat(spaceManager.getWebSocketSessionBy(spaceId)).contains(serverSession);
     }
@@ -129,14 +133,14 @@ public class SpaceServiceSocketTest {
         CountDownLatch latch = new CountDownLatch(1);
         List<String> receivedMessages = new ArrayList<>();
         socketFixture.connectSocket(JSESSIONID, firstId, port, receivedMessages, latch);
-        Thread.sleep(300);
+        Thread.sleep(CONNECT_SETTLE_MS);
 
         // when
         WebSocketSession serverSession = websocketSessionManager.getSessionBy(firstId).iterator().next();
         spaceManager.addSessionToSpace(serverSession, spaceId);
 
         // then: CHAT_ENTER 미전송, 세션 등록 여부만 확인
-        Thread.sleep(500);
+        Thread.sleep(ROOM_JOIN_SETTLE_MS);
         assertThat(receivedMessages).isEmpty();
         Set<WebSocketSession> webSocketSessions = spaceManager.getWebSocketSessionBy(spaceId);
         assertThat(webSocketSessions).hasSize(1);
@@ -172,7 +176,7 @@ public class SpaceServiceSocketTest {
         List<String> secondMessages = new ArrayList<>();
         String secondJSessionId = memberFixture.loginRequestBy("second", port);
         socketFixture.connectSocket(secondJSessionId, secondId, port, secondMessages, latch);
-        Thread.sleep(300);
+        Thread.sleep(CONNECT_SETTLE_MS);
 
         WebSocketSession firstServerSession = websocketSessionManager.getSessionBy(firstId).iterator().next();
         spaceManager.addSessionToSpace(firstServerSession, spaceId);
@@ -191,7 +195,7 @@ public class SpaceServiceSocketTest {
         spaceService.broadCastMessage(firstId, sendChat);
 
         // then: CHAT_MESSAGE가 second에 도착할 때까지 대기
-        boolean received = latch.await(3, TimeUnit.SECONDS);
+        boolean received = latch.await(BROADCAST_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         assertThat(received).isTrue();
         assertThat(secondMessages).isNotEmpty();
 
@@ -234,7 +238,7 @@ public class SpaceServiceSocketTest {
         List<String> secondMessages = new ArrayList<>();
         String secondJSessionId = memberFixture.loginRequestBy(secondUsername, port);
         socketFixture.connectSocket(secondJSessionId, secondId, port, secondMessages, latch);
-        Thread.sleep(300);
+        Thread.sleep(CONNECT_SETTLE_MS);
 
         WebSocketSession firstServerSession = websocketSessionManager.getSessionBy(firstId).iterator().next();
         spaceManager.addSessionToSpace(firstServerSession, spaceId);
@@ -253,7 +257,7 @@ public class SpaceServiceSocketTest {
         spaceService.broadCastMessage(firstId, sendChat);
 
         // then
-        boolean received = latch.await(3, TimeUnit.SECONDS);
+        boolean received = latch.await(BROADCAST_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         assertThat(received).isTrue();
         assertThat(secondMessages).isNotEmpty();
 
@@ -296,17 +300,17 @@ public class SpaceServiceSocketTest {
         CountDownLatch latch = new CountDownLatch(2); // UPDATE_CHAT_ROOM + READ_EVENT
         List<String> secondMessages = new ArrayList<>();
         socketFixture.connectSocket(secondJSessionId, secondId, port, secondMessages, latch);
-        Thread.sleep(300);
+        Thread.sleep(CONNECT_SETTLE_MS);
 
         WebSocketSession secondServerSession = websocketSessionManager.getSessionBy(secondId).iterator().next();
         spaceManager.addSessionToSpace(secondServerSession, spaceId);
-        Thread.sleep(500);
+        Thread.sleep(ROOM_JOIN_SETTLE_MS);
 
         // when: second가 채팅 내역 조회 → updatedCount > 0 이면 READ_EVENT + UPDATE_CHAT_ROOM 발행
         messageService.findMessageHistory(spaceId, secondId, null);
 
         // then: UPDATE_CHAT_ROOM + READ_EVENT 수신 대기
-        boolean received = latch.await(3, TimeUnit.SECONDS);
+        boolean received = latch.await(BROADCAST_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         assertThat(received).isTrue();
         assertThat(secondMessages).hasSize(2);
 
@@ -362,17 +366,17 @@ public class SpaceServiceSocketTest {
         CountDownLatch latch = new CountDownLatch(2);
         List<String> secondMessages = new ArrayList<>();
         socketFixture.connectSocket(secondJSessionId, secondId, port, secondMessages, latch);
-        Thread.sleep(300);
+        Thread.sleep(CONNECT_SETTLE_MS);
 
         WebSocketSession secondServerSession = websocketSessionManager.getSessionBy(secondId).iterator().next();
         spaceManager.addSessionToSpace(secondServerSession, spaceId);
-        Thread.sleep(500);
+        Thread.sleep(ROOM_JOIN_SETTLE_MS);
 
         // when: second 두 번째 채팅 내역 조회 → lastReadChatId = firstMessageId (이전 방문 시 firstChat까지 읽었음)
         messageService.findMessageHistory(spaceId, secondId, null);
 
         // then: READ_EVENT에 lastReadChatId 포함 검증
-        boolean received = latch.await(3, TimeUnit.SECONDS);
+        boolean received = latch.await(BROADCAST_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         assertThat(received).isTrue();
 
         String readEventPayload = secondMessages.stream()
@@ -404,7 +408,7 @@ public class SpaceServiceSocketTest {
         CountDownLatch latch = new CountDownLatch(1);
         List<String> firstMessages = new ArrayList<>();
         socketFixture.connectSocket(firstJSessionId, firstId, port, firstMessages, latch);
-        Thread.sleep(300);
+        Thread.sleep(CONNECT_SETTLE_MS);
 
         WebSocketSession firstServerSession = websocketSessionManager.getSessionBy(firstId).iterator().next();
         spaceManager.addSessionToSpace(firstServerSession, spaceId);
@@ -413,7 +417,7 @@ public class SpaceServiceSocketTest {
         spaceService.leaveSpace(secondId, spaceId);
 
         // then: 남은 first에게 UPDATE_CHAT_ROOM 전송
-        boolean received = latch.await(3, TimeUnit.SECONDS);
+        boolean received = latch.await(BROADCAST_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         assertThat(received).isTrue();
         assertThat(firstMessages).isNotEmpty();
 
@@ -438,7 +442,7 @@ public class SpaceServiceSocketTest {
         CountDownLatch latch = new CountDownLatch(1);
         List<String> firstMessages = new ArrayList<>();
         socketFixture.connectSocket(firstJSessionId, firstId, port, firstMessages, latch);
-        Thread.sleep(300);
+        Thread.sleep(CONNECT_SETTLE_MS);
 
         WebSocketSession firstServerSession = websocketSessionManager.getSessionBy(firstId).iterator().next();
         spaceManager.addSessionToSpace(firstServerSession, spaceId);
@@ -447,7 +451,7 @@ public class SpaceServiceSocketTest {
         spaceService.renameSpace(firstId, spaceId, "newTitle");
 
         // then: UPDATE_CHAT_ROOM에 변경된 title 포함
-        boolean received = latch.await(3, TimeUnit.SECONDS);
+        boolean received = latch.await(BROADCAST_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         assertThat(received).isTrue();
         assertThat(firstMessages).isNotEmpty();
 
@@ -478,7 +482,7 @@ public class SpaceServiceSocketTest {
         CountDownLatch latch = new CountDownLatch(1);
         List<String> firstMessages = new ArrayList<>();
         socketFixture.connectSocket(firstJSessionId, firstId, port, firstMessages, latch);
-        Thread.sleep(300);
+        Thread.sleep(CONNECT_SETTLE_MS);
 
         WebSocketSession firstServerSession = websocketSessionManager.getSessionBy(firstId).iterator().next();
         spaceManager.addSessionToSpace(firstServerSession, spaceId);
@@ -487,7 +491,7 @@ public class SpaceServiceSocketTest {
         spaceService.inviteMembers(firstId, spaceId, Set.of(secondId));
 
         // then: 기존 참여자 first에게 UPDATE_CHAT_ROOM 전송
-        boolean received = latch.await(3, TimeUnit.SECONDS);
+        boolean received = latch.await(BROADCAST_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         assertThat(received).isTrue();
         assertThat(firstMessages).isNotEmpty();
 
@@ -521,13 +525,13 @@ public class SpaceServiceSocketTest {
         List<String> secondMessages = new ArrayList<>();
         WebSocketSession secondClientSession =
                 socketFixture.connectSocket(secondJSessionId, secondId, port, secondMessages, latch);
-        Thread.sleep(300);
+        Thread.sleep(CONNECT_SETTLE_MS);
 
         // 기존 패턴과 동일: addSessionToSpace 직접 호출로 Space 세션 등록
         WebSocketSession secondServerSession =
                 websocketSessionManager.getSessionBy(secondId).iterator().next();
         spaceManager.addSessionToSpace(secondServerSession, spaceId);
-        Thread.sleep(500);
+        Thread.sleep(ROOM_JOIN_SETTLE_MS);
 
         // when: second 클라이언트가 ROOM_ACTIVE WS 메시지 전송
         RoomActiveRequest roomActive = RoomActiveRequest.builder()
@@ -537,7 +541,7 @@ public class SpaceServiceSocketTest {
         secondClientSession.sendMessage(new TextMessage(objectMapper.writeValueAsString(roomActive)));
 
         // then: 3초 안에 READ_EVENT + UPDATE_CHAT_ROOM 수신
-        boolean received = latch.await(3, TimeUnit.SECONDS);
+        boolean received = latch.await(BROADCAST_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         assertThat(received).isTrue();
 
         List<String> messageTypes = secondMessages.stream()
