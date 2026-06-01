@@ -7,6 +7,7 @@ import com.chat.entity.Member;
 import com.chat.fixture.MemberFixture;
 import com.chat.fixture.TestDataFixture;
 import com.chat.repository.DiscussionRepository;
+import com.chat.service.dtos.chat.EnterRoomRequest;
 import com.chat.service.dtos.chat.SendChat;
 import com.chat.service.dtos.chat.SendDiscussionMessage;
 import com.chat.socket.manager.SpaceManager;
@@ -174,6 +175,50 @@ class IntegrationTextSocketHandlerTest {
         assertThat(anyMessageReceived).isFalse();
         assertThat(receivedMessages).isEmpty();
         assertThat(spaceManager.getWebSocketSessionBy(chatRoomId)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("참여자가 ENTER_ROOM 전송 시 Space에 등록된다.")
+    void enterRoom_참여자가_ENTER_ROOM_전송_시_Space에_등록된다() throws ExecutionException, InterruptedException, IOException {
+        // given
+        String username = "username";
+        Member member = memberFixture.saveEncryptPasswordBy(username);
+        Long memberId = member.getId();
+
+        List<Member> participants = new ArrayList<>();
+        participants.add(member);
+        Space space = fixture.savedChatRoomBy("title", participants);
+        Long spaceId = space.getId();
+
+        String JSessionId = memberFixture.loginRequestBy(username, port);
+
+        WebSocketHttpHeaders headers = new WebSocketHttpHeaders();
+        headers.add("Cookie", "JSESSIONID=" + JSessionId);
+
+        CountDownLatch latch = new CountDownLatch(1);
+        List<String> receivedMessages = new ArrayList<>();
+        TestWebSocketHandler handler = new TestWebSocketHandler(memberId, receivedMessages, latch);
+
+        WebSocketClient client = new StandardWebSocketClient();
+        WebSocketSession session = client.execute(handler,
+                        headers,
+                        URI.create("ws://localhost:" + port + "/ws/chat"))
+                .get();
+
+        Thread.sleep(SERVER_SESSION_REGISTER_WAIT_MS);
+
+        // when
+        ObjectMapper objectMapper = new ObjectMapper();
+        EnterRoomRequest enterRoom = EnterRoomRequest.builder()
+                .messageType(MessageType.ENTER_ROOM)
+                .chatRoomId(spaceId)
+                .build();
+        session.sendMessage(new TextMessage(objectMapper.writeValueAsString(enterRoom)));
+        Thread.sleep(SERVER_SESSION_REGISTER_WAIT_MS);
+
+        // then: ENTER_ROOM → validateParticipant → getWrappedSession → addSessionToSpace
+        assertThat(spaceManager.getWebSocketSessionBy(spaceId)).isNotEmpty();
+        assertThat(spaceManager.isSpaceActive(memberId, spaceId)).isTrue();
     }
 
     @Test
