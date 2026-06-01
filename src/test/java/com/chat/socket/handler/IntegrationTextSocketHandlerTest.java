@@ -222,6 +222,51 @@ class IntegrationTextSocketHandlerTest {
     }
 
     @Test
+    @DisplayName("비참여자가 ENTER_ROOM 전송 시 에러 응답을 받고 등록되지 않는다.")
+    void enterRoom_비참여자가_ENTER_ROOM_전송_시_에러_응답을_받고_등록되지_않는다() throws ExecutionException, InterruptedException, IOException {
+        // given
+        Member owner = memberFixture.saveEncryptPasswordBy("owner");
+        Member intruder = memberFixture.saveEncryptPasswordBy("intruder");
+
+        List<Member> participants = new ArrayList<>();
+        participants.add(owner);
+        Space space = fixture.savedChatRoomBy("title", participants);
+        Long spaceId = space.getId();
+
+        String intruderJSessionId = memberFixture.loginRequestBy("intruder", port);
+
+        WebSocketHttpHeaders headers = new WebSocketHttpHeaders();
+        headers.add("Cookie", "JSESSIONID=" + intruderJSessionId);
+
+        CountDownLatch latch = new CountDownLatch(1);
+        List<String> receivedMessages = new ArrayList<>();
+        TestWebSocketHandler handler = new TestWebSocketHandler(intruder.getId(), receivedMessages, latch);
+
+        WebSocketClient client = new StandardWebSocketClient();
+        WebSocketSession session = client.execute(handler,
+                        headers,
+                        URI.create("ws://localhost:" + port + "/ws/chat"))
+                .get();
+
+        // when
+        ObjectMapper objectMapper = new ObjectMapper();
+        EnterRoomRequest enterRoom = EnterRoomRequest.builder()
+                .messageType(MessageType.ENTER_ROOM)
+                .chatRoomId(spaceId)
+                .build();
+        session.sendMessage(new TextMessage(objectMapper.writeValueAsString(enterRoom)));
+
+        // then: validateParticipant → CustomException(SPACE_NOT_FOUND) → mapErrorCode → ROOM_NOT_FOUND
+        boolean received = latch.await(2, TimeUnit.SECONDS);
+        assertThat(received).isTrue();
+
+        JsonNode node = objectMapper.readTree(receivedMessages.get(0));
+        assertThat(node.get("messageType").asText()).isEqualTo("ERROR");
+        assertThat(node.get("errorCode").asText()).isEqualTo("ROOM_NOT_FOUND");
+        assertThat(spaceManager.getWebSocketSessionBy(spaceId)).isEmpty();
+    }
+
+    @Test
     @DisplayName("웹 소켓 연결 종료 시 세션 제거")
     void afterConnectionClosedTest() throws ExecutionException, InterruptedException, IOException {
         // given
