@@ -42,7 +42,11 @@ import static org.assertj.core.api.Assertions.*;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class SpaceServiceSocketTest {
 
-    private static final long CONNECT_SETTLE_MS = 300;
+    // StandardWebSocketClient.execute().get()은 클라이언트 측 연결 완료만 보장한다.
+    // 서버의 afterConnectionEstablished()는 별도 Tomcat I/O 스레드에서 실행되므로
+    // 클라이언트 Future 완료 시점에 websocketSessionManager 세션 등록이 완료됐다는 보장이 없다.
+    // getSessionBy() 호출 전 서버 세션 등록 완료를 기다리기 위해 짧게 대기한다.
+    private static final long SERVER_SESSION_REGISTER_WAIT_MS = 300;
     private static final long BROADCAST_TIMEOUT_SECONDS = 3;
 
     @Autowired
@@ -93,7 +97,7 @@ public class SpaceServiceSocketTest {
         CountDownLatch latch = new CountDownLatch(1);
         List<String> receivedMessages = new ArrayList<>();
         socketFixture.connectSocket(JSESSIONID, memberId, port, receivedMessages, latch);
-        Thread.sleep(CONNECT_SETTLE_MS);
+        Thread.sleep(SERVER_SESSION_REGISTER_WAIT_MS);
 
         // when
         WebSocketSession serverSession = websocketSessionManager.getSessionBy(memberId).iterator().next();
@@ -131,7 +135,7 @@ public class SpaceServiceSocketTest {
         CountDownLatch latch = new CountDownLatch(1);
         List<String> receivedMessages = new ArrayList<>();
         socketFixture.connectSocket(JSESSIONID, firstId, port, receivedMessages, latch);
-        Thread.sleep(CONNECT_SETTLE_MS);
+        Thread.sleep(SERVER_SESSION_REGISTER_WAIT_MS);
 
         // when
         WebSocketSession serverSession = websocketSessionManager.getSessionBy(firstId).iterator().next();
@@ -173,7 +177,7 @@ public class SpaceServiceSocketTest {
         List<String> secondMessages = new ArrayList<>();
         String secondJSessionId = memberFixture.loginRequestBy("second", port);
         socketFixture.connectSocket(secondJSessionId, secondId, port, secondMessages, latch);
-        Thread.sleep(CONNECT_SETTLE_MS);
+        Thread.sleep(SERVER_SESSION_REGISTER_WAIT_MS);
 
         WebSocketSession firstServerSession = websocketSessionManager.getSessionBy(firstId).iterator().next();
         spaceManager.addSessionToSpace(firstServerSession, spaceId);
@@ -235,7 +239,7 @@ public class SpaceServiceSocketTest {
         List<String> secondMessages = new ArrayList<>();
         String secondJSessionId = memberFixture.loginRequestBy(secondUsername, port);
         socketFixture.connectSocket(secondJSessionId, secondId, port, secondMessages, latch);
-        Thread.sleep(CONNECT_SETTLE_MS);
+        Thread.sleep(SERVER_SESSION_REGISTER_WAIT_MS);
 
         WebSocketSession firstServerSession = websocketSessionManager.getSessionBy(firstId).iterator().next();
         spaceManager.addSessionToSpace(firstServerSession, spaceId);
@@ -297,7 +301,7 @@ public class SpaceServiceSocketTest {
         CountDownLatch latch = new CountDownLatch(2); // UPDATE_CHAT_ROOM + READ_EVENT
         List<String> secondMessages = new ArrayList<>();
         socketFixture.connectSocket(secondJSessionId, secondId, port, secondMessages, latch);
-        Thread.sleep(CONNECT_SETTLE_MS);
+        Thread.sleep(SERVER_SESSION_REGISTER_WAIT_MS);
 
         WebSocketSession secondServerSession = websocketSessionManager.getSessionBy(secondId).iterator().next();
         spaceManager.addSessionToSpace(secondServerSession, spaceId);
@@ -362,7 +366,7 @@ public class SpaceServiceSocketTest {
         CountDownLatch latch = new CountDownLatch(2);
         List<String> secondMessages = new ArrayList<>();
         socketFixture.connectSocket(secondJSessionId, secondId, port, secondMessages, latch);
-        Thread.sleep(CONNECT_SETTLE_MS);
+        Thread.sleep(SERVER_SESSION_REGISTER_WAIT_MS);
 
         WebSocketSession secondServerSession = websocketSessionManager.getSessionBy(secondId).iterator().next();
         spaceManager.addSessionToSpace(secondServerSession, spaceId);
@@ -403,7 +407,7 @@ public class SpaceServiceSocketTest {
         CountDownLatch latch = new CountDownLatch(1);
         List<String> firstMessages = new ArrayList<>();
         socketFixture.connectSocket(firstJSessionId, firstId, port, firstMessages, latch);
-        Thread.sleep(CONNECT_SETTLE_MS);
+        Thread.sleep(SERVER_SESSION_REGISTER_WAIT_MS);
 
         WebSocketSession firstServerSession = websocketSessionManager.getSessionBy(firstId).iterator().next();
         spaceManager.addSessionToSpace(firstServerSession, spaceId);
@@ -437,7 +441,7 @@ public class SpaceServiceSocketTest {
         CountDownLatch latch = new CountDownLatch(1);
         List<String> firstMessages = new ArrayList<>();
         socketFixture.connectSocket(firstJSessionId, firstId, port, firstMessages, latch);
-        Thread.sleep(CONNECT_SETTLE_MS);
+        Thread.sleep(SERVER_SESSION_REGISTER_WAIT_MS);
 
         WebSocketSession firstServerSession = websocketSessionManager.getSessionBy(firstId).iterator().next();
         spaceManager.addSessionToSpace(firstServerSession, spaceId);
@@ -477,7 +481,7 @@ public class SpaceServiceSocketTest {
         CountDownLatch latch = new CountDownLatch(1);
         List<String> firstMessages = new ArrayList<>();
         socketFixture.connectSocket(firstJSessionId, firstId, port, firstMessages, latch);
-        Thread.sleep(CONNECT_SETTLE_MS);
+        Thread.sleep(SERVER_SESSION_REGISTER_WAIT_MS);
 
         WebSocketSession firstServerSession = websocketSessionManager.getSessionBy(firstId).iterator().next();
         spaceManager.addSessionToSpace(firstServerSession, spaceId);
@@ -520,7 +524,7 @@ public class SpaceServiceSocketTest {
         List<String> secondMessages = new ArrayList<>();
         WebSocketSession secondClientSession =
                 socketFixture.connectSocket(secondJSessionId, secondId, port, secondMessages, latch);
-        Thread.sleep(CONNECT_SETTLE_MS);
+        Thread.sleep(SERVER_SESSION_REGISTER_WAIT_MS);
 
         // 기존 패턴과 동일: addSessionToSpace 직접 호출로 Space 세션 등록
         WebSocketSession secondServerSession =
