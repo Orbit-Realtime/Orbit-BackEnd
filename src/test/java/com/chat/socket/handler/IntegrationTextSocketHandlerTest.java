@@ -80,8 +80,8 @@ class IntegrationTextSocketHandlerTest {
     }
 
     @Test
-    @DisplayName("클라이언트가 소켓을 이용해 메시지를 전송한다.")
-    void handleTextMessageTest() throws ExecutionException, InterruptedException, IOException {
+    @DisplayName("Space에 등록된 세션이 CHAT_MESSAGE를 전송하면 브로드캐스트된다.")
+    void Space에_등록된_세션이_CHAT_MESSAGE를_전송하면_브로드캐스트된다() throws ExecutionException, InterruptedException, IOException {
         // given
         String username = "username";
         Member member = memberFixture.saveEncryptPasswordBy(username);
@@ -130,8 +130,8 @@ class IntegrationTextSocketHandlerTest {
     }
 
     @Test
-    @DisplayName("채팅방에 세션이 등록되지 않은 상태에서 CHAT_MESSAGE를 전송하면 DB에 저장되지 않는다.")
-    void chatMessageBlockedWhenSessionNotInRoomTest() throws ExecutionException, InterruptedException, IOException {
+    @DisplayName("Space에 등록되지 않은 세션이 CHAT_MESSAGE를 전송하면 차단되어 아무 응답도 오지 않는다.")
+    void Space에_등록되지_않은_세션이_CHAT_MESSAGE를_전송하면_차단된다() throws ExecutionException, InterruptedException, IOException {
         // given
         String username = "username";
         Member member = memberFixture.saveEncryptPasswordBy(username);
@@ -178,8 +178,8 @@ class IntegrationTextSocketHandlerTest {
     }
 
     @Test
-    @DisplayName("참여자가 ENTER_ROOM 전송 시 Space에 등록된다.")
-    void enterRoom_참여자가_ENTER_ROOM_전송_시_Space에_등록된다() throws ExecutionException, InterruptedException, IOException {
+    @DisplayName("Space 참여자가 ENTER_ROOM을 전송하면 세션이 Space에 등록되고 active 상태가 된다.")
+    void 참여자가_ENTER_ROOM을_전송하면_Space에_등록되고_active_상태가_된다() throws ExecutionException, InterruptedException, IOException {
         // given
         String username = "username";
         Member member = memberFixture.saveEncryptPasswordBy(username);
@@ -222,8 +222,8 @@ class IntegrationTextSocketHandlerTest {
     }
 
     @Test
-    @DisplayName("비참여자가 ENTER_ROOM 전송 시 에러 응답을 받고 등록되지 않는다.")
-    void enterRoom_비참여자가_ENTER_ROOM_전송_시_에러_응답을_받고_등록되지_않는다() throws ExecutionException, InterruptedException, IOException {
+    @DisplayName("Space 비참여자가 ENTER_ROOM을 전송하면 ROOM_NOT_FOUND 에러 응답을 받고 Space에 등록되지 않는다.")
+    void 비참여자가_ENTER_ROOM을_전송하면_ROOM_NOT_FOUND_에러_응답을_받고_Space에_등록되지_않는다() throws ExecutionException, InterruptedException, IOException {
         // given
         Member owner = memberFixture.saveEncryptPasswordBy("owner");
         Member intruder = memberFixture.saveEncryptPasswordBy("intruder");
@@ -267,8 +267,8 @@ class IntegrationTextSocketHandlerTest {
     }
 
     @Test
-    @DisplayName("웹 소켓 연결 종료 시 세션 제거")
-    void afterConnectionClosedTest() throws ExecutionException, InterruptedException, IOException {
+    @DisplayName("WebSocket 연결이 종료되면 세션 관리자와 Space에서 세션이 모두 정리된다.")
+    void WebSocket_연결_종료_시_세션_관리자와_Space에서_세션이_정리된다() throws ExecutionException, InterruptedException, IOException {
         // given
         String username = "username";
         Member member = memberFixture.saveEncryptPasswordBy(username);
@@ -317,7 +317,7 @@ class IntegrationTextSocketHandlerTest {
 
     @Test
     @DisplayName("DISCUSSION_MESSAGE 전송 시 Space 세션에 DISCUSSION_MESSAGE_EVENT가 수신된다.")
-    void discussionMessage_전송_시_Space_세션에_DISCUSSION_MESSAGE_EVENT가_수신된다()
+    void DISCUSSION_MESSAGE_전송_시_Space_세션에_DISCUSSION_MESSAGE_EVENT가_수신된다()
             throws Exception {
         // given
         String username = "username";
