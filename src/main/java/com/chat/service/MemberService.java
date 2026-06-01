@@ -104,6 +104,7 @@ public class MemberService {
         member.changePassword(passwordEncoder.encode(newPassword));
     }
 
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void removeSession(Long memberId, WebSocketSession closingSession) {
         spaceManager.removeSessionFromSpace(closingSession);
         websocketSessionManager.removeSession(memberId, closingSession);
