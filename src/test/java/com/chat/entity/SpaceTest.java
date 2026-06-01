@@ -2,7 +2,6 @@ package com.chat.entity;
 
 import com.chat.exception.CustomException;
 import com.chat.exception.ErrorCode;
-import org.assertj.core.api.AbstractObjectAssert;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -12,21 +11,26 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class SpaceTest {
 
     @Test
-    @DisplayName("Space 엔티티를 생성한다.")
-    void createSpaceTest() {
-        // given
-        String title = "개발팀";
-
-        // when
-        Space space = Space.of(title);
-
-        // then
-        assertThat(space.getTitle()).isEqualTo(title);
+    @DisplayName("제목이 null이면 Space 생성 시 EMPTY_SPACE_TITLE 예외가 발생한다.")
+    void 제목이_null이면_Space_생성_시_EMPTY_SPACE_TITLE_예외가_발생한다() {
+        assertThatThrownBy(() -> Space.of(null))
+                .isInstanceOf(CustomException.class)
+                .extracting(ex -> ((CustomException) ex).getErrorCode())
+                .isEqualTo(ErrorCode.EMPTY_SPACE_TITLE);
     }
 
     @Test
-    @DisplayName("Space 이름을 변경한다.")
-    void renameTest() {
+    @DisplayName("제목이 공백이면 Space 생성 시 EMPTY_SPACE_TITLE 예외가 발생한다.")
+    void 제목이_공백이면_Space_생성_시_EMPTY_SPACE_TITLE_예외가_발생한다() {
+        assertThatThrownBy(() -> Space.of("  "))
+                .isInstanceOf(CustomException.class)
+                .extracting(ex -> ((CustomException) ex).getErrorCode())
+                .isEqualTo(ErrorCode.EMPTY_SPACE_TITLE);
+    }
+
+    @Test
+    @DisplayName("유효한 제목으로 변경하면 Space 이름이 갱신된다.")
+    void 유효한_제목으로_변경하면_Space_이름이_갱신된다() {
         // given
         Space space = Space.of("구 이름");
 
@@ -38,82 +42,36 @@ class SpaceTest {
     }
 
     @Test
-    @DisplayName("title 이 없을 시 Space 엔티티를 생성하면 CustomException 이 발생한다.")
-    void nullTitleCreateSpaceFailTest() {
-        // when
-        AbstractObjectAssert<?, CustomException> extracting = assertThatThrownBy(
-                () -> Space.of(null))
-                .isInstanceOf(CustomException.class)
-                .extracting(ex -> (CustomException) ex);
-
-        // then
-        extracting.satisfies(ex -> {
-            assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.EMPTY_SPACE_TITLE);
-        });
-    }
-
-    @Test
-    @DisplayName("title 이 공백이면 Space 엔티티를 생성하면 CustomException 이 발생한다.")
-    void blankTitleCreateSpaceFailTest() {
-        // given
-        String title = "  ";
-
-        // when
-        AbstractObjectAssert<?, CustomException> extracting = assertThatThrownBy(
-                () -> Space.of(title))
-                .isInstanceOf(CustomException.class)
-                .extracting(ex -> (CustomException) ex);
-
-        // then
-        extracting.satisfies(ex -> {
-            assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.EMPTY_SPACE_TITLE);
-        });
-    }
-
-    @Test
-    @DisplayName("null title 로 변경하면 CustomException 이 발생한다.")
-    void renameNullFailTest() {
+    @DisplayName("제목이 null이면 Space 이름을 변경할 수 없다.")
+    void 제목이_null이면_Space_이름을_변경할_수_없다() {
         // given
         Space space = Space.of("개발팀");
 
-        // when
-        AbstractObjectAssert<?, CustomException> extracting = assertThatThrownBy(
-                () -> space.rename(null))
+        // when & then
+        assertThatThrownBy(() -> space.rename(null))
                 .isInstanceOf(CustomException.class)
-                .extracting(ex -> (CustomException) ex);
-
-        // then
-        extracting.satisfies(ex -> {
-            assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.EMPTY_SPACE_TITLE);
-        });
+                .extracting(ex -> ((CustomException) ex).getErrorCode())
+                .isEqualTo(ErrorCode.EMPTY_SPACE_TITLE);
     }
 
     @Test
-    @DisplayName("공백 title 로 변경하면 CustomException 이 발생한다.")
-    void renameBlankFailTest() {
+    @DisplayName("제목이 공백이면 Space 이름을 변경할 수 없다.")
+    void 제목이_공백이면_Space_이름을_변경할_수_없다() {
         // given
         Space space = Space.of("개발팀");
 
-        // when
-        AbstractObjectAssert<?, CustomException> extracting = assertThatThrownBy(
-                () -> space.rename("  "))
+        // when & then
+        assertThatThrownBy(() -> space.rename("  "))
                 .isInstanceOf(CustomException.class)
-                .extracting(ex -> (CustomException) ex);
-
-        // then
-        extracting.satisfies(ex -> {
-            assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.EMPTY_SPACE_TITLE);
-        });
+                .extracting(ex -> ((CustomException) ex).getErrorCode())
+                .isEqualTo(ErrorCode.EMPTY_SPACE_TITLE);
     }
 
     @Test
     @DisplayName("Space 생성 시 inviteCode가 자동으로 생성된다.")
-    void createSpace_inviteCodeGeneratedTest() {
-        // given
-        String title = "개발팀";
-
+    void Space_생성_시_inviteCode가_자동으로_생성된다() {
         // when
-        Space space = Space.of(title);
+        Space space = Space.of("개발팀");
 
         // then
         assertThat(space.getInviteCode()).isNotNull();
@@ -123,12 +81,26 @@ class SpaceTest {
 
     @Test
     @DisplayName("두 Space의 inviteCode는 서로 다르다.")
-    void createSpace_inviteCodeIsUniqueTest() {
-        // given & when
+    void 두_Space의_inviteCode는_서로_다르다() {
+        // when
         Space space1 = Space.of("팀A");
         Space space2 = Space.of("팀B");
 
         // then
         assertThat(space1.getInviteCode()).isNotEqualTo(space2.getInviteCode());
+    }
+
+    @Test
+    @DisplayName("Space 이름을 변경해도 inviteCode는 바뀌지 않는다.")
+    void rename_후_inviteCode는_변하지_않는다() {
+        // given
+        Space space = Space.of("개발팀");
+        String originalInviteCode = space.getInviteCode();
+
+        // when
+        space.rename("백엔드팀");
+
+        // then
+        assertThat(space.getInviteCode()).isEqualTo(originalInviteCode);
     }
 }

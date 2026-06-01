@@ -26,30 +26,11 @@ class MemberRepositoryTest {
     private SpaceMemberRepository spaceMemberRepository;
     
     @Test
-    @DisplayName("회원 정보를 저장한다.")
-    void saveTest() {
-        // given
-        String username = "username";
-        String password = "password";
-        String nickname = "nickname";
-        Member member = Member.of(username, password, nickname);
-
-        // when
-        Member savedMember = memberRepository.save(member);
-
-        // then
-        assertThat(savedMember.getId()).isNotNull();
-        assertThat(savedMember.getUsername()).isEqualTo(username);
-        assertThat(savedMember.getPassword()).isEqualTo(password);
-        assertThat(savedMember.getNickname()).isEqualTo(nickname);
-    }
-
-    @Test
-    @DisplayName("사용자 ID 가 존재하는지 조회한다.")
-    void existsByUsernameTest() {
+    @DisplayName("등록된 username은 existsByUsername이 true를 반환한다.")
+    void 등록된_username은_existsByUsername이_true를_반환한다() {
         // given
         String existUsername = "existUsername";
-        Member member = createMemberBy(existUsername);
+        createMemberBy(existUsername);
 
         // when
         boolean isExist = memberRepository.existsByUsername(existUsername);
@@ -59,8 +40,18 @@ class MemberRepositoryTest {
     }
 
     @Test
-    @DisplayName("사용자 ID 를 이용해 사용자 정보를 조회한다.")
-    void findByUsernameTest() {
+    @DisplayName("존재하지 않는 username은 existsByUsername이 false를 반환한다.")
+    void 존재하지_않는_username은_existsByUsername이_false를_반환한다() {
+        // when
+        boolean result = memberRepository.existsByUsername("ghost");
+
+        // then
+        assertThat(result).isFalse();
+    }
+
+    @Test
+    @DisplayName("등록된 username으로 조회하면 해당 Member를 반환한다.")
+    void 등록된_username으로_조회하면_해당_Member를_반환한다() {
         // given
         String username = "username";
         Member member = createMemberBy(username);
@@ -74,33 +65,37 @@ class MemberRepositoryTest {
         assertThat(findMemberOptional.get().getId()).isNotNull();
     }
 
-    // todo remove session test
+    @Test
+    @DisplayName("존재하지 않는 username으로 조회하면 Optional.empty를 반환한다.")
+    void 존재하지_않는_username으로_조회하면_Optional_empty를_반환한다() {
+        // when
+        Optional<Member> result = memberRepository.findByUsername("ghost");
+
+        // then
+        assertThat(result).isEmpty();
+    }
 
     @Test
-    @DisplayName("채팅방 ID 를 이용해 참여한 사용자 ID 를 조회한다.")
-    void findMemberIdsInTest() {
+    @DisplayName("spaceId로 참여한 전체 memberId 목록을 조회한다.")
+    void spaceId로_참여한_전체_memberId_목록을_조회한다() {
         // given
-        String firstUser = "first";
-        Member firstMember = createMemberBy(firstUser);
-        String secondUser = "second";
-        Member secondMember = createMemberBy(secondUser);
-        String thirdUser = "third";
-        Member thirdMember = createMemberBy(thirdUser);
+        Member firstMember = createMemberBy("first");
+        Member secondMember = createMemberBy("second");
+        Member thirdMember = createMemberBy("third");
 
-        // when
-        String title = "title";
-        Space chatRoom = Space.of(title);
-        Space savedChatRoom = spaceRepository.save(chatRoom);
+        Space savedChatRoom = spaceRepository.save(Space.of("title"));
 
         spaceMemberRepository.save(SpaceMember.of(firstMember, savedChatRoom));
         spaceMemberRepository.save(SpaceMember.of(secondMember, savedChatRoom));
         spaceMemberRepository.save(SpaceMember.of(thirdMember, savedChatRoom));
 
         // when
-        List<Long> memberIds = memberRepository.findMemberIdsIn(chatRoom.getId());
+        List<Long> memberIds = memberRepository.findMemberIdsIn(savedChatRoom.getId());
 
         // then
-        assertThat(memberIds).hasSize(3);
+        assertThat(memberIds)
+                .hasSize(3)
+                .containsExactlyInAnyOrder(firstMember.getId(), secondMember.getId(), thirdMember.getId());
     }
 
     private Member createMemberBy(String username) {

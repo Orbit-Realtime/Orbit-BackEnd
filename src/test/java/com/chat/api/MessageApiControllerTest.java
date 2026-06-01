@@ -5,7 +5,6 @@ import com.chat.entity.Member;
 import com.chat.fixture.TestDataFixture;
 import com.chat.service.MessageService;
 import com.chat.utils.consts.SessionConst;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +12,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -23,6 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Transactional
 class MessageApiControllerTest {
 
     @Autowired
@@ -31,11 +32,6 @@ class MessageApiControllerTest {
     private TestDataFixture fixture;
     @Autowired
     private MessageService messageService;
-
-    @AfterEach
-    void tearDown() {
-        fixture.deleteAllData();
-    }
 
     @Test
     @DisplayName("초기 진입 조회는 200과 메시지 목록을 반환한다.")

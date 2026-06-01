@@ -34,8 +34,8 @@ class BroadcastDataBuilderTest {
     private EntityManager em;
 
     @Test
-    @DisplayName("채팅방에 참여 중인 멤버가 없으면 빈 Map을 반환한다.")
-    void build_noMembers_returnsEmptyMap() {
+    @DisplayName("참여자가 없는 Space는 빈 Map을 반환한다.")
+    void 참여자가_없는_Space는_빈_Map을_반환한다() {
         // given
         Space chatRoom = fixture.savedSimpleChatRoom("title");
 
@@ -47,8 +47,8 @@ class BroadcastDataBuilderTest {
     }
 
     @Test
-    @DisplayName("채팅 메시지가 없는 방은 lastMessage와 createdDate가 null이다.")
-    void build_noMessages_returnsNullLastMessageAndCreatedDate() {
+    @DisplayName("메시지가 없는 Space는 lastMessage와 createdDate가 null이다.")
+    void 메시지가_없는_Space는_lastMessage와_createdDate가_null이다() {
         // given
         Member me = fixture.savedMemberBy("me");
         Member other = fixture.savedMemberBy("other");
@@ -64,8 +64,8 @@ class BroadcastDataBuilderTest {
     }
 
     @Test
-    @DisplayName("멤버별 읽지 않은 메시지 수가 정확히 담긴다.")
-    void build_returnsCorrectUnreadCountPerMember() {
+    @DisplayName("멤버별 unreadCount가 정확히 계산된다.")
+    void 멤버별_unreadCount가_정확히_계산된다() {
         // given
         Member me = fixture.savedMemberBy("me");
         Member other = fixture.savedMemberBy("other");
@@ -90,8 +90,8 @@ class BroadcastDataBuilderTest {
     }
 
     @Test
-    @DisplayName("targetMemberIds가 빈 Set이면 빈 Map을 반환한다.")
-    void buildWithTarget_emptyTargetIds_returnsEmptyMap() {
+    @DisplayName("타겟 멤버가 없으면 빈 Map을 반환한다.")
+    void 타겟_멤버가_없으면_빈_Map을_반환한다() {
         // given
         Member me = fixture.savedMemberBy("me");
         Space chatRoom = fixture.savedChatRoomBy("title", List.of(me));
@@ -104,8 +104,8 @@ class BroadcastDataBuilderTest {
     }
 
     @Test
-    @DisplayName("targetMemberIds에 포함된 멤버만 Map에 담긴다.")
-    void buildWithTarget_onlyTargetMembersIncluded() {
+    @DisplayName("타겟 멤버만 Map에 포함된다.")
+    void 타겟_멤버만_Map에_포함된다() {
         // given
         Member me = fixture.savedMemberBy("me");
         Member other = fixture.savedMemberBy("other");
@@ -121,8 +121,8 @@ class BroadcastDataBuilderTest {
     }
 
     @Test
-    @DisplayName("targetMemberIds 멤버의 unreadMessageCount가 정확히 담긴다.")
-    void buildWithTarget_returnsCorrectUnreadCount() {
+    @DisplayName("타겟 멤버의 unreadCount가 정확히 계산된다.")
+    void 타겟_멤버의_unreadCount가_정확히_계산된다() {
         // given
         Member me = fixture.savedMemberBy("me");
         Member sender = fixture.savedMemberBy("sender");
@@ -139,8 +139,8 @@ class BroadcastDataBuilderTest {
     }
 
     @Test
-    @DisplayName("채팅방 title과 마지막 메시지가 정확히 담긴다.")
-    void build_returnsTitleAndLastMessage() {
+    @DisplayName("Space title과 마지막 메시지 정보가 정확히 담긴다.")
+    void Space_title과_마지막_메시지_정보가_정확히_담긴다() {
         // given
         Member me = fixture.savedMemberBy("me");
         Member other = fixture.savedMemberBy("other");

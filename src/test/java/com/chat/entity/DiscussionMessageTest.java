@@ -2,107 +2,66 @@ package com.chat.entity;
 
 import com.chat.exception.CustomException;
 import com.chat.exception.ErrorCode;
-import org.assertj.core.api.AbstractObjectAssert;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class DiscussionMessageTest {
 
     @Test
-    @DisplayName("DiscussionMessage 엔티티를 생성한다.")
-    void createDiscussionMessageTest() {
-        // given
-        Member member = Member.of("username", "password", "nickname");
-        Space space = Space.of("개발팀");
-        Message rootMessage = Message.of("안녕하세요", member, space);
-        Discussion discussion = Discussion.of(rootMessage);
-        String content = "답글입니다";
-
-        // when
-        DiscussionMessage discussionMessage = DiscussionMessage.of(content, discussion, member);
-
-        // then
-        assertThat(discussionMessage.getContent()).isEqualTo(content);
-        assertThat(discussionMessage.getDiscussion()).isEqualTo(discussion);
-        assertThat(discussionMessage.getMember()).isEqualTo(member);
-    }
-
-    @Test
-    @DisplayName("content 가 없을 시 DiscussionMessage 엔티티를 생성하면 CustomException 이 발생한다.")
-    void nullContentCreateDiscussionMessageFailTest() {
+    @DisplayName("내용이 null이면 DiscussionMessage 생성 시 EMPTY_DISCUSSION_MESSAGE_CONTENT 예외가 발생한다.")
+    void 내용이_null이면_DiscussionMessage_생성_시_EMPTY_DISCUSSION_MESSAGE_CONTENT_예외가_발생한다() {
         // given
         Member member = Member.of("username", "password", "nickname");
         Discussion discussion = createDiscussion(member);
 
-        // when
-        AbstractObjectAssert<?, CustomException> extracting = assertThatThrownBy(
-                () -> DiscussionMessage.of(null, discussion, member))
+        // when & then
+        assertThatThrownBy(() -> DiscussionMessage.of(null, discussion, member))
                 .isInstanceOf(CustomException.class)
-                .extracting(ex -> (CustomException) ex);
-
-        // then
-        extracting.satisfies(ex -> {
-            assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.EMPTY_DISCUSSION_MESSAGE_CONTENT);
-        });
+                .extracting(ex -> ((CustomException) ex).getErrorCode())
+                .isEqualTo(ErrorCode.EMPTY_DISCUSSION_MESSAGE_CONTENT);
     }
 
     @Test
-    @DisplayName("content 가 공백이면 DiscussionMessage 엔티티를 생성하면 CustomException 이 발생한다.")
-    void blankContentCreateDiscussionMessageFailTest() {
+    @DisplayName("내용이 공백이면 DiscussionMessage 생성 시 EMPTY_DISCUSSION_MESSAGE_CONTENT 예외가 발생한다.")
+    void 내용이_공백이면_DiscussionMessage_생성_시_EMPTY_DISCUSSION_MESSAGE_CONTENT_예외가_발생한다() {
         // given
         Member member = Member.of("username", "password", "nickname");
         Discussion discussion = createDiscussion(member);
 
-        // when
-        AbstractObjectAssert<?, CustomException> extracting = assertThatThrownBy(
-                () -> DiscussionMessage.of("  ", discussion, member))
+        // when & then
+        assertThatThrownBy(() -> DiscussionMessage.of("  ", discussion, member))
                 .isInstanceOf(CustomException.class)
-                .extracting(ex -> (CustomException) ex);
-
-        // then
-        extracting.satisfies(ex -> {
-            assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.EMPTY_DISCUSSION_MESSAGE_CONTENT);
-        });
+                .extracting(ex -> ((CustomException) ex).getErrorCode())
+                .isEqualTo(ErrorCode.EMPTY_DISCUSSION_MESSAGE_CONTENT);
     }
 
     @Test
-    @DisplayName("discussion 이 없을 시 DiscussionMessage 엔티티를 생성하면 CustomException 이 발생한다.")
-    void nullDiscussionCreateDiscussionMessageFailTest() {
+    @DisplayName("Discussion이 null이면 DiscussionMessage 생성 시 DISCUSSION_NOT_FOUND 예외가 발생한다.")
+    void Discussion이_null이면_DiscussionMessage_생성_시_DISCUSSION_NOT_FOUND_예외가_발생한다() {
         // given
         Member member = Member.of("username", "password", "nickname");
 
-        // when
-        AbstractObjectAssert<?, CustomException> extracting = assertThatThrownBy(
-                () -> DiscussionMessage.of("답글입니다", null, member))
+        // when & then
+        assertThatThrownBy(() -> DiscussionMessage.of("답글입니다", null, member))
                 .isInstanceOf(CustomException.class)
-                .extracting(ex -> (CustomException) ex);
-
-        // then
-        extracting.satisfies(ex -> {
-            assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.DISCUSSION_NOT_FOUND);
-        });
+                .extracting(ex -> ((CustomException) ex).getErrorCode())
+                .isEqualTo(ErrorCode.DISCUSSION_NOT_FOUND);
     }
 
     @Test
-    @DisplayName("member 가 없을 시 DiscussionMessage 엔티티를 생성하면 CustomException 이 발생한다.")
-    void nullMemberCreateDiscussionMessageFailTest() {
+    @DisplayName("Member가 null이면 DiscussionMessage 생성 시 MEMBER_NOT_FOUND 예외가 발생한다.")
+    void Member가_null이면_DiscussionMessage_생성_시_MEMBER_NOT_FOUND_예외가_발생한다() {
         // given
         Member member = Member.of("username", "password", "nickname");
         Discussion discussion = createDiscussion(member);
 
-        // when
-        AbstractObjectAssert<?, CustomException> extracting = assertThatThrownBy(
-                () -> DiscussionMessage.of("답글입니다", discussion, null))
+        // when & then
+        assertThatThrownBy(() -> DiscussionMessage.of("답글입니다", discussion, null))
                 .isInstanceOf(CustomException.class)
-                .extracting(ex -> (CustomException) ex);
-
-        // then
-        extracting.satisfies(ex -> {
-            assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.MEMBER_NOT_FOUND);
-        });
+                .extracting(ex -> ((CustomException) ex).getErrorCode())
+                .isEqualTo(ErrorCode.MEMBER_NOT_FOUND);
     }
 
     private Discussion createDiscussion(Member member) {

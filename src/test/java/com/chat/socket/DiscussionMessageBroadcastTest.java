@@ -1,4 +1,4 @@
-package com.chat.service;
+package com.chat.socket;
 
 import com.chat.entity.Discussion;
 import com.chat.entity.Member;
@@ -8,6 +8,7 @@ import com.chat.fixture.MemberFixture;
 import com.chat.fixture.SocketFixture;
 import com.chat.fixture.TestDataFixture;
 import com.chat.repository.DiscussionRepository;
+import com.chat.service.DiscussionMessageService;
 import com.chat.socket.manager.SpaceManager;
 import com.chat.socket.manager.WebsocketSessionManager;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -31,6 +32,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 @AutoConfigureMockMvc
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class DiscussionMessageBroadcastTest {
+
+    // StandardWebSocketClient.execute().get()은 클라이언트 측 연결 완료만 보장한다.
+    // 서버의 afterConnectionEstablished()는 별도 Tomcat I/O 스레드에서 실행되므로
+    // 클라이언트 Future 완료 시점에 websocketSessionManager 세션 등록이 완료됐다는 보장이 없다.
+    // getSessionBy() 호출 전 서버 세션 등록 완료를 기다리기 위해 짧게 대기한다.
+    private static final long SERVER_SESSION_REGISTER_WAIT_MS = 300;
 
     @Autowired private DiscussionMessageService discussionMessageService;
     @Autowired private DiscussionRepository discussionRepository;
@@ -71,7 +78,7 @@ class DiscussionMessageBroadcastTest {
         CountDownLatch latch = new CountDownLatch(1);
         List<String> receivedMessages = new ArrayList<>();
         socketFixture.connectSocket(receiverJSessionId, receiver.getId(), port, receivedMessages, latch);
-        Thread.sleep(300);
+        Thread.sleep(SERVER_SESSION_REGISTER_WAIT_MS);
 
         WebSocketSession receiverServerSession =
                 websocketSessionManager.getSessionBy(receiver.getId()).iterator().next();
