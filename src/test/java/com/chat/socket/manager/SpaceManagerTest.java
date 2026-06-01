@@ -24,8 +24,8 @@ class SpaceManagerTest {
     }
 
     @Test
-    @DisplayName("Space ID가 유효하지 않으면 예외 발생")
-    void invalidChatRoomIdTest() {
+    @DisplayName("Space ID가 null이면 세션 등록 시 예외가 발생한다.")
+    void Space_ID가_null이면_세션_등록_시_예외가_발생한다() {
         WebSocketSession session = mock(WebSocketSession.class);
         given(session.getAttributes()).willReturn(Map.of(SessionConst.SESSION_ID, 1L));
 
@@ -34,8 +34,8 @@ class SpaceManagerTest {
     }
 
     @Test
-    @DisplayName("Space가 존재하지 않으면 빈 세트를 반환한다")
-    void nonExistentRoomTest() {
+    @DisplayName("존재하지 않는 Space를 조회하면 빈 세션 목록을 반환한다.")
+    void 존재하지_않는_Space를_조회하면_빈_세션_목록을_반환한다() {
         Long chatRoomId = 999L;
 
         Set<WebSocketSession> result = spaceManager.getWebSocketSessionBy(chatRoomId);
@@ -43,8 +43,8 @@ class SpaceManagerTest {
     }
 
     @Test
-    @DisplayName("Space가 없으면 false 를 반환하고 예외가 발생하지 않는다.")
-    void removeSpaceSession_noRoomTest() {
+    @DisplayName("존재하지 않는 Space에서 세션을 제거하면 false를 반환하고 예외가 발생하지 않는다.")
+    void 존재하지_않는_Space에서_세션을_제거하면_false를_반환하고_예외가_발생하지_않는다() {
         Long chatRoomId = 999L;
         Long memberId = 42L;
 
@@ -57,8 +57,8 @@ class SpaceManagerTest {
     }
 
     @Test
-    @DisplayName("Space 자체가 없으면 isInSpace이 false를 반환한다.")
-    void isInSpace_returnsFalseForNonExistentRoom() {
+    @DisplayName("존재하지 않는 Space의 멤버 참여 여부를 조회하면 false를 반환한다.")
+    void 존재하지_않는_Space의_멤버_참여_여부를_조회하면_false를_반환한다() {
         // given
         Long chatRoomId = 999L;
         Long memberId = 10L;
@@ -68,8 +68,8 @@ class SpaceManagerTest {
     }
 
     @Test
-    @DisplayName("ENTER_ROOM 하면 isSpaceActive가 true를 반환한다.")
-    void isSpaceActive_returnsTrueWhenActivated() {
+    @DisplayName("Space에 세션을 등록하면 해당 Space가 자동으로 active 상태가 된다.")
+    void Space에_세션을_등록하면_해당_Space가_active_상태가_된다() {
         Long chatRoomId = 1L;
         Long memberId = 10L;
 
@@ -84,8 +84,8 @@ class SpaceManagerTest {
     }
 
     @Test
-    @DisplayName("ENTER_ROOM 후 ROOM_INACTIVE 하면 isSpaceActive가 false를 반환한다.")
-    void isSpaceActive_returnsFalseAfterEnterAndInactivate() {
+    @DisplayName("Space를 비활성화하면 active 상태가 해제된다.")
+    void Space를_비활성화하면_active_상태가_해제된다() {
         Long chatRoomId = 1L;
         Long memberId = 10L;
 
@@ -101,8 +101,8 @@ class SpaceManagerTest {
     }
 
     @Test
-    @DisplayName("ROOM_INACTIVE 후 ROOM_ACTIVE 하면 isSpaceActive가 다시 true를 반환한다.")
-    void isSpaceActive_returnsTrueAfterReactivate() {
+    @DisplayName("비활성화된 Space를 다시 활성화하면 active 상태가 복구된다.")
+    void 비활성화된_Space를_다시_활성화하면_active_상태가_복구된다() {
         Long chatRoomId = 1L;
         Long memberId = 10L;
 
@@ -119,8 +119,8 @@ class SpaceManagerTest {
     }
 
     @Test
-    @DisplayName("다중 세션 중 하나라도 active이면 isSpaceActive가 true를 반환한다.")
-    void isSpaceActive_returnsTrueIfAnySessionActive() {
+    @DisplayName("다중 세션 중 하나라도 active 상태이면 Space가 active로 간주된다.")
+    void 다중_세션_중_하나라도_active이면_Space가_active_상태다() {
         Long chatRoomId = 1L;
         Long memberId = 10L;
 
@@ -144,8 +144,8 @@ class SpaceManagerTest {
     }
 
     @Test
-    @DisplayName("다중 세션 모두 inactive이면 isSpaceActive가 false를 반환한다.")
-    void isSpaceActive_returnsFalseWhenAllSessionsInactive() {
+    @DisplayName("다중 세션이 모두 inactive 상태이면 Space는 active로 간주되지 않는다.")
+    void 다중_세션이_모두_inactive이면_Space가_active_상태가_아니다() {
         Long chatRoomId = 1L;
         Long memberId = 10L;
 
@@ -171,8 +171,8 @@ class SpaceManagerTest {
     }
 
     @Test
-    @DisplayName("방 전환(ENTER_ROOM) 시 이전 방의 active 상태가 자동으로 클리어된다.")
-    void addSessionToSpace_clearsActiveStateOnRoomSwitch() {
+    @DisplayName("다른 Space로 전환하면 이전 Space의 active 상태가 자동으로 해제된다.")
+    void 다른_Space로_전환하면_이전_Space의_active_상태가_해제된다() {
         Long room1 = 1L;
         Long room2 = 2L;
         Long memberId = 10L;
@@ -193,8 +193,8 @@ class SpaceManagerTest {
     }
 
     @Test
-    @DisplayName("removeSessionState 후 isSpaceActive가 false를 반환한다.")
-    void removeSessionState_clearsActiveState() {
+    @DisplayName("세션 상태를 제거하면 해당 Space의 active 상태가 해제된다.")
+    void 세션_상태를_제거하면_해당_Space의_active_상태가_해제된다() {
         Long chatRoomId = 1L;
         Long memberId = 10L;
 
@@ -212,8 +212,8 @@ class SpaceManagerTest {
     }
 
     @Test
-    @DisplayName("방에 등록되지 않은 세션으로 activateSpace을 호출해도 active 상태가 되지 않는다.")
-    void activateSpace_rejectsSessionNotInRoom() {
+    @DisplayName("Space에 등록되지 않은 세션은 Space를 active 상태로 만들 수 없다.")
+    void Space에_등록되지_않은_세션은_Space를_active_상태로_만들_수_없다() {
         Long chatRoomId = 1L;
         Long memberId = 10L;
 
