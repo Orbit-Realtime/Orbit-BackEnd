@@ -164,12 +164,11 @@ public class SpaceServiceSocketTest {
         Space space = fixture.savedChatRoomBy("title", participants);
         Long spaceId = space.getId();
 
-        CountDownLatch latch = new CountDownLatch(2);
-
         List<String> firstMessages = new ArrayList<>();
         String firstJSessionId = memberFixture.loginRequestBy("first", port);
-        socketFixture.connectSocket(firstJSessionId, firstId, port, firstMessages, latch);
+        socketFixture.connectSocket(firstJSessionId, firstId, port, firstMessages, new CountDownLatch(1));
 
+        CountDownLatch latch = new CountDownLatch(1);
         List<String> secondMessages = new ArrayList<>();
         String secondJSessionId = memberFixture.loginRequestBy("second", port);
         socketFixture.connectSocket(secondJSessionId, secondId, port, secondMessages, latch);
@@ -192,10 +191,8 @@ public class SpaceServiceSocketTest {
         spaceService.broadCastMessage(firstId, sendChat);
 
         // then: CHAT_MESSAGE가 second에 도착할 때까지 대기
-        long deadline = System.currentTimeMillis() + 3000;
-        while (secondMessages.isEmpty() && System.currentTimeMillis() < deadline) {
-            Thread.sleep(50);
-        }
+        boolean received = latch.await(3, TimeUnit.SECONDS);
+        assertThat(received).isTrue();
         assertThat(secondMessages).isNotEmpty();
 
         String payload = secondMessages.get(0);
@@ -229,11 +226,11 @@ public class SpaceServiceSocketTest {
         Space space = fixture.savedChatRoomBy("title", participants);
         Long spaceId = space.getId();
 
-        CountDownLatch latch = new CountDownLatch(2);
         List<String> firstMessages = new ArrayList<>();
         String firstJSessionId = memberFixture.loginRequestBy(firstUsername, port);
-        socketFixture.connectSocket(firstJSessionId, firstId, port, firstMessages, latch);
+        socketFixture.connectSocket(firstJSessionId, firstId, port, firstMessages, new CountDownLatch(1));
 
+        CountDownLatch latch = new CountDownLatch(1);
         List<String> secondMessages = new ArrayList<>();
         String secondJSessionId = memberFixture.loginRequestBy(secondUsername, port);
         socketFixture.connectSocket(secondJSessionId, secondId, port, secondMessages, latch);
@@ -256,10 +253,9 @@ public class SpaceServiceSocketTest {
         spaceService.broadCastMessage(firstId, sendChat);
 
         // then
-        long deadline = System.currentTimeMillis() + 3000;
-        while (secondMessages.isEmpty() && System.currentTimeMillis() < deadline) {
-            Thread.sleep(50);
-        }
+        boolean received = latch.await(3, TimeUnit.SECONDS);
+        assertThat(received).isTrue();
+        assertThat(secondMessages).isNotEmpty();
 
         JsonNode node = objectMapper.readTree(secondMessages.get(0));
 
