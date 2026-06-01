@@ -43,7 +43,6 @@ import static org.assertj.core.api.Assertions.*;
 public class SpaceServiceSocketTest {
 
     private static final long CONNECT_SETTLE_MS = 300;
-    private static final long ROOM_JOIN_SETTLE_MS = 500;
     private static final long BROADCAST_TIMEOUT_SECONDS = 3;
 
     @Autowired
@@ -101,7 +100,6 @@ public class SpaceServiceSocketTest {
         spaceManager.addSessionToSpace(serverSession, spaceId);
 
         // then: 세션만 등록됨, 클라이언트로 전송되는 메시지 없음
-        Thread.sleep(ROOM_JOIN_SETTLE_MS);
         assertThat(receivedMessages).isEmpty();
         assertThat(spaceManager.getWebSocketSessionBy(spaceId)).contains(serverSession);
     }
@@ -140,7 +138,6 @@ public class SpaceServiceSocketTest {
         spaceManager.addSessionToSpace(serverSession, spaceId);
 
         // then: CHAT_ENTER 미전송, 세션 등록 여부만 확인
-        Thread.sleep(ROOM_JOIN_SETTLE_MS);
         assertThat(receivedMessages).isEmpty();
         Set<WebSocketSession> webSocketSessions = spaceManager.getWebSocketSessionBy(spaceId);
         assertThat(webSocketSessions).hasSize(1);
@@ -304,7 +301,6 @@ public class SpaceServiceSocketTest {
 
         WebSocketSession secondServerSession = websocketSessionManager.getSessionBy(secondId).iterator().next();
         spaceManager.addSessionToSpace(secondServerSession, spaceId);
-        Thread.sleep(ROOM_JOIN_SETTLE_MS);
 
         // when: second가 채팅 내역 조회 → updatedCount > 0 이면 READ_EVENT + UPDATE_CHAT_ROOM 발행
         messageService.findMessageHistory(spaceId, secondId, null);
@@ -370,7 +366,6 @@ public class SpaceServiceSocketTest {
 
         WebSocketSession secondServerSession = websocketSessionManager.getSessionBy(secondId).iterator().next();
         spaceManager.addSessionToSpace(secondServerSession, spaceId);
-        Thread.sleep(ROOM_JOIN_SETTLE_MS);
 
         // when: second 두 번째 채팅 내역 조회 → lastReadChatId = firstMessageId (이전 방문 시 firstChat까지 읽었음)
         messageService.findMessageHistory(spaceId, secondId, null);
@@ -531,7 +526,6 @@ public class SpaceServiceSocketTest {
         WebSocketSession secondServerSession =
                 websocketSessionManager.getSessionBy(secondId).iterator().next();
         spaceManager.addSessionToSpace(secondServerSession, spaceId);
-        Thread.sleep(ROOM_JOIN_SETTLE_MS);
 
         // when: second 클라이언트가 ROOM_ACTIVE WS 메시지 전송
         RoomActiveRequest roomActive = RoomActiveRequest.builder()
