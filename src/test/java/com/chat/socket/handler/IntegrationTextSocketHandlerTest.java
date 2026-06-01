@@ -32,7 +32,6 @@ import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -43,6 +42,12 @@ import static org.assertj.core.api.Assertions.*;
 @AutoConfigureMockMvc
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class IntegrationTextSocketHandlerTest {
+
+    // StandardWebSocketClient.execute().get()은 클라이언트 측 연결 완료만 보장한다.
+    // 서버의 afterConnectionEstablished()는 별도 Tomcat I/O 스레드에서 실행되므로
+    // 클라이언트 Future 완료 시점에 websocketSessionManager 세션 등록이 완료됐다는 보장이 없다.
+    // getSessionBy() 호출 전 서버 세션 등록 완료를 기다리기 위해 짧게 대기한다.
+    private static final long SERVER_SESSION_REGISTER_WAIT_MS = 300;
 
     @Autowired
     private TestDataFixture fixture;
@@ -101,6 +106,7 @@ class IntegrationTextSocketHandlerTest {
                         URI.create("ws://localhost:" + port + "/ws/chat"))
                 .get();
 
+        Thread.sleep(SERVER_SESSION_REGISTER_WAIT_MS);
         WebSocketSession serverSession = websocketSessionManager.getSessionBy(memberId).iterator().next();
         spaceManager.addSessionToSpace(serverSession, chatRoomId);
 
@@ -117,7 +123,8 @@ class IntegrationTextSocketHandlerTest {
         session.sendMessage(new TextMessage(chat));
 
         // then: CHAT_ENTER 제거 → CHAT_MESSAGE + UPDATE_CHAT_ROOM = 2개
-        latch.await(2, TimeUnit.SECONDS);
+        boolean received = latch.await(2, TimeUnit.SECONDS);
+        assertThat(received).isTrue();
         assertThat(receivedMessages).hasSize(2);
     }
 
@@ -180,6 +187,7 @@ class IntegrationTextSocketHandlerTest {
         List<Member> participants = new ArrayList<>();
         participants.add(member);
         Space chatRoom = fixture.savedChatRoomBy("title", participants);
+        Long spaceId = chatRoom.getId();
 
         String JSessionId = memberFixture.loginRequestBy(username, port);
 
@@ -196,15 +204,25 @@ class IntegrationTextSocketHandlerTest {
                         URI.create("ws://localhost:" + port + "/ws/chat"))
                 .get();
 
+        Thread.sleep(SERVER_SESSION_REGISTER_WAIT_MS);
+        WebSocketSession serverSession = websocketSessionManager.getSessionBy(memberId).iterator().next();
+        spaceManager.addSessionToSpace(serverSession, spaceId);
+
+        assertThat(spaceManager.getWebSocketSessionBy(spaceId)).isNotEmpty();
+        assertThat(spaceManager.isSpaceActive(memberId, spaceId)).isTrue();
+
         // when: 세션 종료
         session.close(CloseStatus.NORMAL);
 
-        // then: afterConnectionClosed 호출을 기다림
+        // TestWebSocketHandler는 afterConnectionClosed()를 구현하지 않으므로
+        // 이 latch는 countdown되지 않는다.
+        // session.close() 후 서버의 afterConnectionClosed 처리 완료를 기다리는 timed wait로 사용한다.
         latch.await(2, TimeUnit.SECONDS);
 
-        // WebsocketSessionManager에서 세션이 제거되었는지 확인
-        Collection<WebSocketSession> removedSessions = websocketSessionManager.getSessionBy(memberId);
-        assertThat(removedSessions).isEmpty();
+        // websocketSessionManager, spaceManager chatRooms, spaceManager sessionStates 전체 정리 검증
+        assertThat(websocketSessionManager.getSessionBy(memberId)).isEmpty();
+        assertThat(spaceManager.getWebSocketSessionBy(spaceId)).isEmpty();
+        assertThat(spaceManager.isSpaceActive(memberId, spaceId)).isFalse();
     }
 
     @Test
@@ -234,6 +252,7 @@ class IntegrationTextSocketHandlerTest {
                 handler, headers, URI.create("ws://localhost:" + port + "/ws/chat")).get();
 
         // 서버 세션을 Space에 등록
+        Thread.sleep(SERVER_SESSION_REGISTER_WAIT_MS);
         WebSocketSession serverSession =
                 websocketSessionManager.getSessionBy(member.getId()).iterator().next();
         spaceManager.addSessionToSpace(serverSession, space.getId());
