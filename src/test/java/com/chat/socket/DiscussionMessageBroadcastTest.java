@@ -101,5 +101,6 @@ class DiscussionMessageBroadcastTest {
         assertThat(node.get("content").asText()).isEqualTo("토론 답글");
         assertThat(node.get("discussionMessageId").isNull()).isFalse();
         assertThat(node.get("createdDate").isNull()).isFalse();
+        assertThat(node.get("spaceId").asLong()).isEqualTo(space.getId());
     }
 }
