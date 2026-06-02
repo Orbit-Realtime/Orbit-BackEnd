@@ -175,4 +175,25 @@ class DiscussionMessageServiceTest {
         assertThat(payload.getDiscussionMessageId()).isNotNull();
         assertThat(payload.getCreatedDate()).isNotNull();
     }
+
+    @Test
+    @DisplayName("Discussion 메시지 이벤트에는 Space 식별자가 포함된다")
+    void Discussion_메시지_이벤트에는_Space_식별자가_포함된다(ApplicationEvents events) {
+        // given
+        Member member = fixture.savedMemberBy("member");
+        Space space = fixture.savedChatRoomBy("space", List.of(member));
+        Message message = fixture.savedSimpleChat("내용", member, space);
+        Discussion discussion = discussionRepository.save(Discussion.of(message));
+
+        // when
+        discussionMessageService.broadcastDiscussionMessage(discussion.getId(), member.getId(), "답글");
+
+        // then
+        DiscussionMessageEvent payload = events.stream(PublishDiscussionMessageEvent.class)
+                .findFirst()
+                .orElseThrow()
+                .getPayload();
+
+        assertThat(payload.getSpaceId()).isEqualTo(space.getId());
+    }
 }

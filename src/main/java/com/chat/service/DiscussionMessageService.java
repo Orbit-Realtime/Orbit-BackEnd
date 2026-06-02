@@ -63,6 +63,7 @@ public class DiscussionMessageService {
                 .senderNickname(member.getNickname())
                 .content(saved.getContent())
                 .createdDate(saved.getCreatedDate())
+                .spaceId(spaceId)
                 .build();
 
         publisher.publishEvent(new PublishDiscussionMessageEvent(event, spaceId));

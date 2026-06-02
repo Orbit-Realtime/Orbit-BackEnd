@@ -18,4 +18,5 @@ public class DiscussionMessageEvent {
     private final String senderNickname;
     private final String content;
     private final LocalDateTime createdDate;
+    private final Long spaceId;
 }
