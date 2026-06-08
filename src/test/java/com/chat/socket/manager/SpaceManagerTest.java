@@ -144,6 +144,32 @@ class SpaceManagerTest {
     }
 
     @Test
+    @DisplayName("다중 세션 중 하나가 종료되어도 나머지 세션이 active이면 Space는 active 상태를 유지한다.")
+    void 다중_세션_중_하나가_종료되어도_나머지_세션이_active이면_Space는_active_상태를_유지한다() {
+        Long chatRoomId = 1L;
+        Long memberId = 10L;
+
+        WebSocketSession sessionA = mock(WebSocketSession.class);
+        given(sessionA.getId()).willReturn("session-a");
+        given(sessionA.getAttributes()).willReturn(Map.of(SessionConst.SESSION_ID, memberId));
+
+        WebSocketSession sessionB = mock(WebSocketSession.class);
+        given(sessionB.getId()).willReturn("session-b");
+        given(sessionB.getAttributes()).willReturn(Map.of(SessionConst.SESSION_ID, memberId));
+
+        spaceManager.registerSession(sessionA);
+        spaceManager.addSessionToSpace(sessionA, chatRoomId);   // auto-activate A
+
+        spaceManager.registerSession(sessionB);
+        spaceManager.addSessionToSpace(sessionB, chatRoomId);   // auto-activate B
+
+        // sessionB만 disconnect되어 SessionState가 제거됨 (sessionA는 active 유지)
+        spaceManager.removeSessionState(sessionB);
+
+        assertThat(spaceManager.isSpaceActive(memberId, chatRoomId)).isTrue();
+    }
+
+    @Test
     @DisplayName("다중 세션이 모두 inactive 상태이면 Space는 active로 간주되지 않는다.")
     void 다중_세션이_모두_inactive이면_Space가_active_상태가_아니다() {
         Long chatRoomId = 1L;
