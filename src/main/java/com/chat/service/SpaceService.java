@@ -49,7 +49,7 @@ public class SpaceService {
     @Transactional
     public void broadCastMessage(Long memberId, SendChat sendChat) {
         Long chatRoomId = sendChat.getChatRoomId();
-        Long savedMessageId = messageService.saveMessage(memberId, chatRoomId, sendChat.getMessage());
+        Long savedMessageId = messageService.saveMessage(memberId, chatRoomId, sendChat.getMessage(), sendChat.getClientMessageId());
 
         Member sender = memberRepository.findById(memberId).orElseThrow(
                 () -> new CustomException(ErrorCode.MEMBER_NOT_FOUND)
@@ -66,6 +66,7 @@ public class SpaceService {
                 .chatId(messageData.getChatId())
                 .unreadMemberCount(messageData.getUnreadMemberCount())
                 .createdDate(messageData.getCreatedDate())
+                .clientMessageId(sendChat.getClientMessageId())
                 .build();
 
         Map<Long, UpdateChatRoom> updatesByMemberId = broadcastDataBuilder.build(chatRoomId);

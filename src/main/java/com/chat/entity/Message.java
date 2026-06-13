@@ -37,7 +37,10 @@ public class Message extends BaseEntity {
     @JoinColumn(name = "space_id", nullable = false)
     private Space space;
 
-    private Message(String content, Member member, Space space) {
+    @Column(name = "client_message_id")
+    private String clientMessageId;
+
+    private Message(String content, Member member, Space space, String clientMessageId) {
         validateContent(content);
         validateMember(member);
         validateSpace(space);
@@ -45,10 +48,15 @@ public class Message extends BaseEntity {
         this.content = content;
         this.member = member;
         this.space = space;
+        this.clientMessageId = clientMessageId;
     }
 
     public static Message of(String content, Member member, Space space) {
-        return new Message(content, member, space);
+        return new Message(content, member, space, null);
+    }
+
+    public static Message of(String content, Member member, Space space, String clientMessageId) {
+        return new Message(content, member, space, clientMessageId);
     }
 
     private static void validateContent(String content) {

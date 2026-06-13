@@ -12,4 +12,5 @@ public class SendChat extends BaseWebSocketMessage {
 
     private Long chatRoomId;
     private String message;
+    private String clientMessageId;
 }

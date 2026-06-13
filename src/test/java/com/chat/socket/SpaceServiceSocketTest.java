@@ -214,6 +214,66 @@ public class SpaceServiceSocketTest {
     }
 
     @Test
+    @DisplayName("clientMessageId를 포함해 메시지를 전송하면 저장 및 echo payload에 그대로 포함된다.")
+    void clientMessageId를_포함해_메시지를_전송하면_저장_및_echo_payload에_포함된다() throws ExecutionException, InterruptedException, JsonProcessingException {
+        // given
+        String firstUsername = "first";
+        Member first = memberFixture.saveEncryptPasswordBy(firstUsername);
+        Long firstId = first.getId();
+
+        String secondUsername = "second";
+        Member second = memberFixture.saveEncryptPasswordBy(secondUsername);
+        Long secondId = second.getId();
+
+        List<Member> participants = new ArrayList<>();
+        participants.add(first);
+        participants.add(second);
+
+        Space space = fixture.savedChatRoomBy("title", participants);
+        Long spaceId = space.getId();
+
+        List<String> firstMessages = new ArrayList<>();
+        String firstJSessionId = memberFixture.loginRequestBy(firstUsername, port);
+        socketFixture.connectSocket(firstJSessionId, firstId, port, firstMessages, new CountDownLatch(1));
+
+        CountDownLatch latch = new CountDownLatch(1);
+        List<String> secondMessages = new ArrayList<>();
+        String secondJSessionId = memberFixture.loginRequestBy(secondUsername, port);
+        socketFixture.connectSocket(secondJSessionId, secondId, port, secondMessages, latch);
+        Thread.sleep(SERVER_SESSION_REGISTER_WAIT_MS);
+
+        WebSocketSession firstServerSession = websocketSessionManager.getSessionBy(firstId).iterator().next();
+        spaceManager.addSessionToSpace(firstServerSession, spaceId);
+        WebSocketSession secondServerSession = websocketSessionManager.getSessionBy(secondId).iterator().next();
+        spaceManager.addSessionToSpace(secondServerSession, spaceId);
+
+        String message = "message";
+        String clientMessageId = "client-uuid-5678";
+        SendChat sendChat = SendChat
+                .builder()
+                .messageType(MessageType.CHAT_MESSAGE)
+                .chatRoomId(spaceId)
+                .message(message)
+                .clientMessageId(clientMessageId)
+                .build();
+
+        // when
+        spaceService.broadCastMessage(firstId, sendChat);
+
+        // then
+        boolean received = latch.await(BROADCAST_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        assertThat(received).isTrue();
+        assertThat(secondMessages).isNotEmpty();
+
+        JsonNode node = objectMapper.readTree(secondMessages.get(0));
+        assertThat(node.get("clientMessageId").asText()).isEqualTo(clientMessageId);
+
+        Long messageId = node.get("chatId").asLong();
+        Message foundMessage = messageRepository.findById(messageId).get();
+        assertThat(foundMessage.getClientMessageId()).isEqualTo(clientMessageId);
+    }
+
+    @Test
     @DisplayName("메시지 전송 시 senderId와 senderNickname은 세션과 DB 기준으로 설정된다.")
     void 메시지_전송_시_senderId와_senderNickname은_세션과_DB_기준으로_설정된다() throws ExecutionException, InterruptedException, JsonProcessingException {
         // given
@@ -272,6 +332,9 @@ public class SpaceServiceSocketTest {
         Long savedMessageId = node.get("chatId").asLong();
         Message savedMessage = messageRepository.findById(savedMessageId).orElseThrow();
         assertThat(savedMessage.getMember().getId()).isEqualTo(firstId);
+        // clientMessageId 없는 기존 요청도 정상 처리되며, echo payload의 clientMessageId는 null
+        assertThat(node.get("clientMessageId").isNull()).isTrue();
+        assertThat(savedMessage.getClientMessageId()).isNull();
     }
 
     @Test

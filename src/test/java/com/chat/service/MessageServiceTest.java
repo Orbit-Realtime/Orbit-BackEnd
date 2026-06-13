@@ -84,6 +84,39 @@ class MessageServiceTest {
     }
 
     @Test
+    @DisplayName("clientMessageId와 함께 채팅 메시지를 저장하면 그대로 영속화된다.")
+    void saveChatWithClientMessageIdTest() {
+        // given
+        Member sender = fixture.savedMemberBy("sender");
+        Space chatRoom = fixture.savedChatRoomBy("title", List.of(sender));
+        String message = "message";
+        String clientMessageId = "client-uuid-1234";
+
+        // when
+        Long savedChatId = messageService.saveMessage(sender.getId(), chatRoom.getId(), message, clientMessageId);
+
+        // then
+        Message chat = messageRepository.findById(savedChatId).get();
+        assertThat(chat.getClientMessageId()).isEqualTo(clientMessageId);
+    }
+
+    @Test
+    @DisplayName("clientMessageId 없이 채팅 메시지를 저장하면 null로 저장된다.")
+    void saveChatWithoutClientMessageIdTest() {
+        // given
+        Member sender = fixture.savedMemberBy("sender");
+        Space chatRoom = fixture.savedChatRoomBy("title", List.of(sender));
+        String message = "message";
+
+        // when
+        Long savedChatId = messageService.saveMessage(sender.getId(), chatRoom.getId(), message);
+
+        // then
+        Message chat = messageRepository.findById(savedChatId).get();
+        assertThat(chat.getClientMessageId()).isNull();
+    }
+
+    @Test
     @DisplayName("특정 채팅에 대한 상세정보를 조회한다.")
     void findChatDataTest() {
         // given
