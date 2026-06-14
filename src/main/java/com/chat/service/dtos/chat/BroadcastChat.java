@@ -17,4 +17,5 @@ public class BroadcastChat {
     private final Long chatId;
     private final Long unreadMemberCount;
     private final LocalDateTime createdDate;
+    private final String clientMessageId;
 }

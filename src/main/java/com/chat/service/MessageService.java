@@ -58,6 +58,18 @@ public class MessageService {
 
     @Transactional
     public Long saveMessage(Long senderId, Long chatRoomId, String message) {
+        return saveMessage(senderId, chatRoomId, message, null);
+    }
+
+    @Transactional
+    public Long saveMessage(Long senderId, Long chatRoomId, String message, String clientMessageId) {
+
+        if (clientMessageId != null) {
+            Optional<Message> existing = messageRepository.findByClientMessageId(clientMessageId);
+            if (existing.isPresent()) {
+                return existing.get().getId();
+            }
+        }
 
         Member findSender = memberRepository.findById(senderId).orElseThrow(
                 () -> new CustomException(ErrorCode.MEMBER_NOT_FOUND)
@@ -66,7 +78,7 @@ public class MessageService {
                 () -> new CustomException(ErrorCode.SPACE_NOT_FOUND)
         );
 
-        Message savedChat = messageRepository.save(Message.of(message, findSender, findChatRoom));
+        Message savedChat = messageRepository.save(Message.of(message, findSender, findChatRoom, clientMessageId));
         updateCursorsOnSend(findSender.getId(), findChatRoom.getId(), savedChat);
 
         return savedChat.getId();

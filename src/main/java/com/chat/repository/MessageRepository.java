@@ -21,6 +21,8 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
             " WHERE c.space.id = :chatRoomId")
     Optional<Long> findLastMessageIdBy(@Param("chatRoomId") Long chatRoomId);
 
+    Optional<Message> findByClientMessageId(String clientMessageId);
+
     @Query("SELECT c" +
             " FROM Message c" +
             " WHERE c.id IN (" +

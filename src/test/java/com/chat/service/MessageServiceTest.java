@@ -84,6 +84,79 @@ class MessageServiceTest {
     }
 
     @Test
+    @DisplayName("clientMessageId와 함께 채팅 메시지를 저장하면 그대로 영속화된다.")
+    void saveChatWithClientMessageIdTest() {
+        // given
+        Member sender = fixture.savedMemberBy("sender");
+        Space chatRoom = fixture.savedChatRoomBy("title", List.of(sender));
+        String message = "message";
+        String clientMessageId = "client-uuid-1234";
+
+        // when
+        Long savedChatId = messageService.saveMessage(sender.getId(), chatRoom.getId(), message, clientMessageId);
+
+        // then
+        Message chat = messageRepository.findById(savedChatId).get();
+        assertThat(chat.getClientMessageId()).isEqualTo(clientMessageId);
+    }
+
+    @Test
+    @DisplayName("clientMessageId 없이 채팅 메시지를 저장하면 null로 저장된다.")
+    void saveChatWithoutClientMessageIdTest() {
+        // given
+        Member sender = fixture.savedMemberBy("sender");
+        Space chatRoom = fixture.savedChatRoomBy("title", List.of(sender));
+        String message = "message";
+
+        // when
+        Long savedChatId = messageService.saveMessage(sender.getId(), chatRoom.getId(), message);
+
+        // then
+        Message chat = messageRepository.findById(savedChatId).get();
+        assertThat(chat.getClientMessageId()).isNull();
+    }
+
+    @Test
+    @DisplayName("동일한 clientMessageId로 saveMessage를 두 번 호출하면 기존 messageId를 반환하고 새 메시지를 저장하지 않는다.")
+    void saveChatWithSameClientMessageId_returnsSameMessageIdTest() {
+        // given
+        Member sender = fixture.savedMemberBy("sender");
+        Space chatRoom = fixture.savedChatRoomBy("title", List.of(sender));
+        String message = "message";
+        String clientMessageId = "client-uuid-retry";
+
+        // when
+        Long firstChatId = messageService.saveMessage(sender.getId(), chatRoom.getId(), message, clientMessageId);
+        Long retryChatId = messageService.saveMessage(sender.getId(), chatRoom.getId(), message, clientMessageId);
+
+        // then
+        assertThat(retryChatId).isEqualTo(firstChatId);
+
+        long savedCount = messageRepository.findAll().stream()
+                .filter(m -> clientMessageId.equals(m.getClientMessageId()))
+                .count();
+        assertThat(savedCount).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("clientMessageId가 null이면 saveMessage를 여러 번 호출할 때마다 새 메시지가 저장된다.")
+    void saveChatWithoutClientMessageId_alwaysCreatesNewMessageTest() {
+        // given
+        Member sender = fixture.savedMemberBy("sender");
+        Space chatRoom = fixture.savedChatRoomBy("title", List.of(sender));
+        String message = "message";
+
+        // when
+        Long firstChatId = messageService.saveMessage(sender.getId(), chatRoom.getId(), message);
+        Long secondChatId = messageService.saveMessage(sender.getId(), chatRoom.getId(), message);
+
+        // then
+        assertThat(firstChatId).isNotEqualTo(secondChatId);
+        assertThat(messageRepository.findById(firstChatId)).isPresent();
+        assertThat(messageRepository.findById(secondChatId)).isPresent();
+    }
+
+    @Test
     @DisplayName("특정 채팅에 대한 상세정보를 조회한다.")
     void findChatDataTest() {
         // given
