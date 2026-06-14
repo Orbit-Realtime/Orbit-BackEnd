@@ -37,7 +37,7 @@ public class Message extends BaseEntity {
     @JoinColumn(name = "space_id", nullable = false)
     private Space space;
 
-    @Column(name = "client_message_id")
+    @Column(name = "client_message_id", updatable = false)
     private String clientMessageId;
 
     private Message(String content, Member member, Space space, String clientMessageId) {

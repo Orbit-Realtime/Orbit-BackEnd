@@ -273,6 +273,34 @@ class MessageRepositoryTest {
         assertThat(result.get()).isEqualTo(targetChat.getId());
     }
 
+    @Test
+    @DisplayName("clientMessageId로 메시지를 조회한다.")
+    void clientMessageId로_메시지를_조회한다() {
+        // given
+        Member member = createMember("user");
+        Space chatRoom = createSpaceBy("room");
+        String clientMessageId = "client-uuid-1234";
+
+        Message saved = messageRepository.save(Message.of("message", member, chatRoom, clientMessageId));
+
+        // when
+        Optional<Message> result = messageRepository.findByClientMessageId(clientMessageId);
+
+        // then
+        assertThat(result).isPresent();
+        assertThat(result.get().getId()).isEqualTo(saved.getId());
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 clientMessageId로 조회하면 빈 Optional을 반환한다.")
+    void 존재하지_않는_clientMessageId로_조회하면_빈_Optional을_반환한다() {
+        // when
+        Optional<Message> result = messageRepository.findByClientMessageId("non-existent-client-message-id");
+
+        // then
+        assertThat(result).isEmpty();
+    }
+
     private Member createMember(String username) {
         String commonPassword = "password";
         Member member = Member.of(username, commonPassword, username);

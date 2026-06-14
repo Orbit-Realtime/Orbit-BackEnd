@@ -64,6 +64,13 @@ public class MessageService {
     @Transactional
     public Long saveMessage(Long senderId, Long chatRoomId, String message, String clientMessageId) {
 
+        if (clientMessageId != null) {
+            Optional<Message> existing = messageRepository.findByClientMessageId(clientMessageId);
+            if (existing.isPresent()) {
+                return existing.get().getId();
+            }
+        }
+
         Member findSender = memberRepository.findById(senderId).orElseThrow(
                 () -> new CustomException(ErrorCode.MEMBER_NOT_FOUND)
         );
