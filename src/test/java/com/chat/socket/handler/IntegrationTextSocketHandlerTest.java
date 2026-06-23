@@ -178,8 +178,8 @@ class IntegrationTextSocketHandlerTest {
     }
 
     @Test
-    @DisplayName("Space 참여자가 ENTER_ROOM을 전송하면 세션이 Space에 등록되고 active 상태가 된다.")
-    void 참여자가_ENTER_ROOM을_전송하면_Space에_등록되고_active_상태가_된다() throws ExecutionException, InterruptedException, IOException {
+    @DisplayName("Space 참여자가 ENTER_ROOM을 전송하면 세션이 Space에 등록되고 ENTER_ROOM_ACK을 수신한다.")
+    void 참여자가_ENTER_ROOM을_전송하면_Space에_등록되고_ENTER_ROOM_ACK을_수신한다() throws ExecutionException, InterruptedException, IOException {
         // given
         String username = "username";
         Member member = memberFixture.saveEncryptPasswordBy(username);
@@ -214,16 +214,22 @@ class IntegrationTextSocketHandlerTest {
                 .chatRoomId(spaceId)
                 .build();
         session.sendMessage(new TextMessage(objectMapper.writeValueAsString(enterRoom)));
-        Thread.sleep(SERVER_SESSION_REGISTER_WAIT_MS);
 
-        // then: ENTER_ROOM → validateParticipant → getWrappedSession → addSessionToSpace
+        // then: ENTER_ROOM → validateParticipant → getWrappedSession → addSessionToSpace → ENTER_ROOM_ACK
+        boolean received = latch.await(2, TimeUnit.SECONDS);
+        assertThat(received).isTrue();
+
         assertThat(spaceManager.getWebSocketSessionBy(spaceId)).isNotEmpty();
         assertThat(spaceManager.isSpaceActive(memberId, spaceId)).isTrue();
+
+        JsonNode node = objectMapper.readTree(receivedMessages.get(0));
+        assertThat(node.get("messageType").asText()).isEqualTo("ENTER_ROOM_ACK");
+        assertThat(node.get("chatRoomId").asLong()).isEqualTo(spaceId);
     }
 
     @Test
-    @DisplayName("Space 비참여자가 ENTER_ROOM을 전송하면 ROOM_NOT_FOUND 에러 응답을 받고 Space에 등록되지 않는다.")
-    void 비참여자가_ENTER_ROOM을_전송하면_ROOM_NOT_FOUND_에러_응답을_받고_Space에_등록되지_않는다() throws ExecutionException, InterruptedException, IOException {
+    @DisplayName("Space 비참여자가 ENTER_ROOM을 전송하면 ROOM_NOT_FOUND 에러 응답을 requestType/chatRoomId와 함께 받고 Space에 등록되지 않는다.")
+    void 비참여자가_ENTER_ROOM을_전송하면_ROOM_NOT_FOUND_에러_응답을_requestType_chatRoomId와_함께_받고_Space에_등록되지_않는다() throws ExecutionException, InterruptedException, IOException {
         // given
         Member owner = memberFixture.saveEncryptPasswordBy("owner");
         Member intruder = memberFixture.saveEncryptPasswordBy("intruder");
@@ -263,7 +269,46 @@ class IntegrationTextSocketHandlerTest {
         JsonNode node = objectMapper.readTree(receivedMessages.get(0));
         assertThat(node.get("messageType").asText()).isEqualTo("ERROR");
         assertThat(node.get("errorCode").asText()).isEqualTo("ROOM_NOT_FOUND");
+        assertThat(node.get("requestType").asText()).isEqualTo("ENTER_ROOM");
+        assertThat(node.get("chatRoomId").asLong()).isEqualTo(spaceId);
         assertThat(spaceManager.getWebSocketSessionBy(spaceId)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("잘못된 형식의 메시지를 전송하면 requestType 없이 INVALID_MESSAGE 에러 응답을 받는다.")
+    void 잘못된_형식의_메시지를_전송하면_requestType_없이_INVALID_MESSAGE_에러_응답을_받는다() throws ExecutionException, InterruptedException, IOException {
+        // given
+        String username = "username";
+        Member member = memberFixture.saveEncryptPasswordBy(username);
+
+        String JSessionId = memberFixture.loginRequestBy(username, port);
+
+        WebSocketHttpHeaders headers = new WebSocketHttpHeaders();
+        headers.add("Cookie", "JSESSIONID=" + JSessionId);
+
+        CountDownLatch latch = new CountDownLatch(1);
+        List<String> receivedMessages = new ArrayList<>();
+        TestWebSocketHandler handler = new TestWebSocketHandler(member.getId(), receivedMessages, latch);
+
+        WebSocketClient client = new StandardWebSocketClient();
+        WebSocketSession session = client.execute(handler,
+                        headers,
+                        URI.create("ws://localhost:" + port + "/ws/chat"))
+                .get();
+
+        // when: 파싱 자체가 실패하는 payload 전송
+        session.sendMessage(new TextMessage("{ not-valid-json"));
+
+        // then: requestType을 알 수 없으므로 null
+        boolean received = latch.await(2, TimeUnit.SECONDS);
+        assertThat(received).isTrue();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode node = objectMapper.readTree(receivedMessages.get(0));
+        assertThat(node.get("messageType").asText()).isEqualTo("ERROR");
+        assertThat(node.get("errorCode").asText()).isEqualTo("INVALID_MESSAGE");
+        assertThat(node.get("requestType").isNull()).isTrue();
+        assertThat(node.get("chatRoomId").isNull()).isTrue();
     }
 
     @Test

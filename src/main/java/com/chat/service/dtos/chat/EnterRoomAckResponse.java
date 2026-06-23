@@ -6,13 +6,8 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class ErrorResponse {
+public class EnterRoomAckResponse {
 
     private final MessageType messageType;
-    private final MessageType requestType;
     private final Long chatRoomId;
-    private final String clientMessageId;
-    private final Long discussionId;
-    private final String errorCode;
-    private final String message;
 }
