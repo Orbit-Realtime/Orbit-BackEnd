@@ -130,8 +130,8 @@ class IntegrationTextSocketHandlerTest {
     }
 
     @Test
-    @DisplayName("Space에 등록되지 않은 세션이 CHAT_MESSAGE를 전송하면 차단되어 아무 응답도 오지 않는다.")
-    void Space에_등록되지_않은_세션이_CHAT_MESSAGE를_전송하면_차단된다() throws ExecutionException, InterruptedException, IOException {
+    @DisplayName("Space에 등록되지 않은 세션이 CHAT_MESSAGE를 전송하면 ROOM_NOT_JOINED 에러 응답을 clientMessageId와 함께 받는다.")
+    void Space에_등록되지_않은_세션이_CHAT_MESSAGE를_전송하면_ROOM_NOT_JOINED_에러_응답을_받는다() throws ExecutionException, InterruptedException, IOException {
         // given
         String username = "username";
         Member member = memberFixture.saveEncryptPasswordBy(username);
@@ -165,15 +165,22 @@ class IntegrationTextSocketHandlerTest {
                 .messageType(MessageType.CHAT_MESSAGE)
                 .chatRoomId(chatRoomId)
                 .message("blocked message")
+                .clientMessageId("client-temp-1")
                 .build();
 
         // when: 세션이 방에 없는 상태에서 CHAT_MESSAGE 전송
         session.sendMessage(new TextMessage(objectMapper.writeValueAsString(sendChat)));
 
-        // then: 메시지가 차단되어 아무 응답도 오지 않아야 함
-        boolean anyMessageReceived = latch.await(1, TimeUnit.SECONDS);
-        assertThat(anyMessageReceived).isFalse();
-        assertThat(receivedMessages).isEmpty();
+        // then: silent drop 대신 ROOM_NOT_JOINED 에러 응답을 clientMessageId와 함께 수신해야 함
+        boolean received = latch.await(2, TimeUnit.SECONDS);
+        assertThat(received).isTrue();
+
+        JsonNode node = objectMapper.readTree(receivedMessages.get(0));
+        assertThat(node.get("messageType").asText()).isEqualTo("ERROR");
+        assertThat(node.get("errorCode").asText()).isEqualTo("ROOM_NOT_JOINED");
+        assertThat(node.get("requestType").asText()).isEqualTo("CHAT_MESSAGE");
+        assertThat(node.get("chatRoomId").asLong()).isEqualTo(chatRoomId);
+        assertThat(node.get("clientMessageId").asText()).isEqualTo("client-temp-1");
         assertThat(spaceManager.getWebSocketSessionBy(chatRoomId)).isEmpty();
     }
 
