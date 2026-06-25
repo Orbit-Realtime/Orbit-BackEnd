@@ -35,6 +35,11 @@ public enum ErrorCode {
     SPACE_BROADCAST_IO_EXCEPTION(HttpStatus.INTERNAL_SERVER_ERROR, "Space 전파 중 오류가 발생했습니다."),
     WEB_SOCKET_SESSION_NOT_EXIST(HttpStatus.INTERNAL_SERVER_ERROR, "웹소켓 세션이 존재하지 않습니다."),
 
+    ROOM_NOT_JOINED(HttpStatus.FORBIDDEN, "참여 중인 채팅방이 아닙니다. ENTER_ROOM 후 다시 시도해주세요."),
+    INVALID_MESSAGE_FORMAT(HttpStatus.BAD_REQUEST, "메시지 형식이 올바르지 않습니다."),
+    UNKNOWN_MESSAGE_TYPE(HttpStatus.BAD_REQUEST, "알 수 없는 메시지 타입입니다."),
+    UNEXPECTED_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버 오류가 발생했습니다."),
+
     SERVER_BUSY(HttpStatus.TOO_MANY_REQUESTS, "서버가 일시적으로 혼잡합니다. 잠시 후 다시 시도해주세요."),
     ;
 

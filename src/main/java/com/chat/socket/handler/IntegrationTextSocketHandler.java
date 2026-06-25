@@ -69,7 +69,7 @@ public class IntegrationTextSocketHandler extends TextWebSocketHandler {
             baseMessage = objectMapper.readValue(payload, BaseWebSocketMessage.class);
         } catch (JsonProcessingException e) {
             log.warn("WS 메시지 파싱 실패: session={}", session.getId(), e);
-            sendError(session, null, null, "INVALID_MESSAGE", "메시지 형식이 올바르지 않습니다.");
+            sendError(session, null, null, null, ErrorCode.INVALID_MESSAGE_FORMAT);
             return;
         }
 
@@ -84,6 +84,8 @@ public class IntegrationTextSocketHandler extends TextWebSocketHandler {
                             .noneMatch(s -> s.getId().equals(session.getId()))) {
                         log.warn("session not in room: session={}, chatRoomId={}", session.getId(),
                                 chatRoomId);
+                        sendError(session, baseMessage.getMessageType(), chatRoomId,
+                                sendChat.getClientMessageId(), ErrorCode.ROOM_NOT_JOINED);
                         break;
                     }
 
@@ -125,16 +127,16 @@ public class IntegrationTextSocketHandler extends TextWebSocketHandler {
                     break;
                 default:
                     log.warn("알 수 없는 messageType: session={}, type={}", session.getId(), baseMessage.getMessageType());
-                    sendError(session, baseMessage.getMessageType(), null, "INVALID_MESSAGE", "알 수 없는 메시지 타입입니다.");
+                    sendError(session, baseMessage.getMessageType(), null, null, ErrorCode.UNKNOWN_MESSAGE_TYPE);
             }
         } catch (CustomException e) {
             log.warn("WS 처리 중 CustomException: session={}, error={}", session.getId(), e.getErrorCode(), e);
             sendError(session, baseMessage.getMessageType(), extractChatRoomId(baseMessage),
-                    mapErrorCode(e.getErrorCode()), e.getErrorCode().getErrorMessage());
+                    extractClientMessageId(baseMessage), e.getErrorCode());
         } catch (Exception e) {
             log.error("WS 처리 중 예상치 못한 오류: session={}", session.getId(), e);
             sendError(session, baseMessage.getMessageType(), extractChatRoomId(baseMessage),
-                    "INTERNAL_ERROR", "서버 오류가 발생했습니다.");
+                    extractClientMessageId(baseMessage), ErrorCode.UNEXPECTED_ERROR);
         }
     }
 
@@ -152,15 +154,16 @@ public class IntegrationTextSocketHandler extends TextWebSocketHandler {
     }
 
     private void sendError(WebSocketSession session, MessageType requestType, Long chatRoomId,
-                            String errorCode, String message) {
+                            String clientMessageId, ErrorCode errorCode) {
         if (!session.isOpen()) return;
         try {
             ErrorResponse error = ErrorResponse.builder()
                     .messageType(MessageType.ERROR)
                     .requestType(requestType)
                     .chatRoomId(chatRoomId)
-                    .errorCode(errorCode)
-                    .message(message)
+                    .clientMessageId(clientMessageId)
+                    .errorCode(mapErrorCode(errorCode))
+                    .message(errorCode.getErrorMessage())
                     .build();
             session.sendMessage(new TextMessage(objectMapper.writeValueAsString(error)));
         } catch (IOException e) {
@@ -176,10 +179,21 @@ public class IntegrationTextSocketHandler extends TextWebSocketHandler {
         return null;
     }
 
+    private String extractClientMessageId(BaseWebSocketMessage baseMessage) {
+        if (baseMessage instanceof SendChat r) return r.getClientMessageId();
+        return null;
+    }
+
     private String mapErrorCode(ErrorCode errorCode) {
         return switch (errorCode) {
             case SPACE_NOT_FOUND -> "ROOM_NOT_FOUND";
-            case USER_NOT_AUTHENTICATED -> "UNAUTHORIZED";
+            // TODO: MEMBER_NOT_FOUND는 "회원을 찾을 수 없음"과 "인증되지 않음"이 의미상 다르지만,
+            // 현재 errorCode 구조에 별도 코드가 없어 최소 변경으로 UNAUTHORIZED에 임시 매핑한다.
+            // 클라이언트가 두 케이스를 구분해야 할 필요가 생기면 별도 errorCode(예: MEMBER_NOT_FOUND)로 분리할 것.
+            case USER_NOT_AUTHENTICATED, MEMBER_NOT_FOUND -> "UNAUTHORIZED";
+            case EMPTY_MESSAGE_CONTENT, INVALID_MESSAGE_FORMAT, UNKNOWN_MESSAGE_TYPE -> "INVALID_MESSAGE";
+            case ROOM_NOT_JOINED -> "ROOM_NOT_JOINED";
+            case UNEXPECTED_ERROR -> "INTERNAL_ERROR";
             default -> "INTERNAL_ERROR";
         };
     }
